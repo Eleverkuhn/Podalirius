@@ -1,0 +1,14 @@
+.git/
+
+.venv/
+*.lock
+
+__pycache__/
+.pytest_cache/
+
+*.md
+
+Dockerfile
+compose.yaml
+
+*.log

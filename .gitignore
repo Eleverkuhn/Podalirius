@@ -1,0 +1,13 @@
+.env
+
+.venv/
+*.lock
+.python-version
+
+mysql.env/
+
+__pycache__/
+.pytest_cache/
+
+logs/
+*.log
