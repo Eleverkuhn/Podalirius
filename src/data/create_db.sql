@@ -7,10 +7,12 @@ CREATE TABLE patients (
     last_name VARCHAR(40) NOT NULL,
     middle_name VARCHAR(20) NOT NULL,
     first_name VARCHAR(40) NOT NULL,
+    phone INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ON UPDATE CURRENT_TIMESTAMP,
-    INDEX(last_name)
+    INDEX(last_name),
+    CHECK (phone > 999999999 and phone <10000000000)
 ) ENGINE = InnoDB;
 
 CREATE TABLE patients_addresses (
@@ -33,14 +35,13 @@ CREATE TABLE doctors (
   last_name VARCHAR(40) NOT NULL,
   middle_name VARCHAR(20) NOT NULL,
   first_name VARCHAR(40) NOT NULL,
-  experience DATETIME NOT NULL,
+  experience DATE NOT NULL,
   description TEXT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
     ON UPDATE CURRENT_TIMESTAMP,
   INDEX(last_name)
 ) ENGINE = InnoDB;
-
 
 CREATE TABLE work_schedules (
   id INT AUTO_INCREMENT PRIMARY KEY,
