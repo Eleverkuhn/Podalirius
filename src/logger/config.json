@@ -18,7 +18,7 @@
       "class": "logging.handlers.RotatingFileHandler",
       "formatter": "general",
       "level": "INFO",
-      "filename": "logs/app.log",
+      "filename": "logs/podalirius.log",
       "maxBytes": 10485760,
       "backupCount": 3
     }

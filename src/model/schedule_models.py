@@ -1,7 +1,7 @@
 from datetime import time
 from enum import Enum
 
-from model.base import AbstractModel
+from model.base_models import AbstractModel
 
 
 class WeekdayEnum(str, Enum):

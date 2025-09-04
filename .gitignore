@@ -11,3 +11,5 @@ __pycache__/
 
 logs/
 *.log
+
+*.egg-info/

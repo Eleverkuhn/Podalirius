@@ -2,7 +2,7 @@ from typing import Literal
 
 from pydantic import Field, condecimal
 
-from model.base import AbstractModel
+from model.base_models import AbstractModel
 
 
 class Service(AbstractModel):

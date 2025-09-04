@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from model.base import AbstractModel
+from model.base_models import AbstractModel
 
 
 class Specialty(AbstractModel):

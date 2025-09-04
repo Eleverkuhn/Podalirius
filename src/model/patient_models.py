@@ -1,6 +1,6 @@
 from pydantic import Field
 
-from model.base import AbstractModel, PersonAbstract
+from model.base_models import AbstractModel, PersonAbstract
 
 
 class Patient(PersonAbstract):

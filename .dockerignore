@@ -1,7 +1,6 @@
 .git/
 
 .venv/
-*.lock
 
 __pycache__/
 .pytest_cache/
