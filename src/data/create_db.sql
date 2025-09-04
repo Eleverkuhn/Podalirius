@@ -3,7 +3,7 @@ CREATE DATABASE IF NOT EXISTS podalirius CHARACTER SET utf8mb4 COLLATE utf8mb4_u
 USE podalirius;
 
 CREATE TABLE patients (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id BINARY(16) PRIMARY KEY NOT NULL DEFAULT (UUID_TO_BIN(UUID(), 1)),
     last_name VARCHAR(40) NOT NULL,
     middle_name VARCHAR(20) NOT NULL,
     first_name VARCHAR(40) NOT NULL,
@@ -17,7 +17,7 @@ CREATE TABLE patients (
 
 CREATE TABLE patients_addresses (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  patient_id INT NOT NULL,
+  patient_id BINARY(16) NOT NULL,
   city VARCHAR (100) NOT NULL,
   street VARCHAR (100) NOT NULL,
   building INT NOT NULL,
@@ -60,7 +60,7 @@ CREATE TABLE work_schedules (
 CREATE TABLE appointments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   doctor_id INT NOT NULL,
-  patient_id INT NOT NULL,
+  patient_id BINARY(16) NOT NULL,
   date DATETIME NOT NULL,
   status ENUM("pending", "completed", "cancelled") NOT NULL,
   is_paid BOOLEAN NOT NULL DEFAULT FALSE,

@@ -1,9 +1,14 @@
+from uuid import UUID
+from datetime import date
+
 from pydantic import Field
 
 from model.base_models import AbstractModel, PersonAbstract
 
 
 class Patient(PersonAbstract):
+    id: UUID
+    birth_date: date
     phone: int = Field(min_length=10, max_length=10)
 
 
