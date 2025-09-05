@@ -7,12 +7,11 @@ CREATE TABLE patients (
     last_name VARCHAR(40) NOT NULL,
     middle_name VARCHAR(20) NOT NULL,
     first_name VARCHAR(40) NOT NULL,
-    phone INT NOT NULL,
+    phone VARCHAR(10) UNIQUE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ON UPDATE CURRENT_TIMESTAMP,
-    INDEX(last_name),
-    CHECK (phone > 999999999 and phone <10000000000)
+    INDEX(last_name)
 ) ENGINE = InnoDB;
 
 CREATE TABLE patients_addresses (

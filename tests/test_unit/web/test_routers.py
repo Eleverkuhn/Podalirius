@@ -106,17 +106,22 @@ class TestAppointments(BaseEndpointTest):
             "send_form": self.client.app.url_path_for("Appointment.create_appointment")
         }
 
-    @override 
+    @override
     def test_endpoints_exist(self) -> None:
+        # TODO: change this
         pass
 
-    def test_appointment_form_returns_ok(self) -> None:
+    def test_appointment_form_endpoint_exists(self) -> None:
         response = self.client.get(self.urls.get("get_form"))
         assert response.status_code == status.HTTP_200_OK
 
-    def test_appointment_form_creates_resource(self) -> None:
-        response = self.client.post(self.urls.get("send_form"))
-        assert response.status_code == status.HTTP_201_CREATED
+    def test_appointment_form_redirects_to_main(self) -> None:
+        response = self.client.post(
+            self.urls.get("send_form"),
+            follow_redirects=False)
+        location = response.headers.get("location")
+        assert response.status_code == status.HTTP_303_SEE_OTHER
+        assert location == self.client.app.url_path_for("main")
 
 
 class TestAuthEndpoint(BaseEndpointTest):
