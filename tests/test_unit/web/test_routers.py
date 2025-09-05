@@ -1,5 +1,4 @@
-import logging
-from abc import ABC
+from typing import override
 
 import pytest
 from fastapi.testclient import TestClient
@@ -14,76 +13,146 @@ from model import (
     service_models,
     specialty_models
 )
-from web import (
-    appointment_routes,
-    doctor_routes,
-    patient_routes,
-    service_routes,
-    specialty_routes,
-    index_routes,
-    auth_routes
-)
 
 
 @pytest.fixture(autouse=True)
 def client() -> TestClient:
     return TestClient(app)
 
+@pytest.fixture
+def phone_number_form_data() -> dict[str, str]:
+    return {"phone": "9999999999"}
 
-class BaseEndpoint(ABC):
-    model: base_models.AbstractModel
-    prefixes: list[str]
 
-    def test_endpoint_exists(self, client: TestClient) -> None:
-        logger = logging.getLogger("tests")
-        for prefix in self.prefixes:
-            logger.warning(f"PREFIX: {prefix}")
-            response = client.get(prefix)
+class BaseEndpointTest:
+    model: None | base_models.AbstractModel = None
+    urls: None | dict[str, str] = None
+
+    @pytest.fixture(autouse=True)
+    def setup(self, client: TestClient) -> None:
+        self.client = client
+        self.model = self.get_model()
+        self.urls = self.get_urls()
+
+    def get_model(self) -> base_models.AbstractModel:
+        return self.model
+
+    def get_urls(self) -> dict[str, str]:
+        return self.urls
+
+    def test_endpoints_exist(self) -> None:
+        for url in self.urls.values():
+            response = self.client.get(url)
             assert response.status_code == status.HTTP_200_OK
 
 
-class BasePostEndpoint(BaseEndpoint):
-    def test_post_allowed(self, client: TestClient) -> None:
-        for prefix in self.prefixes:
-            response = client.post(prefix)
-            assert response.status_code == status.HTTP_201_CREATED
+class TestMain(BaseEndpointTest):
+    @override
+    def get_urls(self) -> dict[str, str]:
+        return {"main": self.client.app.url_path_for("main")}
 
 
-class TestMain(BaseEndpoint):
-    prefixes = [index_routes.router.prefix]
-
-
-class TestSpecialties(BaseEndpoint):
+class TestSpecialties(BaseEndpointTest):
     # INFO: has URL parameters
-    model = specialty_models.Specialty
-    prefixes = [specialty_routes.router.prefix]
+    @override
+    def get_model(self) -> specialty_models.Specialty:
+        return specialty_models.Specialty
+
+    @override
+    def get_urls(self) -> dict[str, str]:
+        return {
+            "specialties": self.client.app.url_path_for(
+                "Specialty.all_specialties"),
+            "specialty": self.client.app.url_path_for(
+                "Specialty.specialty", title="1")
+        }
 
 
-class TestServices(BaseEndpoint):
+class TestServices(BaseEndpointTest):
     # INFO: has URL parameters
-    model = service_models.Service
-    prefixes = [service_routes.router.prefix]
+    @override
+    def get_model(self) -> service_models.Service:
+        return service_models.Service
+
+    @override
+    def get_urls(self) -> dict[str, str]:
+        return {
+            "service": self.client.app.url_path_for("Service.service", title="1")
+        }
 
 
-class TestDoctors(BaseEndpoint):
+class TestDoctorEndpoint(BaseEndpointTest):
+    # INFO: has URL parameter
+    @override
+    def get_model(self) -> doctor_models.Doctor:
+        return doctor_models.Doctor
+
+    @override
+    def get_urls(self) -> dict[str, str]:
+        return {
+            "doctor": self.client.app.url_path_for("Doctor.doctor", id=1)
+        }
+
+
+class TestAppointments(BaseEndpointTest):
+    @override
+    def get_model(self) -> appointment_models.Appointment:
+        return appointment_models.Appointment
+
+    @override
+    def get_urls(self) -> dict[str, str]:
+        return {
+            "get_form": self.client.app.url_path_for("Appointment.get_appointment_form"),
+            "send_form": self.client.app.url_path_for("Appointment.create_appointment")
+        }
+
+    @override 
+    def test_endpoints_exist(self) -> None:
+        pass
+
+    def test_appointment_form_returns_ok(self) -> None:
+        response = self.client.get(self.urls.get("get_form"))
+        assert response.status_code == status.HTTP_200_OK
+
+    def test_appointment_form_creates_resource(self) -> None:
+        response = self.client.post(self.urls.get("send_form"))
+        assert response.status_code == status.HTTP_201_CREATED
+
+
+class TestAuthEndpoint(BaseEndpointTest):
+    @override
+    def get_urls(self) -> dict[str, str]:
+        return {
+            "login_form": self.client.app.url_path_for("Login.login_form"),
+            "verify_code_form": self.client.app.url_path_for("VerifyCode.verify_code_form"),
+        }
+
+    def test_sending_login_form_redirects_correctly(
+            self, phone_number_form_data: dict[str, str]) -> None:
+        response = self.client.post(
+            self.urls.get("login_form"),
+            data=phone_number_form_data,
+            follow_redirects=False,
+        )
+        assert response.status_code == status.HTTP_303_SEE_OTHER
+        assert response.headers.get("location") == self.client.app.url_path_for("VerifyCode.verify_code_form")
+
+    def test_verify_code_form_post_is_allowed(self) -> None:
+        response = self.client.post(self.urls.get("verify_code_form"))
+        assert response.status_code == status.HTTP_200_OK
+
+
+class TestPatientEndpoint(BaseEndpointTest):
     # INFO: has URL parameters
-    model = doctor_models.Doctor
-    prefixes = [doctor_routes.router.prefix]
 
+    @override
+    def get_model(self) -> patient_models.Patient:
+        return patient_models.Patient
 
-class TestAppointments(BasePostEndpoint):
-    model = appointment_models.Appointment
-    prefixes = [appointment_routes.router.prefix]
-
-
-class TestAuth(BasePostEndpoint):
-    prefixes = [auth_routes.login_router.prefix, auth_routes.verify_code_router.prefix]
-
-
-class TestPatients(BaseEndpoint):
-    # INFO: has URL parameters
-    model = patient_models.Patient
-    prefixes = [
-        patient_routes.patient_appointments_router.prefix,
-        patient_routes.patient_info_router.prefix
-    ]
+    @override
+    def get_urls(self) -> dict[str, str]:
+        return {
+            "appointments": self.client.app.url_path_for("PatientAppointment.all_appointments"),
+            "appointment": self.client.app.url_path_for("PatientAppointment.appointment", id=1),
+            "info": self.client.app.url_path_for("PatientInfo.info")
+        }
