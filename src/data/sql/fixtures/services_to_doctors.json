@@ -1,0 +1,18 @@
+[
+  { "doctor_id": 1, "service_id": 1 },
+  { "doctor_id": 1, "service_id": 11 },
+  { "doctor_id": 1, "service_id": 12 },
+  { "doctor_id": 2, "service_id": 1 },
+  { "doctor_id": 2, "service_id": 13 },
+  { "doctor_id": 3, "service_id": 1 },
+  { "doctor_id": 4, "service_id": 1 },
+  { "doctor_id": 5, "service_id": 1 },
+  { "doctor_id": 6, "service_id": 1 },
+  { "doctor_id": 6, "service_id": 2 },
+  { "doctor_id": 7, "service_id": 1 },
+  { "doctor_id": 7, "service_id": 2 },
+  { "doctor_id": 8, "service_id": 1 },
+  { "doctor_id": 8, "service_id": 2 },
+  { "doctor_id": 9, "service_id": 1 },
+  { "doctor_id": 9, "service_id": 13 }
+]

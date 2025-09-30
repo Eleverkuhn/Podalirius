@@ -1,0 +1,15 @@
+[
+  { "title": "Consultation", "type_id": 1 },
+  { "title": "Premium Consultation", "type_id": 1, "markup": 2000 },
+  { "title": "Venous Blood Draw", "type_id": 4 },
+  { "title": "Finger-pick", "type_id": 4 },
+  { "title": "Cortisol", "type_id": 3 },
+  { "title": "Testosterone", "type_id": 3, "markup": 1000 },
+  { "title": "Vitamn D", "type_id": 3, "markup": 2000 },
+  { "title": "Vitamn B12", "type_id": 3, "markup": 2000 },
+  { "title": "Complete Blood Count", "type_id": 3, "markup": 500 },
+  { "title": "Lipid Panel", "type_id": 3 },
+  { "title": "Liver Ultrasound", "type_id": 2 },
+  { "title": "Stomach Ultrasound", "type_id": 2 },
+  { "title": "Echocardiogram", "type_id": 2, "markup": 500 }
+]

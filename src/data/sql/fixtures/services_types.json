@@ -1,0 +1,6 @@
+[
+  { "title": "Appointment", "price": 2000 },
+  { "title": "Ultrasound Scan", "price": 2000 },
+  { "title": "Lab Test", "price": 500 },
+  { "title": "Blood Draw", "price": 500}
+]
