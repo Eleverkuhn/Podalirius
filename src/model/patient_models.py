@@ -1,15 +1,28 @@
-from uuid import UUID
 from datetime import date
+from typing import Annotated
 
-from pydantic import Field
+from pydantic import BaseModel, Field, AfterValidator
 
 from model.base_models import AbstractModel, PersonAbstract
 
 
-class Patient(PersonAbstract):
-    id: UUID
+def is_numeric(value: str) -> str:
+    if not value.isnumeric():
+        raise ValueError("Phone number is invalid")
+    return value
+
+
+class Phone(BaseModel):
+    phone: Annotated[str, AfterValidator(is_numeric)] = Field(
+        min_length=10, max_length=10)
+
+
+class PatientCreate(PersonAbstract, Phone):
     birth_date: date
-    phone: str = Field(min_length=10, max_length=10)
+
+
+class Patient(AbstractModel, PatientCreate):
+    id: str
 
 
 class PatientAdress(AbstractModel):

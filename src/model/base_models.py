@@ -1,15 +1,34 @@
 from datetime import datetime
+from typing import Annotated, ItemsView
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AfterValidator
 
 
-class AbstractModel(BaseModel):
+def is_alpha(value: str) -> str:
+    if not value.isalpha():
+        raise ValueError("Field must be string type")
+    return value
+
+
+class Abs(BaseModel):  # FIX: rename this to `AbstractModel`
+    def is_submodel(self, to_compare: "Abs") -> bool:
+        return self.dumped_items <= to_compare.dumped_items
+    
+    @property
+    def dumped_items(self) -> ItemsView:
+        return self.model_dump().items()
+
+
+class AbstractModel(Abs):  # FIX: rename this to `AbstractInner`
     id: int
     created_at: datetime
     updated_at: datetime
 
 
-class PersonAbstract(AbstractModel):
-    last_name: str = Field(max_length=40)
-    middle_name: str = Field(max_length=20)
-    first_name: str = Field(max_length=40)
+class PersonAbstract(Abs):
+    last_name: Annotated[str, AfterValidator(is_alpha)] = Field(
+        min_length=2, max_length=40)
+    middle_name: Annotated[str, AfterValidator(is_alpha)] = Field(
+        min_length=6, max_length=20)
+    first_name: Annotated[str, AfterValidator(is_alpha)] = Field(
+        min_length=2, max_length=40)
