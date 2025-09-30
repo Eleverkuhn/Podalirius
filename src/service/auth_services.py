@@ -1,9 +1,7 @@
-from fastapi import Form, status, Request
-from fastapi.responses import RedirectResponse
+from fastapi import Form
 
 from model.patient_models import Patient
 from model.form_models import PhoneForm, OTPCodeForm
-from data.redis_config import redis_conn
 
 
 class JWTToken:
@@ -35,13 +33,8 @@ class OTPCode:
 
 
 class PhoneFormHandler:
-    def __init__(self, request: Request, phone: str = Form(...)) -> None:
-        self.phone = PhoneForm(phone=phone).phone
-        self.redis_conn = redis_conn
-        self.response = RedirectResponse(
-            url=request.app.url_path_for("VerifyCode.verify_code_form"),
-            status_code=status.HTTP_303_SEE_OTHER
-        )
+    def __init__(self, phone: PhoneForm) -> None:
+        self.phone = phone
 
     def get_user_by_phone(self) -> None:
         # TODO: implement retireval of a patient by the given phone number
