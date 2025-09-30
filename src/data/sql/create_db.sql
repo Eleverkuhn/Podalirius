@@ -8,10 +8,12 @@ CREATE TABLE patients (
     middle_name VARCHAR(20) NOT NULL,
     first_name VARCHAR(40) NOT NULL,
     phone VARCHAR(10) UNIQUE NOT NULL,
+    birth_date DATE NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ON UPDATE CURRENT_TIMESTAMP,
-    INDEX(last_name)
+    INDEX(last_name),
+    INDEX(phone)
 ) ENGINE = InnoDB;
 
 CREATE TABLE patients_addresses (
@@ -45,7 +47,7 @@ CREATE TABLE doctors (
 CREATE TABLE work_schedules (
   id INT AUTO_INCREMENT PRIMARY KEY,
   doctor_id INT NOT NULL,
-  weekday ENUM("1", "2", "3", "4", "5", "6", "7") NOT NULL,
+  weekday ENUM("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -74,17 +76,6 @@ CREATE TABLE appointments (
     ON UPDATE CASCADE
 ) ENGINE = InnoDB;
 
-CREATE TABLE services (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(75) NOT NULL,
-  type ENUM("appointment", "lab test", "surgery") NOT NULL,
-  description TEXT NULL,
-  cost DECIMAL(8, 2) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
-    ON UPDATE CURRENT_TIMESTAMP
-) ENGINE = InnoDB;
-
 CREATE TABLE specialties (
   id INT AUTO_INCREMENT PRIMARY KEY,
   title VARCHAR(30) NOT NULL,
@@ -94,10 +85,33 @@ CREATE TABLE specialties (
     ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE = InnoDB;
 
+CREATE TABLE services_types (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(75) NOT NULL,
+  price DECIMAL(8, 2) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+    ON UPDATE CURRENT_TIMESTAMP
+) ENGINE = InnoDB; 
+
+CREATE TABLE services (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  type_id INT NOT NULL,
+  title VARCHAR(75) NOT NULL,
+  description TEXT NULL,
+  markup DECIMAL(8, 2) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+    ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (type_id) REFERENCES services_types(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE = InnoDB;
+
 CREATE TABLE services_to_specialties (
   id INT AUTO_INCREMENT PRIMARY KEY,
   service_id INT NOT NULL,
-  specialty_id INT NOT NULL,
+  specialty_id INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
     ON UPDATE CURRENT_TIMESTAMP,
@@ -128,6 +142,7 @@ CREATE TABLE services_to_doctors (
   id INT AUTO_INCREMENT PRIMARY KEY,
   doctor_id INT NOT NULL,
   service_id INT NOT NULL,
+  markup DECIMAL(8, 2) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
     ON UPDATE CURRENT_TIMESTAMP,
