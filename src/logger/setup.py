@@ -1,5 +1,6 @@
 import logging.config
 import json, pathlib
+from logging import Logger
 
 
 def setup_logging():
@@ -7,3 +8,7 @@ def setup_logging():
     with open(config_file) as f_in:
         config = json.load(f_in)
     logging.config.dictConfig(config)
+
+
+def get_logger() -> Logger:
+    return logging.getLogger("podalirius")
