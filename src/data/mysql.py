@@ -7,8 +7,9 @@ MYSQL_URL = (
     f"mysql+pymysql://{settings.mysql_user}:{settings.mysql_password}"
     f"@{settings.mysql_host}:{settings.mysql_port}/{settings.mysql_database}"
 )
+engine = create_engine(MYSQL_URL, echo=True)
 
 
 def get_session() -> Session:
-    engine = create_engine(MYSQL_URL, echo=True)
-    return Session(engine)
+    with Session(engine) as session:
+        yield session
