@@ -1,5 +1,6 @@
 import os
 import time
+import pathlib
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -28,6 +29,7 @@ class _Settings(BaseSettings):
 
 class Config:
     _settings = _Settings()
+    templates_dir = pathlib.Path(__file__).resolve().parent.joinpath("templates")
 
     @classmethod
     @lru_cache

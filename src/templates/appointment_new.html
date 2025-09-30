@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>New Appointment</h2>
+<form method="post" action="{{ request.url_for('Appointment.create_appointment') }}">
+  {% for field, value in form.items() %}
+    <label>{{ field }}</label>
+    <input type="text" name="{{ field }}" value="" required>
+    {% if errors and errors.get(field) %}
+      <small>{{ errors[field] }}</small>
+    {% endif %}
+  {% endfor %}
+  <button type="submit">Create Appointment</button>
+</form>
+{% endblock %}
