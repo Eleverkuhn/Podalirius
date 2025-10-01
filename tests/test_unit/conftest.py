@@ -14,7 +14,7 @@ from service.appointment_services import (
     get_appointment_booking
 )
 
-from data.mysql import get_session, engine
+from data.mysql import get_session
 from data.patient_data import PatientSQLModel, PatientCRUD
 
 
@@ -26,8 +26,6 @@ def client() -> TestClient:
 @pytest.fixture(autouse=True)
 def session() -> Session:
     return next(get_session())
-    # with get_session() as session:
-    #     yield session
 
 
 @pytest.fixture

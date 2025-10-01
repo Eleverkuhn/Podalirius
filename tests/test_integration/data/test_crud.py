@@ -26,16 +26,16 @@ class SQLModelForTest(BaseSQLModel, table=True):
 type CreatedTestEntry = Generator[BaseSQLModel, None, None]
 type CreatedTestEntries = Generator[list[SQLModelForTest | None], None, None]
 
+test_data = [
+    {"title": "test_1", "year": 2025},
+    {"title": "test_2", "year": 2025},
+    {"title": "test_3", "year": 2025},
+    {"title": "test_4", "year": 2025},
+    {"title": "test_5", "year": 2025},
+]
+
 
 class SetUp:
-    test_data = [
-        {"title": "test_1", "year": 2025},
-        {"title": "test_2", "year": 2025},
-        {"title": "test_3", "year": 2025},
-        {"title": "test_4", "year": 2025},
-        {"title": "test_5", "year": 2025},
-    ]
-
     def __init__(self, session: Session) -> None:
         self.session = session
 
@@ -103,7 +103,7 @@ def create_test_entry(
 def create_multiple_test_entries(
         setup: SetUp) -> CreatedTestEntries:
     entries = []
-    for model_data in setup.test_data:
+    for model_data in test_data:
         entry = SQLModelForTest(**model_data)
         entry = setup.create_entry(entry)
         entries.append(entry)
@@ -123,20 +123,19 @@ def update_data() -> dict[str, str]:
 @pytest.mark.usefixtures("create_table")
 class TestBaseCRUD:
     @pytest.mark.parametrize(
-        "model_for_test", [SetUp.test_data[1]], indirect=True
+        "model_for_test", [test_data[0]], indirect=True
     )
     def test_add_generates_default_values(
             self,
             crud: BaseCRUD,
             model_for_test: SQLModelForTest) -> None:
         entry = crud.add(model_for_test)
-        assert entry.title == SetUp.test_data[1].get("title")  # FIX: Remove this later
         assert entry.id
         assert entry.created_at
         assert entry.updated_at
 
     @pytest.mark.parametrize(
-        "model_for_test", SetUp.test_data, indirect=True
+        "model_for_test", [test_data[0]], indirect=True
     )
     def test_get_returns_entry(
             self,
@@ -164,7 +163,7 @@ class TestBaseCRUD:
         assert entries == []
 
     @pytest.mark.parametrize(
-        "model_for_test", [SetUp.test_data[0]], indirect=True
+        "model_for_test", [test_data[0]], indirect=True
     )
     def test_update_succeed(
             self,
@@ -176,7 +175,7 @@ class TestBaseCRUD:
         assert create_test_entry.description == update_data.get("description")
 
     @pytest.mark.parametrize(
-        "model_for_test", [SetUp.test_data[0]], indirect=True
+        "model_for_test", [test_data[0]], indirect=True
     )
     def test_updated_time_is_updated(
             self,
@@ -189,7 +188,7 @@ class TestBaseCRUD:
         assert old_update_at < create_test_entry.updated_at
 
     @pytest.mark.parametrize(
-        "model_for_test", [SetUp.test_data[0]], indirect=True
+        "model_for_test", [test_data[0]], indirect=True
     )
     def test_delete(
             self,
