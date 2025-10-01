@@ -9,10 +9,12 @@
   },
   "handlers": {
     "debug": {
-      "class": "logging.StreamHandler",
+      "class": "logging.handlers.RotatingFileHandler",
       "formatter": "general",
       "level": "DEBUG",
-      "stream": "ext://sys.stdout"
+      "filename": "logs/debug.log",
+      "maxBytes": 10485760,
+      "backupCount": 3
     },
     "app": {
       "class": "logging.handlers.RotatingFileHandler",
@@ -24,7 +26,7 @@
     }
   },
   "loggers": {
-    "root": {
+    "podalirius": {
       "level": "DEBUG",
       "handlers": ["debug", "app"]
     }

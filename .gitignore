@@ -13,3 +13,4 @@ logs/
 *.log
 
 *.egg-info/
+src/logger/config_archived.json
