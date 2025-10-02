@@ -27,7 +27,8 @@ def crud(session: Session) -> PatientCRUD:
 
 class TestPatientCRUD:
     @pytest.mark.parametrize(
-        "build_test_data", [(PatientCreate, test_data[0])], indirect=True)
+        "build_test_data", [(PatientCreate, test_data[0])], indirect=True
+    )
     def test_create_returns_patient_entry(
             self, crud: PatientCRUD, build_test_data: PatientCreate) -> None:
         patient = crud.create(build_test_data)
@@ -37,15 +38,26 @@ class TestPatientCRUD:
         crud.session.rollback()
 
     @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, test_data[0])], indirect=True)
+        "build_test_data", [(PatientSQLModel, test_data[0])], indirect=True
+    )
     def test_convert_to_patient_inner(
             self, build_test_data: PatientSQLModel) -> None:
-        patient_inner = PatientCRUD.convert_to_patient_inner(build_test_data)
+        patient_inner = PatientCRUD.convert_to_patient_outer(build_test_data)
         assert type(patient_inner.id) is str
 
     @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, test_data[0])], indirect=True)
+        "build_test_data", [(PatientSQLModel, test_data[0])], indirect=True
+    )
     def test_get_by_phone(
-            self, crud: PatientCRUD, test_entry) -> None:
+            self, crud: PatientCRUD, test_entry: PatientSQLModel) -> None:
         patient = crud.get_by_phone(test_entry.phone)
         assert patient.phone == test_entry.phone
+
+    @pytest.mark.parametrize(
+        "build_test_data", [(PatientSQLModel, test_data[0])], indirect=True
+    )
+    def test_get(self, crud: PatientCRUD, test_entry: PatientSQLModel) -> None:
+        str_uuid = crud.uuid_to_str(test_entry.id)
+        patient = crud.get(str_uuid)
+        assert patient.phone == test_entry.phone
+        assert patient.id == str_uuid

@@ -4,7 +4,7 @@ from datetime import date
 
 from sqlmodel import Field, Session
 
-from model.patient_models import PatientCreate, Patient
+from model.patient_models import PatientCreate, PatientInner, PatientOuter
 from data.crud import BaseCRUD
 from data.base_sql_models import PersonSQLModel
 
@@ -22,45 +22,36 @@ class PatientCRUD(BaseCRUD):
     def __init__(
             self,
             session: Session,
-            sql_model: type[PatientSQLModel] = PatientSQLModel) -> None:
-        super().__init__(session, sql_model)
+            sql_model=PatientSQLModel,
+            return_model=PatientInner) -> None:
+        super().__init__(session, sql_model, return_model)
+    
+    def get(self, patient_id: str) -> PatientOuter:
+        patient = super().get(self.uuid_to_bytes(patient_id))
+        return self.convert_to_patient_outer(patient)
 
-    def create(self, patient_data: PatientCreate) -> Patient:
-        instance = self._convert_to_sql_model(patient_data.model_dump())
-        patient = super()._create(instance)
-        return self.convert_to_patient_inner(patient)
-
-    def get(self, patient_id: str) -> Patient:
-        patient = self._convert_id_and_get(patient_id)
-        return self.convert_to_patient_inner(patient)
-
-    def get_by_phone(self, phone: str) -> Patient:
+    def get_by_phone(self, phone: str) -> PatientOuter:
         patient = self.session.exec(
             self.select.where(self.sql_model.phone == phone)
         ).one()
-        return self.convert_to_patient_inner(patient)
+        return self.convert_to_patient_outer(patient)
 
-    def update(self, patient_id: str, data: dict) -> Patient:
-        patient = self._convert_id_and_get(patient_id)
-        self._update(patient, data)
-        return self.convert_to_patient_inner(patient)
+    def update(self, patient_id: str, data: dict) -> PatientOuter:
+        patient = super().update(self.uuid_to_bytes(patient_id), data)
+        return self.convert_to_patient_outer(patient)
 
     @classmethod
-    def convert_to_patient_inner(
-            cls, patient: PatientSQLModel) -> Patient:
+    def convert_to_patient_outer(
+            cls, patient: PatientInner | PatientSQLModel) -> PatientOuter:
         dumped_patient = patient.model_dump()
         dumped_patient.update(
             {"id": cls.uuid_to_str(dumped_patient.get("id"))}
         )
-        return Patient(**dumped_patient)
+        return PatientOuter(**dumped_patient)
 
     @classmethod
     def uuid_to_str(cls, id: bytes) -> str:
         return str(UUID(bytes=id))
-
-    def _convert_id_and_get(self, patient_id: str) -> PatientSQLModel:  # TODO: find a better name
-        bytes_patient_id = self.__class__.uuid_to_bytes(patient_id)
-        return self._get(bytes_patient_id)
 
     @classmethod
     def uuid_to_bytes(cls, id: str) -> bytes:

@@ -21,8 +21,12 @@ class PatientCreate(PersonAbstract, Phone):
     birth_date: date
 
 
-class Patient(AbstractModel, PatientCreate):
+class PatientOuter(AbstractModel, PatientCreate):
     id: str
+
+
+class PatientInner(PatientOuter):
+    id: bytes
 
 
 class PatientAdress(AbstractModel):

@@ -9,7 +9,6 @@ from logger.setup import get_logger
 from data.mysql import engine
 from data.crud import BaseCRUD
 from data.base_sql_models import BaseSQLModel
-from test_integration.conftest import CreatedTestEntry
 
 
 class SQLModelForTest(BaseSQLModel, table=True):
@@ -46,7 +45,7 @@ def model_data() -> dict:
 
 @pytest.fixture
 def crud(session: Session) -> BaseCRUD:
-    return BaseCRUD(session, SQLModelForTest)
+    return BaseCRUD(session, SQLModelForTest, SQLModelForTest)
 
 
 @pytest.fixture
@@ -78,7 +77,7 @@ class TestBaseCRUD:
             self,
             crud: BaseCRUD,
             build_test_data: SQLModelForTest) -> None:
-        entry = crud._create(build_test_data)
+        entry = crud.create(build_test_data)
         assert entry.id
         assert entry.created_at
         assert entry.updated_at
@@ -89,7 +88,7 @@ class TestBaseCRUD:
     def test_get_returns_entry(
             self,
             crud: BaseCRUD,
-            test_entry: CreatedTestEntry) -> None:
+            test_entry: SQLModelForTest) -> None:
         entry = crud._get(test_entry.id)
         assert entry.title == test_entry.title
 
@@ -101,14 +100,14 @@ class TestBaseCRUD:
             self,
             create_multiple_test_entries: CreatedTestEntries,
             crud: BaseCRUD) -> None:
-        entries = crud._get_all()
+        entries = crud.get_all()
         for entry_from_db, created_entry in zip(
                 entries, create_multiple_test_entries
         ):
             assert entry_from_db.title == created_entry.title
 
     def test_get_all_from_empty_db(self, crud: BaseCRUD) -> None:
-        entries = crud._get_all()
+        entries = crud.get_all()
         assert entries == []
 
     @pytest.mark.parametrize(
@@ -116,9 +115,10 @@ class TestBaseCRUD:
     )
     def test_update_succeed(
             self,
-            test_entry: CreatedTestEntry,
+            test_entry: SQLModelForTest,
             crud: BaseCRUD,
             update_data: dict[str, str]) -> None:
+        assert not test_entry.title == update_data.get("title")
         crud._update(test_entry, update_data)
         assert test_entry.title == update_data.get("title")
         assert test_entry.description == update_data.get("description")
@@ -128,7 +128,7 @@ class TestBaseCRUD:
     )
     def test_updated_time_is_updated(
             self,
-            test_entry: CreatedTestEntry,
+            test_entry: BaseSQLModel,
             crud: BaseCRUD,
             update_data: dict[str, str]) -> None:
         old_update_at = test_entry.updated_at
@@ -141,7 +141,7 @@ class TestBaseCRUD:
     )
     def test_delete(
             self,
-            test_entry: CreatedTestEntry,
+            test_entry: SQLModelForTest,
             crud: BaseCRUD) -> None:
         crud._delete(test_entry)
         with pytest.raises(NoResultFound):
