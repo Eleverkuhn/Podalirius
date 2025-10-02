@@ -1,0 +1,10 @@
+{
+  "patient_1": 
+    {
+      "last_name": "TestLastname",
+      "middle_name": "TestMiddlename",
+      "first_name": "TestFirstname",
+      "phone": "9999999999",
+      "birth_date": "2001-01-01"
+    }
+}

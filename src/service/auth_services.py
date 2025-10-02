@@ -1,6 +1,6 @@
 from fastapi import Form
 
-from model.patient_models import Patient
+from model.patient_models import PatientOuter
 from model.form_models import PhoneForm, OTPCodeForm
 
 
@@ -16,7 +16,7 @@ class JWTToken:
 
 
 class OTPCode:
-    def __init__(self, patient: Patient, otp_code: str = Form(...)) -> None:
+    def __init__(self, patient: PatientOuter, otp_code: str = Form(...)) -> None:
         self.patient = patient
         self.otp_code = otp_code
 

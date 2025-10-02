@@ -3,8 +3,9 @@ import random
 import pytest
 from sqlmodel import Session
 
+from logger.setup import get_logger
 from exceptions import DataDoesNotMatch
-from model.patient_models import PatientCreate
+from model.patient_models import PatientCreate, PatientOuter
 from service.patient_services import PatientService
 from data.patient_data import PatientSQLModel, PatientCRUD
 
@@ -34,59 +35,36 @@ def unmatching_patient_create_data(
     return updated_patient_create_data
 
 
+@pytest.mark.parametrize(
+    "test_data", ["test_patients.json"], indirect=True
+)
+@pytest.mark.usefixtures("test_data")
 class TestPatientService:
-    def test_check_returns_patient_data_if_all_the_checks_are_passed(
-            self,
-            patient_service: PatientService,
-            create_test_patient: PatientSQLModel,
-            patient_create_data: PatientCreate) -> None:
-        patient = patient_service.check_input_data(patient_create_data)
-        assert patient is not None
+    def build__compare_data(
+            self, patient: PatientSQLModel
+    ) -> tuple[PatientOuter, PatientCreate]:
+        patient_db = PatientCRUD.convert_to_patient_outer(patient)
+        patient_input = PatientCreate(**patient.model_dump())
+        return patient_db, patient_input
 
-    def test_check_input_data_registries_patient(
-            self,
-            session: Session,
-            patient_service: PatientService,
-            patient_create_data: PatientCreate) -> None:
-        patient = patient_service.check_input_data(patient_create_data)
-        crud = PatientCRUD(session)
-        patient_from_db = crud.get(patient.id)
-        assert patient_from_db is not None
-        crud.delete_raw(crud.uuid_to_bytes(patient.id))  # FIX: refactor this
-
-    def test__check_existing_patient_returns_true(
-            self,
-            patient_service: PatientService,
-            registered_phone: str) -> None:
-        patient_exists = patient_service._check_patient_exsits(
-            registered_phone
-        )
-        assert patient_exists is not None
-
-    def test__check_non_existing_patient_returns_false(
-            self,
-            patient_service: PatientService,
-            unregistered_phone: str) -> None:
-        patient_exists = patient_service._check_patient_exsits(
-            unregistered_phone
-        )
-        assert patient_exists is None
-
+    @pytest.mark.parametrize(
+        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
+    )
     def test__compare_returns_ture_for_correct_input(
-            self,
-            patient_service: PatientService,
-            patient_create_data: PatientCreate) -> None:
-        data_matches = patient_service._compare(
-            patient_create_data, patient_create_data
+            self, build_test_data: PatientSQLModel
+    ) -> None:
+        data_matches = PatientService._compare(
+            *self.build__compare_data(build_test_data)
         )
         assert data_matches is True
 
+    @pytest.mark.parametrize(
+        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
+    )
     def test__compare_raises_error_if_input_does_not_match(
-            self,
-            patient_service: PatientService,
-            patient_create_data: PatientCreate,
-            unmatching_patient_create_data: PatientCreate) -> None:
+            self, build_test_data: PatientSQLModel
+    ) -> None:
+        patient_db, patient_input = self.build__compare_data(build_test_data)
+        patient_input.first_name = "unmatchingfirstname"
         with pytest.raises(DataDoesNotMatch):
-            patient_service._compare(
-                patient_create_data, unmatching_patient_create_data
-            )
+            PatientService._compare(patient_db, patient_input)

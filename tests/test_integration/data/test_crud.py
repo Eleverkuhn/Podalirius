@@ -24,23 +24,10 @@ class SQLModelForTest(BaseSQLModel, table=True):
 
 type CreatedTestEntries = Generator[list[SQLModelForTest | None], None, None]
 
-test_data = [
-    {"title": "test_1", "year": 2025},
-    {"title": "test_2", "year": 2025},
-    {"title": "test_3", "year": 2025},
-    {"title": "test_4", "year": 2025},
-    {"title": "test_5", "year": 2025},
-]
-
 
 @pytest.fixture
 def create_table() -> None:
     SQLModel.metadata.create_all(engine, tables=[SQLModelForTest.__table__])
-
-
-@pytest.fixture
-def model_data() -> dict:
-    return {"title": "test", "year": 2025}
 
 
 @pytest.fixture
@@ -49,9 +36,9 @@ def crud(session: Session) -> BaseCRUD:
 
 
 @pytest.fixture
-def create_multiple_test_entries(setup) -> CreatedTestEntries:
+def create_multiple_test_entries(setup, test_data) -> CreatedTestEntries:
     entries = []
-    for model_data in test_data:
+    for model_data in test_data.values():
         entry = SQLModelForTest(**model_data)
         entry = setup.create_entry(entry)
         entries.append(entry)
@@ -68,10 +55,13 @@ def update_data() -> dict[str, str]:
     }
 
 
-@pytest.mark.usefixtures("create_table")
+@pytest.mark.parametrize(
+    "test_data", ["test_crud.json"], indirect=True
+)
+@pytest.mark.usefixtures("create_table", "test_data")
 class TestBaseCRUD:
     @pytest.mark.parametrize(
-        "build_test_data", [(SQLModelForTest, test_data[0])], indirect=True
+        "build_test_data", [(SQLModelForTest, "test_1")], indirect=True
     )
     def test_create_generates_default_values(
             self,
@@ -83,7 +73,7 @@ class TestBaseCRUD:
         assert entry.updated_at
 
     @pytest.mark.parametrize(
-        "build_test_data", [(SQLModelForTest, test_data[0])], indirect=True
+        "build_test_data", [(SQLModelForTest, "test_1")], indirect=True
     )
     def test_get_returns_entry(
             self,
@@ -111,7 +101,7 @@ class TestBaseCRUD:
         assert entries == []
 
     @pytest.mark.parametrize(
-        "build_test_data", [(SQLModelForTest, test_data[0])], indirect=True
+        "build_test_data", [(SQLModelForTest, "test_1")], indirect=True
     )
     def test_update_succeed(
             self,
@@ -124,7 +114,7 @@ class TestBaseCRUD:
         assert test_entry.description == update_data.get("description")
 
     @pytest.mark.parametrize(
-        "build_test_data", [(SQLModelForTest, test_data[0])], indirect=True
+        "build_test_data", [(SQLModelForTest, "test_1")], indirect=True
     )
     def test_updated_time_is_updated(
             self,
@@ -137,7 +127,7 @@ class TestBaseCRUD:
         assert old_update_at < test_entry.updated_at
 
     @pytest.mark.parametrize(
-        "build_test_data", [(SQLModelForTest, test_data[0])], indirect=True
+        "build_test_data", [(SQLModelForTest, "test_1")], indirect=True
     )
     def test_delete(
             self,

@@ -1,5 +1,3 @@
-from datetime import date
-
 import pytest
 from sqlmodel import Session
 
@@ -8,26 +6,17 @@ from model.patient_models import PatientCreate
 from data.patient_data import PatientCRUD, PatientSQLModel
 
 
-test_data = [
-    {
-        "last_name": "TestLastname",
-        "middle_name": "TestMiddlename",
-        "first_name": "TestFirstname",
-        "phone": "9999999999",
-        "birth_date": date(2001, 1, 1)
-    },
-]
-
-
 @pytest.fixture
 def crud(session: Session) -> PatientCRUD:
-    get_logger().debug("Inside `crud`")
     return PatientCRUD(session)
 
 
+@pytest.mark.parametrize(
+    "test_data", ["test_patients.json"], indirect=True
+)
 class TestPatientCRUD:
     @pytest.mark.parametrize(
-        "build_test_data", [(PatientCreate, test_data[0])], indirect=True
+        "build_test_data", [(PatientCreate, "patient_1")], indirect=True
     )
     def test_create_returns_patient_entry(
             self, crud: PatientCRUD, build_test_data: PatientCreate) -> None:
@@ -38,7 +27,7 @@ class TestPatientCRUD:
         crud.session.rollback()
 
     @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, test_data[0])], indirect=True
+        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
     )
     def test_convert_to_patient_inner(
             self, build_test_data: PatientSQLModel) -> None:
@@ -46,7 +35,7 @@ class TestPatientCRUD:
         assert type(patient_inner.id) is str
 
     @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, test_data[0])], indirect=True
+        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
     )
     def test_get_by_phone(
             self, crud: PatientCRUD, test_entry: PatientSQLModel) -> None:
@@ -54,7 +43,7 @@ class TestPatientCRUD:
         assert patient.phone == test_entry.phone
 
     @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, test_data[0])], indirect=True
+        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
     )
     def test_get(self, crud: PatientCRUD, test_entry: PatientSQLModel) -> None:
         str_uuid = crud.uuid_to_str(test_entry.id)
