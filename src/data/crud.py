@@ -13,38 +13,42 @@ class BaseCRUD:
             sql_model: type[BaseSQLModel]) -> None:
         self.session = session
         self.sql_model = sql_model
+    
+    def _create(self, instance: BaseSQLModel) -> BaseSQLModel:
+        """
+        No session.commit() bacause it will be used in the service layer
+        inside transactions
+        """
+        self.session.add(instance)
+        self.session.flush()
+        return instance
+
+    def _get(self, id: int | bytes) -> BaseSQLModel:
+        statement = self.select.where(self.sql_model.id == id)
+        entry = self.session.exec(statement)
+        return entry.one()
 
     @property
     def select(self):
         return select(self.sql_model)
 
-    def add(self, instance: BaseSQLModel) -> BaseSQLModel:
-        self.session.add(instance)
-        self.session.flush()
-        return instance
-
-    def get(self, id: int | bytes) -> BaseSQLModel:
-        statement = self.select.where(self.sql_model.id == id)
-        entry = self.session.exec(statement)
-        return entry.one()
-
-    def get_all(self):
+    def _get_all(self):
         return self.session.exec(self.select).all()
 
-    def update(self, entry: BaseSQLModel, data: dict) -> BaseSQLModel:
+    def _update(self, entry: BaseSQLModel, data: dict) -> BaseSQLModel:
         data["updated_at"] = datetime.now()
         for key, value in data.items():
             if hasattr(entry, key):
                 setattr(entry, key, value)
-        entry = self.add(entry)
+        entry = self._create(entry)
         self.session.commit()
         return entry
 
-    def delete(self, entry: BaseSQLModel) -> None:
+    def _delete(self, entry: BaseSQLModel) -> None:
         self.session.delete(entry)
         self.session.commit()
 
-    def _construct_sql_model_from_dict(self, data: dict) -> BaseSQLModel:
+    def _convert_to_sql_model(self, data: dict) -> BaseSQLModel:
         return self.sql_model(**data)
 
     def create_raw(self, model: BaseModel) -> SQLModel:  # FIX: deprecated
