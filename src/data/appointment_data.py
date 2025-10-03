@@ -1,11 +1,11 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import override
 
 from pydantic import BaseModel
 from sqlmodel import Field, Enum, Session
 
 from model.appointment_models import Appointment, AppointmentCreate
-from data.base_sql_models import BaseEnumSQLModel, BaseSQLModel
+from data.base_sql_models import BaseEnumSQLModel, BaseSQLModel, PersonSQLModel
 from data.crud import BaseCRUD
 
 
@@ -13,6 +13,13 @@ class Status(str, Enum):
     PENDING = "pending"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
+
+
+class DoctorSQLModel(PersonSQLModel, table=True):  # FIX: Temporal decision. The model shouldn't be defined there
+    __tablename__ = "doctors"
+
+    experience: date
+    description: None | str = Field(default=None)
 
 
 class AppointmentSQLModel(BaseEnumSQLModel, table=True):

@@ -1,6 +1,7 @@
 from sqlmodel import Session
 from fastapi import Depends
 
+from logger.setup import get_logger
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import (
     Appointment, AppointmentCreate
@@ -45,8 +46,8 @@ class AppointmentBooking:
             patient = PatientService(self.session).check_input_data(
                 self.form.get_patient_data()
             )
-            id = PatientCRUD.uuid_to_bytes(patient.id)
-            appointment = self._create_appointment(id)
+            appointment = self._create_appointment(patient.id)
+            get_logger().debug(appointment)
         except Exception as exc:  # TODO: figure out exception type and manage exception handling
             self.session.rollback()  # TODO: to make this work I need to change
                                      #       my session handling logic
@@ -57,7 +58,7 @@ class AppointmentBooking:
     def _create_appointment(self, patient_id: bytes) -> Appointment:
         appointment_data = self._construct_appointment_data(patient_id)
         appointment = AppointmentCrud(self.session).create(
-            appointment_data.model_dump()
+            appointment_data
         )
         return appointment
 

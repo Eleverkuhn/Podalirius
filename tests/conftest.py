@@ -1,4 +1,5 @@
 import json
+import uuid
 from pathlib import Path
 
 import pytest
@@ -15,7 +16,7 @@ def session() -> Session:
     return next(get_session())
 
 
-class SetUp:
+class SetUp:  # FIX: better naming, something like `Utils`
     def __init__(self, session: Session) -> None:
         self.session = session
 
@@ -47,6 +48,11 @@ class SetUp:
     def _delete_entry(self, entry: BaseSQLModel) -> None:
         self.session.delete(entry)
         self.session.commit()
+
+
+@pytest.fixture
+def uuid_bytes() -> bytes:
+    return uuid.uuid4().bytes
 
 
 @pytest.fixture

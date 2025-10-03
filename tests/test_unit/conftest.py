@@ -30,7 +30,7 @@ def session() -> Session:
 
 @pytest.fixture
 def today() -> datetime:
-    return datetime.now()
+    return datetime.now().replace(microsecond=0)
 
 
 @pytest.fixture
@@ -107,11 +107,6 @@ def clean_up(session: Session):
             session.commit()
 
     return _clean
-
-
-@pytest.fixture
-def uuid_bytes() -> bytes:
-    return uuid.uuid4().bytes
 
 
 @pytest.fixture

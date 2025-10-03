@@ -9,6 +9,7 @@ from sqlmodel import Field, Session, SQLModel, Enum, Table, text
 
 from model.base_models import BaseModel
 from data.base_sql_models import BaseSQLModel, BaseEnumSQLModel, PersonSQLModel
+from data.appointment_data import DoctorSQLModel
 from data.crud import BaseCRUD
 
 type FixtureJSON = list[dict[str, str]]
@@ -42,13 +43,6 @@ class ServiceSQLModel(BaseSQLModel, table=True):
     )
 
     type_id: int = Field(foreign_key="services_types.id")
-
-
-class DoctorSQLModel(PersonSQLModel, table=True):
-    __tablename__ = "doctors"
-
-    experience: date
-    description: None | str = Field(default=None)
 
 
 class Weekday(str, Enum):
@@ -155,12 +149,14 @@ class InitSeed:
         return content
 
     def _get_crud(self, sql_model: SQLModel) -> BaseCRUD:
-        crud = BaseCRUD(session=self.session, sql_model=sql_model)
+        crud = BaseCRUD(session=self.session, sql_model=sql_model, return_model=sql_model)
         return crud
 
     def _populate_table(self, crud: BaseCRUD, content: FixtureJSON,) -> None:
         for row in content:
-            crud.create_raw_from_dict(row)
+            instance = crud.sql_model(**row)
+            crud.create(instance)
+            crud.session.commit()
 
 
 class DatabaseTruncator:
