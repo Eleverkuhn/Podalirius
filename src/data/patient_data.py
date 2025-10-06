@@ -4,7 +4,7 @@ from datetime import date
 
 from sqlmodel import Field, Session
 
-from model.patient_models import PatientCreate, PatientInner, PatientOuter
+from model.patient_models import PatientInner, PatientOuter
 from data.crud import BaseCRUD
 from data.base_sql_models import PersonSQLModel
 

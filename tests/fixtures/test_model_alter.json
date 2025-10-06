@@ -1,0 +1,5 @@
+{
+  "test_1": { "title": "example1", "amount": 100 },
+  "test_2": { "title": "example2", "amount": 1000 },
+  "test_3": { "title": "example3", "amount": 10000 }
+}

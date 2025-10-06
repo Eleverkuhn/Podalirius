@@ -18,7 +18,7 @@ def test_entry(
     parameters passed directly to `test_entry`.
     This separation is needed because some test causes require multiple models.
     """
-    if request.param:
+    if hasattr(request, "param"):
         get_logger().debug(request.param)
         model, key = request.param
         data = test_data.get(key)

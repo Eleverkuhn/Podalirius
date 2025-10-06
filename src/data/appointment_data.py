@@ -1,42 +1,14 @@
-from datetime import datetime, date
-from typing import override
+from sqlmodel import Session
 
-from pydantic import BaseModel
-from sqlmodel import Field, Enum, Session
-
-from model.appointment_models import Appointment, AppointmentCreate
-from data.base_sql_models import BaseEnumSQLModel, BaseSQLModel, PersonSQLModel
+from model.appointment_models import Appointment
 from data.crud import BaseCRUD
-
-
-class Status(str, Enum):
-    PENDING = "pending"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-
-
-class DoctorSQLModel(PersonSQLModel, table=True):  # FIX: Temporal decision. The model shouldn't be defined there
-    __tablename__ = "doctors"
-
-    experience: date
-    description: None | str = Field(default=None)
-
-
-class AppointmentSQLModel(BaseEnumSQLModel, table=True):
-    __tablename__ = "appointments"
-
-    date: datetime
-    status: Status
-    is_paid: bool = Field(default=False)
-
-    doctor_id: int = Field(foreign_key="doctors.id")
-    patient_id: int = Field(foreign_key="patients.id")
+from data import sql_models
 
 
 class AppointmentCrud(BaseCRUD):
     def __init__(
             self,
             session: Session,
-            sql_model=AppointmentSQLModel,
+            sql_model=sql_models.Appointment,
             return_model=Appointment) -> None:
         super().__init__(session, sql_model, return_model)

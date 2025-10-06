@@ -1,0 +1,93 @@
+import json
+from pathlib import Path
+
+from sqlalchemy import TextClause
+from sqlalchemy.orm.exc import ObjectDeletedError
+from sqlmodel import Session, Table, text, inspect
+
+from logger.setup import get_logger
+from data.base_sql_models import BaseSQLModel
+from data.crud import BaseCRUD
+
+
+def read_fixture(fixture: Path) -> dict:
+    with open(fixture) as file:
+        content = json.load(file)
+    return content
+
+
+class DatabaseSeeder:
+    def __init__(
+            self,
+            session: Session,
+            models_to_fixtures: dict[type[BaseSQLModel], Path]
+    ) -> None:
+        self.session = session
+        self.models_to_fixtures = models_to_fixtures
+
+    def execute(self) -> None:
+        for sql_model, fixture in self.models_to_fixtures.items():
+            crud = BaseCRUD(self.session, sql_model, sql_model)
+            content = read_fixture(fixture)
+            self._populate_table(crud, content)
+
+    def _populate_table(self, crud: BaseCRUD, content: dict) -> None:
+        for data in content.values():
+            instance = crud.sql_model(**data)
+            crud.create(instance)
+            crud.session.commit()
+
+
+class SetUpTest:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def create_entry(self, entry: BaseSQLModel) -> BaseSQLModel:
+        self.session.add(entry)
+        self.session.commit()
+        self.session.refresh(entry)
+        return entry
+
+    def delete_multiple(self, data: list[BaseSQLModel]) -> None:
+        for entry in data:
+            self._delete_entry(entry)
+
+    def tear_down(self, entry: BaseSQLModel) -> None:
+        try:
+            self._inspect(entry)
+        except ObjectDeletedError:
+            pass
+
+    def _inspect(self, entry: BaseSQLModel) -> None:
+        try:
+            state = inspect(entry)
+            if state.persistent:
+                self._delete_entry(entry)
+        except ObjectDeletedError:
+            pass
+
+    def _delete_entry(self, entry: BaseSQLModel) -> None:
+        self.session.delete(entry)
+        self.session.commit()
+
+
+class DatabaseTruncator:  # REF: probably need to remove this
+    _set_fk_0: TextClause = text("SET FOREIGN_KEY_CHECKS = 0;")
+    _set_fk_1: TextClause = text("SET FOREIGN_KEY_CHECKS = 1;")  # TODO: this can be refactored
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def reset_database(self) -> None:
+        self.session.exec(self._set_fk_0)
+        self._truncate_tables()
+        self.session.exec(self._set_fk_1)
+
+    def _truncate_tables(self) -> None:
+        for table in reversed(BaseSQLModel.metadata.sorted_tables):
+            statement = self._get_truncate_table_query_string(table)
+            self.session.exec(text(statement))
+
+    @staticmethod
+    def _get_truncate_table_query_string(table: Table) -> TextClause:
+        return text(f"TRUNCATE TABLE `{table.name}`;")
