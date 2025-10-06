@@ -1,39 +1,39 @@
 import pytest
 from pydantic import ValidationError, Field
 
-from model.base_models import PersonAbstract, Abs
+from model.base_models import PersonAbstract, AbstractModel
 from model.patient_models import Phone
 
 
-class AbsTest(Abs):
+class AbstractModelTest(AbstractModel):
     id: int
     desc: str
 
 
-class AbsTestExpanded(AbsTest):
+class AbsTestExpanded(AbstractModelTest):
     addition_field: str = Field(default="addition_field")
 
 
 @pytest.fixture
-def abs() -> AbsTest:
-    return AbsTest(id=1, desc="test")
+def abs() -> AbstractModelTest:
+    return AbstractModelTest(id=1, desc="test")
 
 
 @pytest.fixture
-def abs_expanded(abs: AbsTest) -> AbsTestExpanded:
+def abs_expanded(abs: AbstractModelTest) -> AbsTestExpanded:
     return AbsTestExpanded(**abs.model_dump())
 
 
 class TestAbs:  # FIX: rename this to `TestAbstractModel`
     def test_is_submodel_returns_true(
             self,
-            abs: AbsTest,
+            abs: AbstractModelTest,
             abs_expanded: AbsTestExpanded) -> None:
         assert abs.is_submodel(abs_expanded)
 
     def test_is_submodel_returns_false(
             self,
-            abs: AbsTest,
+            abs: AbstractModelTest,
             abs_expanded: AbsTestExpanded) -> None:
         abs.desc = "modified_desc"
         assert abs.is_submodel(abs_expanded) is False

@@ -1,7 +1,7 @@
 from datetime import date
 from typing import Annotated
 
-from pydantic import BaseModel, Field, AfterValidator
+from pydantic import Field, AfterValidator
 
 from model.base_models import AbstractModel, PersonAbstract
 
@@ -12,7 +12,7 @@ def is_numeric(value: str) -> str:
     return value
 
 
-class Phone(BaseModel):
+class Phone(AbstractModel):
     phone: Annotated[str, AfterValidator(is_numeric)] = Field(
         min_length=10, max_length=10)
 
@@ -21,7 +21,7 @@ class PatientCreate(PersonAbstract, Phone):
     birth_date: date
 
 
-class PatientOuter(AbstractModel, PatientCreate):
+class PatientOuter(PatientCreate):
     id: str
 
 

@@ -22,8 +22,6 @@ class TestPatientCRUD:
             self, crud: PatientCRUD, build_test_data: PatientCreate) -> None:
         patient = crud.create(build_test_data)
         assert patient.id
-        assert patient.created_at
-        assert patient.updated_at
         crud.session.rollback()
 
     @pytest.mark.parametrize(

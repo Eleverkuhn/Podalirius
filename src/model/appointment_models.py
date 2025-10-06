@@ -3,10 +3,10 @@ from typing import Literal
 
 from pydantic import Field
 
-from model.base_models import Abs
+from model.base_models import AbstractModel
 
 
-class AppointmentBase(Abs):
+class AppointmentBase(AbstractModel):
     doctor_id: int
     date: datetime
 
