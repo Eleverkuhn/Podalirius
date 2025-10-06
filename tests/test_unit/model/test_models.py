@@ -24,7 +24,7 @@ def abs_expanded(abs: AbstractModelTest) -> AbsTestExpanded:
     return AbsTestExpanded(**abs.model_dump())
 
 
-class TestAbs:  # FIX: rename this to `TestAbstractModel`
+class TestAbstractModel:
     def test_is_submodel_returns_true(
             self,
             abs: AbstractModelTest,

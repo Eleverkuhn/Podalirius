@@ -1,7 +1,14 @@
+import uuid
+
 import pytest
 
 from model.form_models import AppointmentBookingForm
 from service.appointment_services import AppointmentBooking
+
+
+@pytest.fixture
+def uuid_str() -> str:
+    return str(uuid.uuid4())
 
 
 @pytest.mark.parametrize(
