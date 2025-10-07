@@ -1,14 +1,19 @@
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from fastapi import Depends
+from fastapi.exceptions import RequestValidationError
 
 from logger.setup import get_logger
+from exceptions import DataDoesNotMatch
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import (
-    Appointment, AppointmentCreate
+    Appointment, AppointmentCreate, ServiceToAppointment
 )
 from model.patient_models import PatientCreate
 from service.patient_services import PatientService
+from data import sql_models
 from data.mysql import get_session
+from data.crud import BaseCRUD
 from data.appointment_data import AppointmentCrud
 from data.patient_data import PatientCRUD
 
@@ -47,12 +52,15 @@ class AppointmentBooking:
                 self.form.get_patient_data()
             )
             appointment = self._create_appointment(patient.id)
-            get_logger().debug(appointment)
-        except Exception as exc:  # TODO: figure out exception type and manage exception handling
-            self.session.rollback()  # TODO: to make this work I need to change
-                                     #       my session handling logic
+        except DataDoesNotMatch:
+            self.session.rollback()
+            raise DataDoesNotMatch
+        except IntegrityError as exc:  # INFO: temp exception handler in case if something went wrong
+            self.session.rollback()
             return exc
         else:
+            self.session.commit()
+            self._create_entry_in_services_to_appoitments(appointment.id)
             return appointment
 
     def _create_appointment(self, patient_id: bytes) -> Appointment:
@@ -63,11 +71,26 @@ class AppointmentBooking:
         return appointment
 
     def _construct_appointment_data(
-            self, patient_id: bytes) -> AppointmentCreate:
+            self, patient_id: bytes
+    ) -> AppointmentCreate:
         return AppointmentCreate(
             **self.form.get_appointment_data().model_dump(),
             patient_id=patient_id
         )
+
+    def _create_entry_in_services_to_appoitments(
+            self, appointment_id: int
+    ) -> None:
+        entry = ServiceToAppointment(
+            appointment_id=appointment_id,
+            service_id=self.form.service_id
+        )
+        BaseCRUD(
+            self.session,
+            sql_models.ServiceToAppointment,
+            sql_models.ServiceToAppointment
+        ).create(entry)
+        self.session.commit()
         
     def render_form(self) -> None | PatientCreate:
         patient_id = self._check_user_is_logged_in()

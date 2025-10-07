@@ -10,5 +10,29 @@
     "first_name": "TestFirstname",
     "phone": "9999999999",
     "birth_date": "2001-01-01"
+  },
+  "miss_matched_user_data":
+  {
+    "date": "2025-10-03T08:17:49",
+    "doctor_id": 1,
+    "specialty_id": 1,
+    "service_id": 1,
+    "last_name": "MissMatchedLastName",
+    "middle_name": "TestMiddlename",
+    "first_name": "TestFirstname",
+    "phone": "9999999999",
+    "birth_date": "2001-01-01"
+  },
+  "invalid_booking_form":
+  {
+    "date": "2025-10-03T08:17:49",
+    "doctor_id": 1,
+    "specialty_id": 1,
+    "service_id": 1,
+    "last_name": "123124",
+    "middle_name": "T1swerd3243",
+    "first_name": "TestFirstname",
+    "phone": "0",
+    "birth_date": "2001-01-01"
   }
 }

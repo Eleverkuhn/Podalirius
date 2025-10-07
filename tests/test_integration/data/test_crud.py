@@ -8,20 +8,23 @@ from logger.setup import get_logger
 from data.crud import BaseCRUD
 from data.base_sql_models import BaseSQLModel
 from tests.conftest import SQLModelForTest
+from utils import SetUpTest
 
 type CreatedTestEntries = Generator[list[SQLModelForTest | None], None, None]
 
 
 @pytest.fixture
-def create_multiple_test_entries(setup, test_data) -> CreatedTestEntries:
+def create_multiple_test_entries(
+        setup_test: SetUpTest, test_data: dict
+) -> CreatedTestEntries:
     entries = []
     for model_data in test_data.values():
         entry = SQLModelForTest(**model_data)
-        entry = setup.create_entry(entry)
+        entry = setup_test.create_entry(entry)
         entries.append(entry)
     yield entries
     for entry in entries:
-        setup.tear_down(entry)
+        setup_test.tear_down(entry)
 
 
 @pytest.fixture

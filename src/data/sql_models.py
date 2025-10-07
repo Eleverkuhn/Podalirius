@@ -108,8 +108,8 @@ class ServiceToDoctor(BaseSQLModel, table=True):
     service_id: int = Field(foreign_key="services.id")
 
 
-# TODO: implement this later
-# class ServiceToAppointment(BaseSQLModel, table=True):
-#     __tablename__ = "services_to_appointments"
-#     appointment_id: int = Field(foreign_key="appoitments.id")
-#     service_id: int = Field(foreign_key="services.id")
+class ServiceToAppointment(BaseSQLModel, table=True):
+    __tablename__ = "services_to_appointments"
+
+    appointment_id: int = Field(foreign_key="appointments.id")
+    service_id: int = Field(foreign_key="services.id")

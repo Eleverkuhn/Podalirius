@@ -2,6 +2,9 @@
 
 {% block content %}
 <h2>New Appointment</h2>
+{% if unmatching_exc %}
+  <p>{{ unmatching_exc }}</p>
+{% endif %}
 <form method="post" action="{{ request.url_for('Appointment.create_appointment') }}">
   {% for field, value in form.items() %}
     <label>{{ field }}</label>

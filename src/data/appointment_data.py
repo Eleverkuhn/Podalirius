@@ -5,7 +5,7 @@ from data.crud import BaseCRUD
 from data import sql_models
 
 
-class AppointmentCrud(BaseCRUD):
+class AppointmentCrud(BaseCRUD):  # REF: rename to `ApppointmentCRUD`
     def __init__(
             self,
             session: Session,

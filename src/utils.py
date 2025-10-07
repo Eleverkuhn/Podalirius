@@ -8,6 +8,7 @@ from sqlmodel import Session, Table, text, inspect
 from logger.setup import get_logger
 from data.base_sql_models import BaseSQLModel
 from data.crud import BaseCRUD
+from data.patient_data import PatientCRUD
 
 
 def read_fixture(fixture: Path) -> dict:
@@ -51,6 +52,10 @@ class SetUpTest:
     def delete_multiple(self, data: list[BaseSQLModel]) -> None:
         for entry in data:
             self._delete_entry(entry)
+
+    def delete_patient(self, phone: str) -> None:
+        patient = PatientCRUD(self.session)._get_by_phone(phone)
+        self.tear_down(patient)
 
     def tear_down(self, entry: BaseSQLModel) -> None:
         try:

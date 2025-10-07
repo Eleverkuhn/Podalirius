@@ -19,3 +19,8 @@ class AppointmentCreate(AppointmentBase):
 
 class Appointment(AppointmentCreate):
     id: int
+
+
+class ServiceToAppointment(AbstractModel):
+    appointment_id: int
+    service_id: int

@@ -56,23 +56,23 @@ class TestDatabaseSeeder:
             db_seeder: DatabaseSeeder,
             crud_test: BaseCRUD,
             crud_test_alter: BaseCRUD,
-            setup: SetUpTest
+            setup_test: SetUpTest
     ) -> None:
         assert crud_test.get_all() == []
         assert crud_test_alter.get_all() == []
         db_seeder.execute()
-        setup.delete_multiple(crud_test.get_all())
-        setup.delete_multiple(crud_test_alter.get_all())
+        setup_test.delete_multiple(crud_test.get_all())
+        setup_test.delete_multiple(crud_test_alter.get_all())
 
     def test__populate_table_test(
             self,
             db_seeder: DatabaseSeeder,
             crud_test: BaseCRUD,
             fixture_content_test: list[dict],
-            setup: SetUpTest
+            setup_test: SetUpTest
     ) -> None:
         assert crud_test.get_all() == []
         db_seeder._populate_table(crud_test, fixture_content_test)
         entries = crud_test.get_all()
         assert len(entries) == len(fixture_content_test)
-        setup.delete_multiple(entries)
+        setup_test.delete_multiple(entries)

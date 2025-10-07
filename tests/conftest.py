@@ -1,4 +1,3 @@
-import json
 import uuid
 from pathlib import Path
 
@@ -54,8 +53,7 @@ def uuid_bytes() -> bytes:
 
 
 @pytest.fixture
-def setup(session: Session) -> SetUpTest:
-    get_logger().debug("inside `setup`")
+def setup_test(session: Session) -> SetUpTest:
     return SetUpTest(session)
 
 
@@ -71,7 +69,8 @@ def test_data(fixture_dir: Path, request) -> dict:
 
 
 @pytest.fixture
-def build_test_data(request, test_data) -> BaseSQLModel:
-    model, key = request.param
-    data = test_data.get(key)
-    return model(**data)
+def build_test_data(request, test_data: dict) -> BaseSQLModel:
+    if hasattr(request, "param"):  # BUG: it shouldn't work like this
+        model, key = request.param
+        data = test_data.get(key)
+        return model(**data)

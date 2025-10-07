@@ -7,9 +7,9 @@ from config import Config
 template_obj = Jinja2Templates(directory=Config.templates_dir)
 
 
-class DataDoesNotMatch(ValueError):  # TODO: move it in distinct file
+class DataDoesNotMatch(ValueError):  # REF: move it in distinct file
     default_message = (
-        "The data provided with the phone number doesn't match. "
+        "The data provided with the phone number does not match. "
         "Please log in to book an appointment or provide a different phone."
     )
 
@@ -17,7 +17,23 @@ class DataDoesNotMatch(ValueError):  # TODO: move it in distinct file
         super().__init__(message or self.default_message)
 
 
-async def render_template_with_error_message(
+async def render_data_does_not_match(
+    request: Request, exc: DataDoesNotMatch
+):
+    form = await request.form()
+    content = {
+        "request": request,
+        "unmatching_exc": exc,
+        "form": form
+    }
+    return template_obj.TemplateResponse(
+        "appointment_new.html",
+        content,
+        status_code=status.HTTP_400_BAD_REQUEST
+    )
+
+
+async def render_template_with_error_message(  # REF: rename
         request: Request, exc: RequestValidationError):
     form = await request.form()
     errors = {

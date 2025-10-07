@@ -31,9 +31,7 @@ class PatientCRUD(BaseCRUD):
         return self.convert_to_patient_outer(patient)
 
     def get_by_phone(self, phone: str) -> PatientOuter:
-        patient = self.session.exec(
-            self.select.where(self.sql_model.phone == phone)
-        ).one()
+        patient = self._get_by_phone(phone)
         return self.convert_to_patient_outer(patient)
 
     def update(self, patient_id: str, data: dict) -> PatientOuter:
@@ -56,3 +54,8 @@ class PatientCRUD(BaseCRUD):
     @classmethod
     def uuid_to_bytes(cls, id: str) -> bytes:
         return UUID(id).bytes
+
+    def _get_by_phone(self, phone: str) -> PatientSQLModel:  # FIX:
+        return self.session.exec(
+            self.select.where(self.sql_model.phone == phone)
+        ).one()

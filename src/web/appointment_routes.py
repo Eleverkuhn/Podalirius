@@ -6,6 +6,7 @@ from starlette.templating import _TemplateResponse
 from pydantic import ValidationError
 
 from config import Config
+from exceptions import DataDoesNotMatch
 from service.appointment_services import (
     AppointmentBooking,
     get_appointment_booking,
@@ -46,14 +47,25 @@ class Appointment:
             request: Request,
             service: AppointmentBooking = Depends(post_appointment_booking)):
         try:
-            service.render_form()
+            service.book()
         except ValidationError as exc:
             content = {
                 "request": request,
                 "form": service.form.model_dump(),
                 "errors": exc.errors()
             }
-            return template_obj.TemplateResponse("appointment_new.html", content)
+            return template_obj.TemplateResponse(
+                "appointment_new.html", content
+            )
+        except DataDoesNotMatch as exc:
+            content = {
+                "request": request,
+                "unmatching_exc": exc,
+                "form": service.form.model_dump()
+            }
+            return template_obj.TemplateResponse(
+                "appointment_new.html", content
+            )
         else:
             response = RedirectResponse(
                 url=request.app.url_path_for("main"),

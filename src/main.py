@@ -2,7 +2,11 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 
 from config import Config
-from exceptions import render_template_with_error_message
+from exceptions import (
+    DataDoesNotMatch,
+    render_data_does_not_match,
+    render_template_with_error_message
+)
 from web import (
     appointment_routes,
     auth_routes,
@@ -28,4 +32,8 @@ app.include_router(service_routes.router)
 app.include_router(specialty_routes.router)
 
 app.add_exception_handler(
-    RequestValidationError, render_template_with_error_message)
+    RequestValidationError, render_template_with_error_message
+)
+app.add_exception_handler(
+    DataDoesNotMatch, render_data_does_not_match
+)
