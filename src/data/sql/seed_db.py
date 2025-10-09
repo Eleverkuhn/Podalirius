@@ -1,5 +1,8 @@
-from data import sql_models
 from pathlib import Path
+
+from data import sql_models
+from data.mysql import get_session
+from utils import DatabaseSeeder
 
 FIXTURE_DIR = Path(__file__).parent.joinpath("fixtures")
 
@@ -19,3 +22,5 @@ MODELS_TO_FIXTURES = {
         "services_to_doctors.json"
     )
 }
+
+DatabaseSeeder(next(get_session()), MODELS_TO_FIXTURES).execute()

@@ -11,7 +11,7 @@ from data.crud import BaseCRUD
 from data.patient_data import PatientCRUD
 
 
-def read_fixture(fixture: Path) -> dict:
+def read_fixture(fixture: Path) -> dict | list:
     with open(fixture) as file:
         content = json.load(file)
     return content
@@ -30,13 +30,22 @@ class DatabaseSeeder:
         for sql_model, fixture in self.models_to_fixtures.items():
             crud = BaseCRUD(self.session, sql_model, sql_model)
             content = read_fixture(fixture)
-            self._populate_table(crud, content)
+            self._content_type_check(crud, content)
 
-    def _populate_table(self, crud: BaseCRUD, content: dict) -> None:
-        for data in content.values():
-            instance = crud.sql_model(**data)
-            crud.create(instance)
-            crud.session.commit()
+    def _content_type_check(
+            self, crud: BaseCRUD, content: dict | list
+    ) -> None:
+        if type(content) is dict:  # REF: temporal solution
+            for data in content.values():
+                self._populate_table(crud, data)
+        elif type(content) is list:
+            for data in content:
+                self._populate_table(crud, data)
+
+    def _populate_table(self, crud: BaseCRUD, data: dict) -> None:
+        instance = crud.sql_model(**data)
+        crud.create(instance)
+        crud.session.commit()
 
 
 class SetUpTest:

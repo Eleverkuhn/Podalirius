@@ -68,11 +68,12 @@ class TestDatabaseSeeder:
             self,
             db_seeder: DatabaseSeeder,
             crud_test: BaseCRUD,
-            fixture_content_test: list[dict],
+            fixture_content_test: dict,
             setup_test: SetUpTest
     ) -> None:
         assert crud_test.get_all() == []
-        db_seeder._populate_table(crud_test, fixture_content_test)
+        single = fixture_content_test.get("test_1")
+        db_seeder._populate_table(crud_test, single)
         entries = crud_test.get_all()
-        assert len(entries) == len(fixture_content_test)
+        assert entries[0].title == single.get("title")
         setup_test.delete_multiple(entries)
