@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Appointment created</h2>
+<dl>
+  <dt>ID</dt>
+  <dd>{{ appointment.id }}</dd>
+  <dt>Doctor</dt>
+  <dd>{{ appointment.doctor_id }}</dd>
+  <dt>Date</dt>
+  <dd>{{ appointment.date }}</dd>
+</dl>
+{% endblock %}

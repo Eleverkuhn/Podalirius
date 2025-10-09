@@ -73,7 +73,7 @@ class Appointment(BaseEnumSQLModel, table=True):
     __tablename__ = "appointments"
 
     date: datetime
-    status: Status
+    status: Status = Field(default=Status.PENDING)
     is_paid: bool = Field(default=False)
 
     doctor_id: int = Field(foreign_key="doctors.id")

@@ -2,10 +2,13 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
+from logger.setup import get_logger
 from exceptions import DataDoesNotMatch
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import AppointmentCreate
-from service.appointment_services import AppointmentBooking
+from service.appointment_services import (
+    AppointmentBooking, AppointmentJWTTokenService
+)
 from data import sql_models
 from data.appointment_data import AppointmentCrud
 from data.patient_data import PatientCRUD, PatientSQLModel
@@ -13,7 +16,7 @@ from utils import SetUpTest
 
 
 @pytest.fixture
-def service(
+def booking_service(
         session: Session,
         build_test_data: AppointmentBookingForm
 ) -> AppointmentBooking:
@@ -36,15 +39,12 @@ class TestApointmentBooking:
     )
     def test__booking_for_unlogged_in_user_succeed(
             self,
-            session: Session,
-            service: AppointmentBooking,
+            booking_service: AppointmentBooking,
             setup_test: SetUpTest,
     ) -> None:
-        appointment = service._booking_for_unlogged_in_user()
-        assert appointment
-        setup_test._delete_entry(PatientCRUD(session)._get(
-            appointment.patient_id
-        ))
+        token = booking_service._booking_for_unlogged_in_user()
+        assert token
+        setup_test.delete_patient(booking_service.form.phone)
 
     @pytest.mark.parametrize(
         "test_entry",
@@ -57,10 +57,12 @@ class TestApointmentBooking:
         indirect=True
     )
     def test__booking_for_unlogged_in_user_rollbacks_if_miss_matched(
-            self, service: AppointmentBooking, test_entry: PatientSQLModel
+            self,
+            booking_service: AppointmentBooking,
+            test_entry: PatientSQLModel
     ) -> None:
         with pytest.raises(DataDoesNotMatch):
-            service._booking_for_unlogged_in_user()
+            booking_service._booking_for_unlogged_in_user()
 
     @pytest.mark.parametrize(
         "test_entry",
@@ -75,10 +77,10 @@ class TestApointmentBooking:
     def test__create_appointment_succeed(
             self,
             session: Session,
-            service: AppointmentBooking,
+            booking_service: AppointmentBooking,
             test_entry: PatientSQLModel
     ) -> None:
-        appointment = service._create_appointment(
+        appointment = booking_service._create_appointment(
             test_entry.id
         )
         appointment_from_db = AppointmentCrud(session).get(appointment.id)
@@ -90,10 +92,10 @@ class TestApointmentBooking:
         indirect=True
     )
     def test__create_appointment_fails_for_unexisting_patient(
-            self, service: AppointmentBooking, uuid_bytes: bytes
+            self, booking_service: AppointmentBooking, uuid_bytes: bytes
     ) -> None:
         with pytest.raises(IntegrityError):
-            service._create_appointment(uuid_bytes)
+            booking_service._create_appointment(uuid_bytes)
 
     @pytest.mark.parametrize(
         "test_entry",
@@ -109,13 +111,13 @@ class TestApointmentBooking:
             self,
             session: Session,
             build_test_data: AppointmentBookingForm,
-            service: AppointmentBooking,
+            booking_service: AppointmentBooking,
             test_entry: PatientSQLModel
     ) -> None:
         appointment = AppointmentCrud(session).create(AppointmentCreate(
             **build_test_data.model_dump(), patient_id=test_entry.id
         ))
-        service._create_entry_in_services_to_appoitments(
+        booking_service._create_entry_in_services_to_appoitments(
             appointment.id
         )
         entry = session.exec(
@@ -124,3 +126,19 @@ class TestApointmentBooking:
             )
         ).one()
         assert entry
+
+
+class TestAppointmentJWTTokenService:
+    @pytest.mark.parametrize("patient", ["patient_1"], indirect=True)
+    @pytest.mark.parametrize("appointment", ["booking_form"], indirect=True)
+    @pytest.mark.parametrize("jwt_token_appointment", [None], indirect=True)
+    def test_get_appointment(
+            self,
+            appointment_token_service: AppointmentJWTTokenService,
+            jwt_token_appointment: str,
+            appointment: sql_models.Appointment
+    ) -> None:
+        appointment_from_token = appointment_token_service.get_appointment(
+            jwt_token_appointment
+        )
+        assert appointment_from_token.id == appointment.id

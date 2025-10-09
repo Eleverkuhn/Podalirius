@@ -1,7 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from fastapi import Depends
-from fastapi.exceptions import RequestValidationError
 
 from logger.setup import get_logger
 from exceptions import DataDoesNotMatch
@@ -10,6 +9,7 @@ from model.appointment_models import (
     Appointment, AppointmentCreate, ServiceToAppointment
 )
 from model.patient_models import PatientCreate
+from service.auth_services import JWTTokenService
 from service.patient_services import PatientService
 from data import sql_models
 from data.mysql import get_session
@@ -38,7 +38,7 @@ class AppointmentBooking:
         """
         if self._check_user_is_logged_in():
             self._booking_for_logged_in_user()
-        self._booking_for_unlogged_in_user()
+        return self._booking_for_unlogged_in_user()
 
     def _check_user_is_logged_in(self) -> str | bool:
         return self.patient_id is not None
@@ -46,7 +46,7 @@ class AppointmentBooking:
     def _booking_for_logged_in_user(self) -> None:
         pass
 
-    def _booking_for_unlogged_in_user(self) -> Appointment:
+    def _booking_for_unlogged_in_user(self) -> str:
         try:
             patient = PatientService(self.session).check_input_data(
                 self.form.get_patient_data()
@@ -61,7 +61,8 @@ class AppointmentBooking:
         else:
             self.session.commit()
             self._create_entry_in_services_to_appoitments(appointment.id)
-            return appointment
+            token = JWTTokenService().create_access_token(appointment.id)
+            return token
 
     def _create_appointment(self, patient_id: bytes) -> Appointment:
         appointment_data = self._construct_appointment_data(patient_id)
@@ -112,16 +113,36 @@ class AppointmentBooking:
         pass
 
 
+class AppointmentJWTTokenService:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def get_appointment(self, token: str) -> Appointment:
+        id = self._get_id_from_token(token)
+        return AppointmentCrud(self.session).get(id)
+
+    def _get_id_from_token(self, token: str) -> int:
+        content = JWTTokenService().verify_access_token(token)
+        return content.get("id")
+
+
 def get_appointment_booking(
         session: Session = Depends(get_session),
         form: AppointmentBookingForm = Depends(AppointmentBookingForm.empty),
-        access_token: dict[str, str | None] = {}) -> AppointmentBooking:
-    return AppointmentBooking(
-        session, form, access_token)
+        access_token: dict[str, str | None] = {}
+) -> AppointmentBooking:
+    return AppointmentBooking(session, form, access_token)
 
 
 def post_appointment_booking(
         session: Session = Depends(get_session),
         form: AppointmentBookingForm = Depends(AppointmentBookingForm.as_form),
-        access_token: dict[str, str | None] = {}) -> AppointmentBooking:
+        access_token: dict[str, str | None] = {}
+) -> AppointmentBooking:
     return AppointmentBooking(session, form, access_token)
+
+
+def get_appointment_jwt_token_service(
+        session: Session = Depends(get_session),
+) -> AppointmentJWTTokenService:
+    return AppointmentJWTTokenService(session)
