@@ -4,12 +4,30 @@ networks:
   internal:
 
 services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_PORT=${MYSQL_PORT}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql.env:/etc/mysql/config/.env
+      - ./src/data/sql/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql
+    ports:
+      - "${MYSQL_PORT}:${MYSQL_PORT}"
+    networks:
+      internal:
   fastapi:
     build: .
     container_name: fastapi
     environment:
       - FASTAPI_HOST=${FASTAPI_HOST}
       - FASTAPI_PORT=${FASTAPI_PORT}
+      - MYSQL_HOST=mysql
     ports:
       - "${FASTAPI_PORT}:${FASTAPI_PORT}"
     command: 
@@ -23,24 +41,6 @@ services:
     volumes: 
       - .:/podalirius
       - ./logs:/podalirius/logs
-    networks:
-      internal:
-  mysql:
-    image: mysql:latest
-    container_name: mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_HOST=${MYSQL_HOST}
-      - MYSQL_PORT=${MYSQL_PORT}
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ./mysql.env:/etc/mysql/config/.env
-      - ./src/data/sql/create_db.sql:/docker-entrypoint-initdb.d/create_db.sql
-    ports:
-      - "${MYSQL_PORT}:${MYSQL_PORT}"
     networks:
       internal:
   redis:
