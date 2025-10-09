@@ -6,7 +6,7 @@ router = APIRouter(prefix="/specialties")
 
 @cbv(router)
 class Specialty:
-    @router.get("/", name="all_specialties", status_code=status.HTTP_200_OK)
+    @router.get("/", name="all", status_code=status.HTTP_200_OK)
     def get_all(self) -> None:
         pass
 

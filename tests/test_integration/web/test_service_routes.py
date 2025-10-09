@@ -1,13 +1,18 @@
-from typing import override
+import pytest
+from fastapi import status
+from fastapi.testclient import TestClient
 
-from tests.test_integration.web.conftest import BaseEndpointTest
+from data import sql_models
+from data.crud import BaseCRUD
 
 
-class TestServiceEndpoint(BaseEndpointTest):
-    # INFO: has URL parameters
-
-    @override
-    def get_urls(self) -> dict[str, str]:
-        return {
-            "service": self.client.app.url_path_for("Service.service", title="1")
-        }
+class TestServiceEndpoint:  # INFO: has URL parameters
+    @pytest.mark.parametrize(
+        "get_all", [(sql_models.Service, sql_models.Service)], indirect=True
+    )
+    def test_exists(self, client: TestClient, get_all) -> None:
+        for service in get_all:
+            response = client.get(client.app.url_path_for(
+                "Service.service", title=service.title
+            ))
+            assert response.status_code == status.HTTP_200_OK

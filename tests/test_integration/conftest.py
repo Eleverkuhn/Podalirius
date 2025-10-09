@@ -18,7 +18,7 @@ type CreatedTestEntry = Generator[BaseSQLModel, None, None]
 
 
 @pytest.fixture
-def setup_test(session: Session) -> SetUpTest:  # FIX: why `setup` import from global `conftest` has failed
+def setup_test(session: Session) -> SetUpTest:
     return SetUpTest(session)
 
 

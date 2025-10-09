@@ -1,13 +1,18 @@
-from typing import override
+import pytest
+from fastapi import status
+from fastapi.testclient import TestClient
 
-from tests.test_integration.web.conftest import BaseEndpointTest
+from logger.setup import get_logger
+from data import sql_models
 
 
-class TestDoctorEndpoint(BaseEndpointTest):
-    # INFO: has URL parameter
-
-    @override
-    def get_urls(self) -> dict[str, str]:
-        return {
-            "doctor": self.client.app.url_path_for("Doctor.doctor", id=1)
-        }
+class TestDoctorEndpoint:  # INFO: has URL parameter
+    @pytest.mark.parametrize(
+        "get_all", [(sql_models.Doctor, sql_models.Doctor)], indirect=True
+    )
+    def test_exists(self, client: TestClient, get_all) -> None:
+        for doctor in get_all:
+            response = client.get(client.app.url_path_for(
+                "Doctor.doctor", id=doctor.id
+            ))
+            assert response.status_code == status.HTTP_200_OK

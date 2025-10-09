@@ -1,9 +1,8 @@
-from typing import override
+from fastapi import status
+from fastapi.testclient import TestClient
 
-from tests.test_integration.web.conftest import BaseEndpointTest
 
-
-class TestIndex(BaseEndpointTest):
-    @override
-    def get_urls(self) -> dict[str, str]:
-        return {"main": self.client.app.url_path_for("main")}
+class TestIndex:
+    def test_exists(self, client: TestClient) -> None:
+        response = client.get(client.app.url_path_for("main"))
+        assert response.status_code == status.HTTP_200_OK

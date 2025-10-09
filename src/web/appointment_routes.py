@@ -24,9 +24,10 @@ template_obj = Jinja2Templates(directory=Config.templates_dir)
 class Appointment:
     @router.get(
         "/new",
-        name="get_appointment_form",
+        name="get_form",
         status_code=status.HTTP_200_OK,
-        response_class=_TemplateResponse)
+        response_class=_TemplateResponse
+    )
     def get_appointment(
             self,
             request: Request,
@@ -42,7 +43,7 @@ class Appointment:
 
     @router.post(
         "/new",
-        name="create_appointment",
+        name="send_form",
         status_code=status.HTTP_303_SEE_OTHER,
         response_class=RedirectResponse
     )
@@ -71,7 +72,7 @@ class Appointment:
                 "appointment_new.html", content
             )
         else:
-            url = request.app.url_path_for("Appointment.appointment_created")
+            url = request.app.url_path_for("Appointment.info")
             modified = "".join([url, f"?token={token}"])
             response = RedirectResponse(
                 url=modified,
@@ -79,11 +80,7 @@ class Appointment:
             )
             return response
 
-    @router.get(
-        "/view",
-        name="appointment_created",
-        status_code=status.HTTP_200_OK,
-    )
+    @router.get("/view", name="info", status_code=status.HTTP_200_OK)
     def created_info(
             self,
             request: Request,
