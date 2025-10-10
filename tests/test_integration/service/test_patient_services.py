@@ -12,50 +12,30 @@ def service(session: Session) -> PatientService:
     return PatientService(session)
 
 
-@pytest.mark.parametrize(
-    "test_data", ["test_patients.json"], indirect=True
-)
-@pytest.mark.usefixtures("test_data")
+@pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
 class TestPatientService:
-    @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
-    )
-    def test_check_returns_patient_data_if_all_the_checks_are_passed(  # TODO: test both workflow with registry and for existing user
-            self,
-            service: PatientService,
-            test_entry: PatientSQLModel) -> None:
-        create_data = PatientCreate(**test_entry.model_dump())
-        patient = service.check_input_data(create_data)
-        assert patient is not None
-        get_logger().debug(patient)
+    def test_check_input_data_returns_patient(
+            self, service: PatientService, patient: PatientSQLModel
+    ) -> None:  # TODO: test both workflows for new and existing patient
+        create_data = PatientCreate(**patient.model_dump())
+        patient_db = service.check_input_data(create_data)
+        assert patient_db is not None
 
-    @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
-    )
     def test_check_input_data_reach_registry_clause__if_no_patient_exists(
-            self,
-            service: PatientService,
-            build_test_data: PatientCreate) -> None:
-        patient = service.check_input_data(build_test_data)
-        assert patient is not None
+            self, service: PatientService, patient_create: PatientCreate
+    ) -> None:
+        patient_db = service.check_input_data(patient_create)
+        assert patient_db is not None
         service.session.rollback()
 
-    @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
-    )
     def test__check_existing_patient_returns_true(
-            self,
-            service: PatientService,
-            test_entry: PatientSQLModel) -> None:
-        patient_exists = service._check_patient_exsits(test_entry.phone)
+            self, service: PatientService, patient: PatientSQLModel
+    ) -> None:
+        patient_exists = service._check_patient_exsits(patient.phone)
         assert patient_exists is not None
 
-    @pytest.mark.parametrize(
-        "build_test_data", [(PatientSQLModel, "patient_1")], indirect=True
-    )
     def test__check_non_existing_patient_returns_false(
-            self,
-            service: PatientService,
-            build_test_data: PatientCreate) -> None:
-        patient_exists = service._check_patient_exsits(build_test_data.phone)
+            self, service: PatientService, patient_create: PatientCreate
+    ) -> None:
+        patient_exists = service._check_patient_exsits(patient_create.phone)
         assert patient_exists is None

@@ -6,9 +6,12 @@ from sqlmodel import Session, SQLModel, Field
 
 from logger.setup import get_logger
 from utils import SetUpTest, read_fixture
+from model.form_models import AppointmentBookingForm
+from service.auth_services import JWTTokenService
 from data.mysql import get_session, engine
 from data.base_sql_models import BaseSQLModel
 from data.crud import BaseCRUD
+from data.patient_data import PatientSQLModel
 
 
 class SQLModelForTest(BaseSQLModel, table=True):
@@ -63,14 +66,33 @@ def fixture_dir() -> Path:
 
 
 @pytest.fixture
-def test_data(fixture_dir: Path, request) -> dict:
-    fixture_path = fixture_dir.joinpath(request.param)
-    return read_fixture(fixture_path)
+def patients_data(fixture_dir: Path, request: pytest.FixtureRequest) -> dict:
+    data = read_fixture(fixture_dir.joinpath("test_patients.json"))
+    return data.get(request.param)
 
 
 @pytest.fixture
-def build_test_data(request, test_data: dict) -> BaseSQLModel:
-    if hasattr(request, "param"):  # BUG: it shouldn't work like this
-        model, key = request.param
-        data = test_data.get(key)
-        return model(**data)
+def patient_sql_model(patients_data: dict) -> PatientSQLModel:
+    return PatientSQLModel(**patients_data)
+
+
+@pytest.fixture
+def appointments_data(
+        fixture_dir: Path, request: pytest.FixtureRequest
+) -> dict:
+    data = read_fixture(fixture_dir.joinpath("test_appointments.json"))
+    return data.get(request.param)
+
+
+@pytest.fixture
+def appointment_booking_form(appointments_data: dict) -> AppointmentBookingForm:
+    return AppointmentBookingForm(**appointments_data)
+
+
+@pytest.fixture
+def jwt_token_service(request: pytest.FixtureRequest) -> JWTTokenService:
+    if hasattr(request, "param"):
+        service = JWTTokenService(request.param)
+    else:
+        service = JWTTokenService()
+    return service
