@@ -22,7 +22,11 @@ def url_appointment_created(
     return "".join([base, f"?token={jwt_token_appointment}"])
 
 
-class TestAppointmentEndpoint:
+class TestAppointmentEndpointGetForm:
+    def test_exists(self, client: TestClient) -> None:
+        response = client.get(client.app.url_path_for("Appointment.get_form"))
+        assert response.status_code == status.HTTP_200_OK
+
     def test_get_returns_blank_form_for_unlogged_in_user(
             self, client: TestClient
     ) -> None:
@@ -32,6 +36,8 @@ class TestAppointmentEndpoint:
         for field in form_fields:
             assert field.get("value") == ""
 
+
+class TestAppointmentEndpointSendForm:
     @pytest.mark.parametrize(
         "appointments_data", ["booking_form"], indirect=True
     )
@@ -115,20 +121,18 @@ class TestAppointmentEndpoint:
         assert DataDoesNotMatch.default_message in response.text
         setup_test.delete_patient(appointments_data.get("phone"))
 
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
-    )
+
+@pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+@pytest.mark.parametrize(
+    "appointments_data", ["booking_form"], indirect=True
+)
+class TestAppointmentEndpointCreatedInfo:
     def test_created_info_returns_ok(
             self, client: TestClient, url_appointment_created: str
     ) -> None:
         response = client.get(url_appointment_created)
         assert response.status_code == status.HTTP_200_OK
 
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
-    )
     def test_created_info_contains_appointment_info(
             self,
             client: TestClient,
@@ -144,10 +148,6 @@ class TestAppointmentEndpoint:
         ]
         assert str(appointment.id) in appointment_info
 
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
-    )
     @pytest.mark.parametrize(
         "jwt_token_service", [timedelta(seconds=1)], indirect=True
     )
