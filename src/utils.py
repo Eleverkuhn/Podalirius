@@ -6,6 +6,8 @@ from sqlalchemy.orm.exc import ObjectDeletedError
 from sqlmodel import Session, Table, text, inspect
 
 from logger.setup import get_logger
+from model.auth_models import OTPCode
+from data.redis_config import redis_conn
 from data.base_sql_models import BaseSQLModel
 from data.crud import BaseCRUD
 from data.patient_data import PatientCRUD
@@ -51,6 +53,13 @@ class DatabaseSeeder:
 class SetUpTest:
     def __init__(self, session: Session) -> None:
         self.session = session
+
+    def find_otp_code_by_patient_id(self, patient_id: str) -> OTPCode:
+        otp_keys = redis_conn.keys("otp:*")
+        for otp_code in otp_keys:
+            id = redis_conn.get(otp_code)
+            if id == patient_id:
+                return OTPCode(value=otp_code[4:], patient_id=id)
 
     def create_entry(self, entry: BaseSQLModel) -> BaseSQLModel:
         self.session.add(entry)

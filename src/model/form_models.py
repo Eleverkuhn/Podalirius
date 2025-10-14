@@ -10,13 +10,31 @@ from model.patient_models import PatientCreate, Phone
 
 
 class PhoneForm(Phone):
-    # TODO: implement as_form method
-    pass
+    @classmethod
+    def as_form(cls, phone: str = Form(...)) -> "PhoneForm":
+        try:
+            return cls(phone=phone)
+        except ValidationError as exc:
+            raise RequestValidationError(exc.errors())
+
+    @classmethod
+    def empty(cls) -> "PhoneForm":
+        return cls.model_construct(phone="")
 
 
 class OTPCodeForm(BaseModel):
-    # TODO: implement as_form and empty methods
-    value: None | str = Field(min_length=6, max_length=6)
+    value: str = Field(min_length=6, max_length=6)
+    
+    @classmethod
+    def as_form(cls, value: str = Form(...)) -> "OTPCodeForm":
+        try:
+            return cls(value=value)
+        except ValidationError as exc:
+            raise RequestValidationError(exc.errors())
+
+    @classmethod
+    def empty(cls) -> "OTPCodeForm":
+        return cls.model_construct(value="")
 
 
 class AppointmentBookingForm(AppointmentBase, PatientCreate):

@@ -6,11 +6,6 @@ from model.form_models import AppointmentBookingForm
 from service.appointment_services import AppointmentBooking
 
 
-@pytest.fixture
-def uuid_str() -> str:
-    return str(uuid.uuid4())
-
-
 class TestAppointmentBooking:
     def test__check_user_is_logged_in_returns_true_if_access_code(
             self, uuid_str: str

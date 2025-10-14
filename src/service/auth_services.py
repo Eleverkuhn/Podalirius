@@ -1,13 +1,16 @@
 import secrets
-from datetime import timezone
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
+from fastapi import Depends
 from jose import jwt
-from fastapi import Form
+from sqlmodel import Session
 
-from logger.setup import get_logger
-from model.patient_models import PatientOuter
 from model.form_models import PhoneForm, OTPCodeForm
+from model.auth_models import OTPCode
+from model.patient_models import PatientOuter
+from service.patient_services import PatientService
+from data.mysql import get_session
+from data.auth_data import OTPCodeRedis
 
 type Payload = dict[str, bytes | int | datetime]
 
@@ -46,10 +49,19 @@ class JWTTokenService:
         return datetime.now(timezone.utc) + self.exp_time
 
 
-class OTPCode:
-    def __init__(self, patient: PatientOuter, otp_code: str = Form(...)) -> None:
-        self.patient = patient
-        self.otp_code = otp_code
+class OTPCodeService:
+    def __init__(
+            self, session: Session, form: PhoneForm | OTPCodeForm) -> None:
+        self.session = session
+        self.form = form
+
+    @property
+    def patient_service(self) -> PatientService:
+        return PatientService(self.session)
+
+    @property
+    def patient(self) -> PatientOuter | None:
+        return self.patient_service._check_patient_exsits(self.form.phone)
 
     def verify_otp_code(self) -> None:
         pass
@@ -57,29 +69,24 @@ class OTPCode:
     def send_otp_code(self) -> None:
         # TODO: figure out how to send codes via SMS
         pass
+    
+    def create_otp_code(self) -> None:
+        if self.patient:
+            OTPCodeRedis().set(self._build_otp_code_model(self.patient.id))
+        else:
+            patient = self.patient_service.registry(self.form)
+            OTPCodeRedis().set(self._build_otp_code_model(patient.id))
 
-    def generate_otp_code(self) -> None:
-        # TODO: implement creation of OTP code with Redis
-        pass
+    def _build_otp_code_model(self, patient_id: str) -> OTPCode:
+        return OTPCode(patient_id=patient_id, value=self._generate_value())
 
-
-class PhoneFormHandler:
-    def __init__(self, phone: PhoneForm) -> None:
-        self.phone = phone
-
-    def get_user_by_phone(self) -> None:
-        # TODO: implement retireval of a patient by the given phone number
-        pass
-
-    def otp_code_workflow(self) -> None:
-        # TODO: consequent process of creating and sending OTP Code to user
-        pass
+    @staticmethod
+    def _generate_value() -> str:
+        return str(secrets.randbelow(10**6)).zfill(6)
 
 
-class CodeVerificationFormHandler:
-    def __init__(self, otp_code: None | str = Form(...)) -> None:
-        self.otp_code = OTPCodeForm(otp_code)
-
-    def set_cookie(self) -> None:
-        # TODO: set HTTP Only cookie
-        pass
+def post_phone_form(
+        session: Session = Depends(get_session),
+        form: PhoneForm = Depends(PhoneForm.as_form)
+) -> OTPCodeService:
+    return OTPCodeService(session, form)

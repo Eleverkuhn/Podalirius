@@ -8,13 +8,16 @@ import pytest
 from sqlmodel import Session
 
 from logger.setup import get_logger
+from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
-from service.auth_services import JWTTokenService
+from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
+from service.patient_services import PatientService
 from data import sql_models
 from data.base_sql_models import BaseSQLModel
-from data.patient_data import PatientSQLModel
-from utils import SetUpTest, read_fixture
+from data.auth_data import OTPCodeRedis
+from data.patient_data import PatientSQLModel, PatientCRUD
+from utils import SetUpTest
 
 type CreatedTestEntry = Generator[BaseSQLModel, None, None]
 
@@ -27,6 +30,16 @@ def setup_test(session: Session) -> SetUpTest:
 @pytest.fixture
 def patient_create(patients_data: dict) -> PatientCreate:
     return PatientCreate(**patients_data)
+
+
+@pytest.fixture
+def patient_service(session: Session) -> PatientService:
+    return PatientService(session)
+
+
+@pytest.fixture
+def patient_crud(session: Session) -> PatientCRUD:
+    return PatientCRUD(session)
 
 
 @pytest.fixture
@@ -62,3 +75,24 @@ def jwt_token_appointment(
 @pytest.fixture
 def appointment_token_service(session: Session) -> AppointmentJWTTokenService:
     return AppointmentJWTTokenService(session)
+
+
+@pytest.fixture
+def otp_redis(request: pytest.FixtureRequest) -> OTPCodeRedis:
+    otp_r = OTPCodeRedis()
+    if hasattr(request, "param"):
+        otp_r.lifetime = request.param
+    return otp_r
+
+
+@pytest.fixture
+def otp_random(uuid_str: str, otp_code_service: OTPCodeService) -> OTPCode:
+    return OTPCode(
+        patient_id=uuid_str,
+        value=otp_code_service._generate_value(),
+    )
+
+
+@pytest.fixture
+def otp_set(otp_redis: OTPCodeRedis, otp_random: OTPCode) -> None:
+    otp_redis.set(otp_random)

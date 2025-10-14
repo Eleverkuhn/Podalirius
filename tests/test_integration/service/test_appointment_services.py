@@ -42,6 +42,7 @@ class TestApointmentBooking:
     ) -> None:
         token = booking_service._booking_for_unlogged_in_user()
         assert token
+        get_logger().debug(token)
         setup_test.delete_patient(booking_service.form.phone)
 
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)

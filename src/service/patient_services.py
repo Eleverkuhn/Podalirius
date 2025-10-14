@@ -11,6 +11,19 @@ class PatientService:
     def __init__(self, session: Session) -> None:
         self.session = session
 
+    @property
+    def crud(self) -> PatientCRUD:
+        return PatientCRUD(self.session)
+
+    def registry(self, create_data: PatientCreate) -> PatientOuter:
+        """
+        Separate method created for possible scalability
+        """
+        patient = self.crud.create(create_data)
+        patient = self.crud.convert_to_patient_outer(patient)
+        self.session.commit()
+        return patient
+
     def check_input_data(  # TODO: better naming
             self, patient_input_data: PatientCreate) -> PatientOuter:
         """
@@ -19,16 +32,15 @@ class PatientService:
         """
         patient_db = self._check_patient_exsits(patient_input_data.phone)
         if patient_db is not None:
-            get_logger().debug("compare clause")
             self._compare(patient_db, patient_input_data)
             return patient_db
         else:
-            get_logger().debug("registry clause")
-            return self.registry(patient_input_data)
+            patient = self.crud.create(patient_input_data)
+            return patient
 
     def _check_patient_exsits(self, phone: str) -> PatientOuter | None:
         try:
-            patient = PatientCRUD(self.session).get_by_phone(phone)
+            patient = self.crud.get_by_phone(phone)
         except NoResultFound:
             return None
         else:
@@ -36,17 +48,9 @@ class PatientService:
 
     @classmethod
     def _compare(
-            cls,
-            patient_db: PatientOuter,
-            patient_input: PatientCreate) -> bool:
+            cls, patient_db: PatientOuter, patient_input: PatientCreate
+    ) -> bool:
         if patient_input.is_submodel(patient_db):
             return True
         else:
             raise DataDoesNotMatch()
-
-    def registry(self, create_data: PatientCreate) -> PatientOuter:
-        """
-        Separate method created for possible scalability
-        """
-        patient = PatientCRUD(self.session).create(create_data)
-        return patient

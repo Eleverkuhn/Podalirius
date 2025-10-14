@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Login</>
+<form method="post" action="{{ request.url_for('Login.form') }}">
+  {% include "form_rendering.html" %}
+  <button type="submit">Log In</button>
+</form>
+{% endblock %}

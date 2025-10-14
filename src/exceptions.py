@@ -2,6 +2,7 @@ from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.templating import Jinja2Templates
 
+from logger.setup import get_logger
 from config import Config
 
 template_obj = Jinja2Templates(directory=Config.templates_dir)
@@ -46,8 +47,13 @@ async def render_template_with_error_message(  # REF: rename
         "errors": errors,
         "form": form,
     }
+    if request.url.path == request.url_for("Login.form").path:
+        template = "login.html"
+    elif request.url.path == request.url_for("Appointment.send_form").path:
+        template = "appointment_new.html"
     return template_obj.TemplateResponse(
-        "appointment_new.html",
+        # "appointment_new.html",
+        template,
         content,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
     )

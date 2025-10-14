@@ -15,6 +15,6 @@ class BaseEnumSQLModel(BaseSQLModel):
 
 
 class PersonSQLModel(BaseSQLModel):
-    last_name: str
-    middle_name: str
-    first_name: str
+    last_name: str | None = Field(default=None)
+    middle_name: str | None = Field(default=None)
+    first_name: str | None = Field(default=None)

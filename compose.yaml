@@ -28,6 +28,7 @@ services:
       - FASTAPI_HOST=${FASTAPI_HOST}
       - FASTAPI_PORT=${FASTAPI_PORT}
       - MYSQL_HOST=mysql
+      - REDIS_HOST=redis
     ports:
       - "${FASTAPI_PORT}:${FASTAPI_PORT}"
     command: 

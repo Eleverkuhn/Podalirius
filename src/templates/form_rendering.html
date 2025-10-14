@@ -1,0 +1,7 @@
+{% for field, value in form.items() %}
+  <label>{{ field }}</label>
+  <input type="text" name="{{ field }}" value="" required>
+  {% if errors and errors.get(field) %}
+    <small>{{ errors[field] }}</small>
+  {% endif %}
+{% endfor %}

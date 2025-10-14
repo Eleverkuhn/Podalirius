@@ -5,7 +5,8 @@ import pytest
 from jose.exceptions import ExpiredSignatureError
 
 from logger.setup import get_logger
-from service.auth_services import JWTTokenService
+from utils import SetUpTest
+from service.auth_services import JWTTokenService, OTPCodeService
 
 
 @pytest.fixture
@@ -38,3 +39,11 @@ class TestJWTTokenService:
         sleep(2)
         with pytest.raises(ExpiredSignatureError):
             jwt_token_service.verify_access_token(token)
+
+
+class TestOTPCode:
+    def test__generate_value(
+            self, otp_code_service_no_form: OTPCodeService
+    ) -> None:
+        value = otp_code_service_no_form._generate_value()
+        assert len(value) == 6

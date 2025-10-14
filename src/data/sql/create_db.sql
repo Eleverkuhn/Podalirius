@@ -4,11 +4,11 @@ USE podalirius;
 
 CREATE TABLE patients (
     id BINARY(16) PRIMARY KEY NOT NULL DEFAULT (UUID_TO_BIN(UUID(), 1)),
-    last_name VARCHAR(40) NOT NULL,
-    middle_name VARCHAR(20) NOT NULL,
-    first_name VARCHAR(40) NOT NULL,
+    last_name VARCHAR(40) NULL,
+    middle_name VARCHAR(20) NULL,
+    first_name VARCHAR(40) NULL,
     phone VARCHAR(10) UNIQUE NOT NULL,
-    birth_date DATE NOT NULL,
+    birth_date DATE NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       ON UPDATE CURRENT_TIMESTAMP,

@@ -7,35 +7,41 @@ from service.patient_services import PatientService
 from data.patient_data import PatientSQLModel
 
 
-@pytest.fixture
-def service(session: Session) -> PatientService:
-    return PatientService(session)
+# @pytest.fixture
+# def service(session: Session) -> PatientService:
+#     return PatientService(session)
 
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
 class TestPatientService:
     def test_check_input_data_returns_patient(
-            self, service: PatientService, patient: PatientSQLModel
+            self, patient_service: PatientService, patient: PatientSQLModel
     ) -> None:  # TODO: test both workflows for new and existing patient
         create_data = PatientCreate(**patient.model_dump())
-        patient_db = service.check_input_data(create_data)
+        patient_db = patient_service.check_input_data(create_data)
         assert patient_db is not None
 
     def test_check_input_data_reach_registry_clause__if_no_patient_exists(
-            self, service: PatientService, patient_create: PatientCreate
+            self,
+            patient_service: PatientService,
+            patient_create: PatientCreate
     ) -> None:
-        patient_db = service.check_input_data(patient_create)
+        patient_db = patient_service.check_input_data(patient_create)
         assert patient_db is not None
-        service.session.rollback()
+        patient_service.session.rollback()
 
     def test__check_existing_patient_returns_true(
-            self, service: PatientService, patient: PatientSQLModel
+            self, patient_service: PatientService, patient: PatientSQLModel
     ) -> None:
-        patient_exists = service._check_patient_exsits(patient.phone)
+        patient_exists = patient_service._check_patient_exsits(patient.phone)
         assert patient_exists is not None
 
     def test__check_non_existing_patient_returns_false(
-            self, service: PatientService, patient_create: PatientCreate
+            self,
+            patient_service: PatientService,
+            patient_create: PatientCreate
     ) -> None:
-        patient_exists = service._check_patient_exsits(patient_create.phone)
+        patient_exists = patient_service._check_patient_exsits(
+            patient_create.phone
+        )
         assert patient_exists is None

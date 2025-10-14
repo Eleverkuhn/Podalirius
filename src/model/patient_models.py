@@ -14,11 +14,12 @@ def is_numeric(value: str) -> str:
 
 class Phone(AbstractModel):
     phone: Annotated[str, AfterValidator(is_numeric)] = Field(
-        min_length=10, max_length=10)
+        min_length=10, max_length=10
+    )
 
 
 class PatientCreate(PersonAbstract, Phone):
-    birth_date: date
+    birth_date: date | None = Field(None)
 
 
 class PatientOuter(PatientCreate):

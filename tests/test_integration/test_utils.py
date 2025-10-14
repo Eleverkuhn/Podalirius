@@ -3,7 +3,9 @@ from pathlib import Path
 import pytest
 from sqlmodel import Session
 
-from utils import DatabaseSeeder
+from logger.setup import get_logger
+from utils import DatabaseSeeder, SetUpTest
+from model.auth_models import OTPCode
 from data.base_sql_models import BaseSQLModel
 from data.crud import BaseCRUD
 from tests.conftest import SQLModelForTest, SQLModelForTestAlter, SetUpTest
@@ -77,3 +79,13 @@ class TestDatabaseSeeder:
         entries = crud_test.get_all()
         assert entries[0].title == single.get("title")
         setup_test.delete_multiple(entries)
+
+
+class TestSetUpTest:
+    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+    @pytest.mark.usefixtures("otp_set")
+    def test_find_otp_code_by_patient_id(
+            self, setup_test: SetUpTest, otp_random: OTPCode
+    ) -> None:
+        otp_code = setup_test.find_otp_code_by_patient_id(otp_random.patient_id)
+        assert otp_code.patient_id == otp_random.patient_id
