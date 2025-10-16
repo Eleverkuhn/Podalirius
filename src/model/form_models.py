@@ -1,5 +1,6 @@
 from datetime import datetime
 from datetime import date
+from typing import override
 
 from pydantic import BaseModel, Field, ValidationError
 from fastapi import Form
@@ -22,19 +23,22 @@ class PhoneForm(Phone):
         return cls.model_construct(phone="")
 
 
-class OTPCodeForm(BaseModel):
-    value: str = Field(min_length=6, max_length=6)
-    
+class OTPCodeForm(PhoneForm):
+    code: str = Field(min_length=6, max_length=6)
+
+    @override
     @classmethod
-    def as_form(cls, value: str = Form(...)) -> "OTPCodeForm":
+    def as_form(
+            cls, phone: str = Form(...), code: str = Form(...)
+    ) -> "OTPCodeForm":
         try:
-            return cls(value=value)
+            return cls(phone=phone, code=code)
         except ValidationError as exc:
             raise RequestValidationError(exc.errors())
 
     @classmethod
     def empty(cls) -> "OTPCodeForm":
-        return cls.model_construct(value="")
+        return cls.model_construct(phone="", code="")
 
 
 class AppointmentBookingForm(AppointmentBase, PatientCreate):

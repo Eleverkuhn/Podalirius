@@ -1,15 +1,15 @@
+import hashlib
 import secrets
+import os
 from datetime import datetime, timedelta, timezone
 
-from fastapi import Depends
 from jose import jwt
 from sqlmodel import Session
 
-from model.form_models import PhoneForm, OTPCodeForm
+from exceptions.exc import FormInputError, OTPCodeHashDoesNotMatch
+from model.form_models import PhoneForm
 from model.auth_models import OTPCode
-from model.patient_models import PatientOuter
 from service.patient_services import PatientService
-from data.mysql import get_session
 from data.auth_data import OTPCodeRedis
 
 type Payload = dict[str, bytes | int | datetime]
@@ -20,8 +20,7 @@ class JWTTokenService:
     alg = "HS256"
 
     def __init__(
-            self,
-            exp_time: timedelta | None = None
+            self, exp_time: timedelta | None = None
     ) -> None:
         if exp_time:
             self.exp_time = exp_time
@@ -50,43 +49,55 @@ class JWTTokenService:
 
 
 class OTPCodeService:
-    def __init__(
-            self, session: Session, form: PhoneForm | OTPCodeForm) -> None:
+    def __init__(self, session: Session) -> None:
         self.session = session
-        self.form = form
 
     @property
     def patient_service(self) -> PatientService:
         return PatientService(self.session)
 
-    @property
-    def patient(self) -> PatientOuter | None:
-        return self.patient_service._check_patient_exsits(self.form.phone)
+    def create(self, phone: str) -> None:
+        code = self._generate_code()
+        self._send_otp_code(code)
+        self._save_otp_code(phone, code)
 
-    def verify_otp_code(self) -> None:
-        pass
-
-    def send_otp_code(self) -> None:
-        # TODO: figure out how to send codes via SMS
-        pass
-    
-    def create_otp_code(self) -> None:
-        if self.patient:
-            OTPCodeRedis().set(self._build_otp_code_model(self.patient.id))
+    def verify(self, form: PhoneForm) -> bool:
+        try:
+            is_matching = self._hash_matches(form)
+        except OTPCodeHashDoesNotMatch:
+            raise FormInputError("Verification code does not match")
         else:
-            patient = self.patient_service.registry(self.form)
-            OTPCodeRedis().set(self._build_otp_code_model(patient.id))
-
-    def _build_otp_code_model(self, patient_id: str) -> OTPCode:
-        return OTPCode(patient_id=patient_id, value=self._generate_value())
+            return is_matching
 
     @staticmethod
-    def _generate_value() -> str:
+    def _generate_code() -> str:
         return str(secrets.randbelow(10**6)).zfill(6)
 
+    def _send_otp_code(self, code: str) -> None:  # INFO: deprecated
+        pass
 
-def post_phone_form(
-        session: Session = Depends(get_session),
-        form: PhoneForm = Depends(PhoneForm.as_form)
-) -> OTPCodeService:
-    return OTPCodeService(session, form)
+    def _save_otp_code(self, phone: str, code: str) -> None:
+        salt, hashed_value = self._hash_otp_code(code)
+        otp_code = OTPCode(phone=phone, salt=salt, code=hashed_value)
+        OTPCodeRedis().set(otp_code)
+
+    def _hash_otp_code(self, code: str) -> tuple[bytes, bytes]:
+        salt = os.urandom(16)
+        hashed = self._hash(code, salt)
+        return salt, hashed
+
+    def _hash_matches(self, form: PhoneForm) -> bool:
+        otp_code_db = OTPCodeRedis().get(form.phone)
+        hashed_code = self._hash(form.code, otp_code_db.salt)
+        return self._check_hash(hashed_code, otp_code_db.code)
+
+    def _hash(self, value: str, salt: bytes) -> bytes:
+        hashed = hashlib.pbkdf2_hmac(
+            "sha256", value.encode("utf-8"), salt, 100000
+        )
+        return hashed
+
+    def _check_hash(self, hashed_code: bytes, db_code: bytes) -> bool:
+        if hashed_code == db_code:
+            return True
+        raise OTPCodeHashDoesNotMatch()

@@ -1,3 +1,4 @@
+import os
 from datetime import timedelta
 from time import sleep
 
@@ -5,7 +6,7 @@ import pytest
 from jose.exceptions import ExpiredSignatureError
 
 from logger.setup import get_logger
-from utils import SetUpTest
+from exceptions.exc import OTPCodeHashDoesNotMatch
 from service.auth_services import JWTTokenService, OTPCodeService
 
 
@@ -43,7 +44,23 @@ class TestJWTTokenService:
 
 class TestOTPCode:
     def test__generate_value(
-            self, otp_code_service_no_form: OTPCodeService
+            self, otp_code_service: OTPCodeService
     ) -> None:
-        value = otp_code_service_no_form._generate_value()
+        value = otp_code_service._generate_code()
         assert len(value) == 6
+
+    def test__hash_otp_code(
+            self, otp_code_service: OTPCodeService
+    ) -> None:
+        value = otp_code_service._generate_code()
+        salt, hashed_otp_code = otp_code_service._hash_otp_code(value)
+        assert salt
+        assert hashed_otp_code
+
+    def test__check_hash_raises_does_not_match_error(
+            self, otp_code_service: OTPCodeService
+    ) -> None:
+        rand_bytes_1 = os.urandom(16)
+        rand_bytes_2 = os.urandom
+        with pytest.raises(OTPCodeHashDoesNotMatch):
+            otp_code_service._check_hash(rand_bytes_1, rand_bytes_2)

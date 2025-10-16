@@ -81,11 +81,11 @@ class TestDatabaseSeeder:
         setup_test.delete_multiple(entries)
 
 
-class TestSetUpTest:
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    @pytest.mark.usefixtures("otp_set")
-    def test_find_otp_code_by_patient_id(
-            self, setup_test: SetUpTest, otp_random: OTPCode
-    ) -> None:
-        otp_code = setup_test.find_otp_code_by_patient_id(otp_random.patient_id)
-        assert otp_code.patient_id == otp_random.patient_id
+# class TestSetUpTest:
+#     def test_find_otp_code_by_patient_id(
+#             self, setup_test: SetUpTest, otp_set_random: OTPCode
+#     ) -> None:
+#         otp_code = setup_test.find_otp_code_by_patient_id(
+#             otp_set_random.patient_id
+#         )
+#         assert otp_code.patient_id == otp_set_random.patient_id

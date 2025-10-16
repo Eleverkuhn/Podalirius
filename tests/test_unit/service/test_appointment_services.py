@@ -1,5 +1,3 @@
-import uuid
-
 import pytest
 
 from model.form_models import AppointmentBookingForm

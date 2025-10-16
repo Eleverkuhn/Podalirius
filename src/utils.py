@@ -54,13 +54,6 @@ class SetUpTest:
     def __init__(self, session: Session) -> None:
         self.session = session
 
-    def find_otp_code_by_patient_id(self, patient_id: str) -> OTPCode:
-        otp_keys = redis_conn.keys("otp:*")
-        for otp_code in otp_keys:
-            id = redis_conn.get(otp_code)
-            if id == patient_id:
-                return OTPCode(value=otp_code[4:], patient_id=id)
-
     def create_entry(self, entry: BaseSQLModel) -> BaseSQLModel:
         self.session.add(entry)
         self.session.commit()

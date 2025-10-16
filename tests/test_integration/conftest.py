@@ -1,5 +1,6 @@
 from collections.abc import Iterator
 from datetime import timedelta
+from random import randint
 
 from pathlib import Path
 from typing import Generator
@@ -86,13 +87,19 @@ def otp_redis(request: pytest.FixtureRequest) -> OTPCodeRedis:
 
 
 @pytest.fixture
-def otp_random(uuid_str: str, otp_code_service: OTPCodeService) -> OTPCode:
+def otp_random(otp_code_service: OTPCodeService) -> OTPCode:
+    phone = str(randint(1000000000,  9999999999))
+    salt, hashed_value = otp_code_service._hash_otp_code(
+        otp_code_service._generate_code()
+    )
     return OTPCode(
-        patient_id=uuid_str,
-        value=otp_code_service._generate_value(),
+        phone=phone,
+        salt=salt,
+        code=hashed_value,
     )
 
 
 @pytest.fixture
-def otp_set(otp_redis: OTPCodeRedis, otp_random: OTPCode) -> None:
+def otp_set_random(otp_redis: OTPCodeRedis, otp_random: OTPCode) -> OTPCode:
     otp_redis.set(otp_random)
+    return otp_random

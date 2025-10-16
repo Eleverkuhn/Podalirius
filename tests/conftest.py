@@ -6,7 +6,7 @@ from sqlmodel import Session, SQLModel, Field
 
 from logger.setup import get_logger
 from utils import SetUpTest, read_fixture
-from model.form_models import AppointmentBookingForm, PhoneForm
+from model.form_models import AppointmentBookingForm, PhoneForm, OTPCodeForm
 from service.auth_services import JWTTokenService, OTPCodeService
 from data.mysql import get_session, engine
 from data.base_sql_models import BaseSQLModel
@@ -109,12 +109,18 @@ def phone_form(patients_data: dict) -> PhoneForm:
 
 
 @pytest.fixture
-def otp_code_service(
-        session: Session, phone_form: PhoneForm
-) -> OTPCodeService:
-    return OTPCodeService(session, phone_form)
+def otp_code_form(patients_data: dict) -> OTPCodeForm:
+    return OTPCodeForm(
+        phone=patients_data.get("phone"),
+        code="123456"
+    )
 
 
 @pytest.fixture
-def otp_code_service_no_form(session: Session) -> OTPCodeService:
-    return OTPCodeService(session, None)
+def otp_code_service(session: Session) -> OTPCodeService:
+    return OTPCodeService(session)
+
+
+# @pytest.fixture
+# def otp_code_service_no_form(session: Session) -> OTPCodeService:
+#     return OTPCodeService(session, None)

@@ -5,9 +5,8 @@ from pydantic import ValidationError
 from bs4 import BeautifulSoup
 
 from logger.setup import get_logger
-from utils import SetUpTest
-from model.form_models import PhoneForm
-from data.patient_data import PatientCRUD
+from model.form_models import PhoneForm, OTPCodeForm
+from data.auth_data import OTPCodeRedis
 
 
 @pytest.fixture
@@ -19,6 +18,11 @@ def login_data(phone_form: PhoneForm) -> dict[str, str]:
 def invalid_login_data(login_data: dict[str, str]) -> dict[str, str]:
     login_data.update({"phone": "wqeqe"})
     return login_data
+
+
+@pytest.fixture
+def otp_code_data(otp_code_form: OTPCodeForm) -> dict[str, str]:
+    return otp_code_form.model_dump()
 
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
@@ -72,19 +76,15 @@ class TestLoginEndpoint:
             self,
             client: TestClient,
             login_data: dict[str, str],
-            setup_test: SetUpTest,
-            patient_crud: PatientCRUD
+            otp_redis: OTPCodeRedis
     ) -> None:
         response = client.post(
             client.app.url_path_for("Login.form"), 
             data=login_data,
             follow_redirects=False
         )
-        patient_db = patient_crud.get_by_phone(login_data.get("phone"))
-        otp_code = setup_test.find_otp_code_by_patient_id(patient_db.id)
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert otp_code.patient_id == patient_db.id
-        setup_test.delete_patient(login_data.get("phone"))
+        assert otp_redis.get(login_data.get("phone"))
 
 
 class TestVerifyCodeEndpoint:
@@ -92,9 +92,12 @@ class TestVerifyCodeEndpoint:
         response = client.get(client.app.url_path_for("VerifyCode.form"))
         assert response.status_code == status.HTTP_200_OK
 
-    def test_post_is_allowed(self, client: TestClient) -> None:
+    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+    def test_post_is_allowed(
+            self, client: TestClient, otp_code_data: dict[str, str]
+    ) -> None:
         response = client.post(
             client.app.url_path_for("VerifyCode.form"),
-            data={"value": "000000"}
+            data=otp_code_data
         )
         assert response.status_code == status.HTTP_201_CREATED

@@ -4,11 +4,13 @@ from fastapi.responses import RedirectResponse
 from fastapi_utils.cbv import cbv
 from pydantic import ValidationError
 from starlette.templating import _TemplateResponse
+from sqlmodel import Session
 
 from config import Config
 from web.routes import Prefixes
 from model.form_models import PhoneForm, OTPCodeForm
-from service.auth_services import OTPCodeService, post_phone_form
+from service.auth_services import OTPCodeService
+from data.mysql import get_session
 
 login_router = APIRouter(prefix=f"{Prefixes.AUTH}/login")
 verify_code_router = APIRouter(prefix=f"{Prefixes.AUTH}/verify-code")
@@ -21,10 +23,9 @@ class Login:
         "/",
         name="form",
         status_code=status.HTTP_200_OK,
-        response_class=_TemplateResponse
     )
     def get_form(
-        self, request: Request, form: PhoneForm = Depends(PhoneForm.empty)
+            self, request: Request, form: PhoneForm = Depends(PhoneForm.empty)
     ) -> _TemplateResponse:
         content = {"request": request, "form": form.model_dump()}
         return template_obj.TemplateResponse("login.html", content)
@@ -34,10 +35,11 @@ class Login:
     def send_form(
             self,
             request: Request,
-            service: OTPCodeService = Depends(post_phone_form)
+            form: PhoneForm = Depends(PhoneForm.as_form),
+            session: Session = Depends(get_session)
     ) -> RedirectResponse:
         try:
-            service.create_otp_code()
+            OTPCodeService(session).create(form.phone)
         except ValidationError as exc:
             content = {
                 "request": request,

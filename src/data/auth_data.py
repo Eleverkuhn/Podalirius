@@ -1,5 +1,7 @@
 from redis import Redis
 
+from logger.setup import get_logger
+from exceptions.exc import OTPCodeNotFound
 from model.auth_models import OTPCode
 from data.redis_config import redis_conn
 
@@ -10,10 +12,18 @@ class OTPCodeRedis:
         self.lifetime = lifetime
         self.prefix = "otp:"
 
-    def get(self, value: str) -> str:
-        return self.conn.get(f"{self.prefix}{value}")
+    def get(self, phone: str) -> OTPCode:
+        otp_code = self.conn.hgetall(f"{self.prefix}{phone}")
+        if not otp_code:
+            raise OTPCodeNotFound()
+        return OTPCode(
+            phone=phone, code=otp_code.get(b"code"), salt=otp_code.get(b"salt")
+        )
 
     def set(self, otp: OTPCode) -> None:
-        self.conn.set(
-            f"{self.prefix}{otp.value}", otp.patient_id, ex=self.lifetime
-        )
+        key = f"{self.prefix}{otp.phone}"
+        self.conn.hset(key, mapping={"salt": otp.salt, "code": otp.code})
+        self.conn.expire(key, self.lifetime)
+
+    def delete(self, phone: str) -> None:
+        self.conn.delete(f"{self.prefix}{phone}")
