@@ -3,7 +3,7 @@ from sqlmodel import Session
 from fastapi import Depends
 
 from logger.setup import get_logger
-from exceptions import DataDoesNotMatch
+from exceptions.exc import DataDoesNotMatch, FormInputError
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import (
     Appointment, AppointmentCreate, ServiceToAppointment
@@ -54,7 +54,10 @@ class AppointmentBooking:
             appointment = self._create_appointment(patient.id)
         except DataDoesNotMatch:
             self.session.rollback()
-            raise DataDoesNotMatch
+            raise FormInputError((
+                "You are trying to book an appointment for existing user with"
+                "wrong data."
+            ))
         except IntegrityError as exc:  # INFO: temp exception handler in case if something went wrong
             self.session.rollback()
             return exc

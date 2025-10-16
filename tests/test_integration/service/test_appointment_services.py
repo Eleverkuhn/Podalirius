@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from logger.setup import get_logger
-from exceptions import DataDoesNotMatch
+from exceptions.exc import FormInputError
 from model.form_models import AppointmentBookingForm
 from service.appointment_services import (
     AppointmentBooking, AppointmentJWTTokenService
@@ -53,7 +53,7 @@ class TestApointmentBooking:
     def test__booking_for_unlogged_in_user_rollbacks_if_miss_matched(
             self, booking_service: AppointmentBooking,
     ) -> None:
-        with pytest.raises(DataDoesNotMatch):
+        with pytest.raises(FormInputError):
             booking_service._booking_for_unlogged_in_user()
     
     @pytest.mark.parametrize(

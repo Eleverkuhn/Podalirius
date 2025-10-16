@@ -7,7 +7,7 @@ from starlette.templating import _TemplateResponse
 from pydantic import ValidationError
 
 from config import Config
-from exceptions import DataDoesNotMatch
+from exceptions.exc import FormInputError
 from service.appointment_services import (
     AppointmentBooking,
     AppointmentJWTTokenService,
@@ -62,7 +62,7 @@ class Appointment:
             return template_obj.TemplateResponse(
                 "appointment_new.html", content
             )
-        except DataDoesNotMatch as exc:
+        except FormInputError as exc:
             content = {
                 "request": request,
                 "unmatching_exc": exc,

@@ -1,6 +1,6 @@
 import pytest
 
-from exceptions import DataDoesNotMatch
+from exceptions.exc import DataDoesNotMatch
 from model.patient_models import PatientCreate, PatientOuter
 from service.patient_services import PatientService
 from data.patient_data import PatientSQLModel, PatientCRUD

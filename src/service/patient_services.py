@@ -2,7 +2,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session
 
 from logger.setup import get_logger
-from exceptions import DataDoesNotMatch
+from exceptions.exc import DataDoesNotMatch
 from model.patient_models import PatientCreate, PatientOuter
 from data.patient_data import PatientCRUD
 

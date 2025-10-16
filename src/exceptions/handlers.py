@@ -1,41 +1,36 @@
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.templating import Jinja2Templates
+from starlette.templating import _TemplateResponse
 
+from exceptions.exc import FormInputError
 from logger.setup import get_logger
 from config import Config
 
 template_obj = Jinja2Templates(directory=Config.templates_dir)
 
 
-class DataDoesNotMatch(ValueError):  # REF: move it in distinct file
-    default_message = (
-        "The data provided with the phone number does not match. "
-        "Please log in to book an appointment or provide a different phone."
-    )
-
-    def __init__(self, message: str | None = None) -> None:
-        super().__init__(message or self.default_message)
-
-
-async def render_data_does_not_match(
-    request: Request, exc: DataDoesNotMatch
-):
+async def form_input_err_handler(
+        request: Request, exc: FormInputError
+) -> _TemplateResponse:
     form = await request.form()
     content = {
         "request": request,
         "unmatching_exc": exc,
         "form": form
     }
+    if request.url.path == request.url_for("Appointment.send_form").path:
+        template = "appointment_new.html"
     return template_obj.TemplateResponse(
-        "appointment_new.html",
+        template,
         content,
         status_code=status.HTTP_400_BAD_REQUEST
     )
 
 
-async def render_template_with_error_message(  # REF: rename
-        request: Request, exc: RequestValidationError):
+async def req_validation_err_handler(
+        request: Request, exc: RequestValidationError
+) -> _TemplateResponse:
     form = await request.form()
     errors = {
         error.get("loc")[0]: error.get("msg")
@@ -52,7 +47,6 @@ async def render_template_with_error_message(  # REF: rename
     elif request.url.path == request.url_for("Appointment.send_form").path:
         template = "appointment_new.html"
     return template_obj.TemplateResponse(
-        # "appointment_new.html",
         template,
         content,
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY

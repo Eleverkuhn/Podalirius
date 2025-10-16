@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from logger.setup import get_logger
-from exceptions import DataDoesNotMatch
+from exceptions.exc import DataDoesNotMatch
 from utils import SetUpTest
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import Appointment
@@ -118,7 +118,11 @@ class TestAppointmentEndpointSendForm:
             client.app.url_path_for("Appointment.send_form"),
             data=appointments_data
         )
-        assert DataDoesNotMatch.default_message in response.text
+        err_msg = (
+            "You are trying to book an appointment for existing user with"
+            "wrong data."
+        )
+        assert err_msg in response.text
         setup_test.delete_patient(appointments_data.get("phone"))
 
 
