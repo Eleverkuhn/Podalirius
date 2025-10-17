@@ -1,25 +1,15 @@
 import pytest
+from sqlmodel import Session
 
 from exceptions.exc import (
     FormInputError, OTPCodeHashDoesNotMatch
 )
+from utils import SetUpTest
 from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
-from service.auth_services import OTPCodeService
+from service.auth_services import AuthService, OTPCodeService
 from data.auth_data import OTPCodeRedis
 from data.patient_data import PatientSQLModel
-
-
-@pytest.fixture
-def otp_code_db(
-        otp_code_service: OTPCodeService,
-        otp_code_form: OTPCodeForm,
-        otp_redis: OTPCodeRedis
-) -> OTPCode:
-    otp_code_service._save_otp_code(**otp_code_form.model_dump())
-    otp_code = otp_redis.get(otp_code_form.phone)
-    yield otp_code
-    otp_redis.delete(otp_code_form.phone)
 
 
 @pytest.fixture
@@ -27,6 +17,33 @@ def invalid_form(otp_code_form: OTPCodeForm) -> OTPCodeForm:
     otp_code_form.code = "000000"
     return otp_code_form
 
+
+@pytest.fixture
+def auth_service(session: Session) -> AuthService:
+    return AuthService(session)
+
+
+class TestAuthService:
+    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+    @pytest.mark.usefixtures("otp_code_db", "patient")
+    def test_auth_succeed_for_existing_patient(
+            self, auth_service: AuthService, otp_code_form: OTPCodeForm
+    ) -> None:
+        auth_header = auth_service.authenticate(otp_code_form)
+        assert auth_header
+
+    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+    @pytest.mark.usefixtures("otp_code_db")
+    def test_auth_succeed_for_nonexistent_patient(
+            self,
+            auth_service: AuthService,
+            otp_code_form: OTPCodeForm,
+            setup_test: SetUpTest,
+    ) -> None:
+        auth_header = auth_service.authenticate(otp_code_form)
+        assert auth_header
+        setup_test.delete_patient(otp_code_form.phone)
+    
 
 class TestOTPCodeService:
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)

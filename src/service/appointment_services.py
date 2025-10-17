@@ -64,7 +64,7 @@ class AppointmentBooking:
         else:
             self.session.commit()
             self._create_entry_in_services_to_appoitments(appointment.id)
-            token = JWTTokenService().create_access_token(appointment.id)
+            token = JWTTokenService().create(appointment.id)
             return token
 
     def _create_appointment(self, patient_id: bytes) -> Appointment:
@@ -125,7 +125,7 @@ class AppointmentJWTTokenService:
         return AppointmentCrud(self.session).get(id)
 
     def _get_id_from_token(self, token: str) -> int:
-        content = JWTTokenService().verify_access_token(token)
+        content = JWTTokenService().verify(token)
         return content.get("id")
 
 

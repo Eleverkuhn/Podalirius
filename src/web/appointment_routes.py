@@ -51,34 +51,14 @@ class Appointment:
             self,
             request: Request,
             service: AppointmentBooking = Depends(post_appointment_booking)):
-        try:
-            token = service.book()
-        except ValidationError as exc:
-            content = {
-                "request": request,
-                "form": service.form.model_dump(),
-                "errors": exc.errors()
-            }
-            return template_obj.TemplateResponse(
-                "appointment_new.html", content
-            )
-        except FormInputError as exc:
-            content = {
-                "request": request,
-                "unmatching_exc": exc,
-                "form": service.form.model_dump()
-            }
-            return template_obj.TemplateResponse(
-                "appointment_new.html", content
-            )
-        else:
-            url = request.app.url_path_for("Appointment.info")
-            modified = "".join([url, f"?token={token}"])
-            response = RedirectResponse(
-                url=modified,
-                status_code=status.HTTP_303_SEE_OTHER
-            )
-            return response
+        token = service.book()
+        url = request.app.url_path_for("Appointment.info")
+        modified = "".join([url, f"?token={token}"])
+        response = RedirectResponse(
+            url=modified,
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+        return response
 
     @router.get("/view", name="info", status_code=status.HTTP_200_OK)
     def created_info(

@@ -2,11 +2,9 @@
 
 {% block content %}
 <h2>New Appointment</h2>
-{% if unmatching_exc %}
-  <p>{{ unmatching_exc }}</p>
-{% endif %}
 <form method="post" action="{{ request.url_for('Appointment.send_form') }}">
   {% include "form_rendering.html" %}
   <button type="submit">Create Appointment</button>
 </form>
+{% include "form_input_err.html" %}
 {% endblock %}

@@ -117,10 +117,5 @@ def otp_code_form(patients_data: dict) -> OTPCodeForm:
 
 
 @pytest.fixture
-def otp_code_service(session: Session) -> OTPCodeService:
-    return OTPCodeService(session)
-
-
-# @pytest.fixture
-# def otp_code_service_no_form(session: Session) -> OTPCodeService:
-#     return OTPCodeService(session, None)
+def otp_code_service() -> OTPCodeService:
+    return OTPCodeService()

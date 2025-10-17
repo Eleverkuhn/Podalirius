@@ -16,11 +16,13 @@ async def form_input_err_handler(
     form = await request.form()
     content = {
         "request": request,
-        "unmatching_exc": exc,
+        "form_input_err": str(exc),
         "form": form
     }
     if request.url.path == request.url_for("Appointment.send_form").path:
         template = "appointment_new.html"
+    elif request.url.path == request.url_for("VerifyCode.form").path:
+        template = "verify_login.html"
     return template_obj.TemplateResponse(
         template,
         content,
@@ -46,6 +48,8 @@ async def req_validation_err_handler(
         template = "login.html"
     elif request.url.path == request.url_for("Appointment.send_form").path:
         template = "appointment_new.html"
+    elif request.url.path == request.url_for("VerifyCode.form").path:
+        template = "verify_login.html"
     return template_obj.TemplateResponse(
         template,
         content,

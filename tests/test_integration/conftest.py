@@ -9,6 +9,7 @@ import pytest
 from sqlmodel import Session
 
 from logger.setup import get_logger
+from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
 from service.auth_services import JWTTokenService, OTPCodeService
@@ -70,7 +71,7 @@ def appointment(
 def jwt_token_appointment(
         jwt_token_service: JWTTokenService, appointment: sql_models.Appointment
 ) -> str:
-    return jwt_token_service.create_access_token(appointment.id)
+    return jwt_token_service.create(appointment.id)
 
 
 @pytest.fixture
@@ -103,3 +104,15 @@ def otp_random(otp_code_service: OTPCodeService) -> OTPCode:
 def otp_set_random(otp_redis: OTPCodeRedis, otp_random: OTPCode) -> OTPCode:
     otp_redis.set(otp_random)
     return otp_random
+
+
+@pytest.fixture
+def otp_code_db(
+        otp_code_service: OTPCodeService,
+        otp_code_form: OTPCodeForm,
+        otp_redis: OTPCodeRedis
+) -> OTPCode:
+    otp_code_service._save_otp_code(**otp_code_form.model_dump())
+    otp_code = otp_redis.get(otp_code_form.phone)
+    yield otp_code
+    otp_redis.delete(otp_code_form.phone)
