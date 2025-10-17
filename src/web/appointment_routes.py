@@ -1,13 +1,10 @@
 from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 from fastapi_utils.cbv import cbv
 from jose.exceptions import ExpiredSignatureError
 from starlette.templating import _TemplateResponse
-from pydantic import ValidationError
 
-from config import Config
-from exceptions.exc import FormInputError
+from web.base_routes import BaseRouter
 from service.appointment_services import (
     AppointmentBooking,
     AppointmentJWTTokenService,
@@ -17,11 +14,10 @@ from service.appointment_services import (
 )
 
 router = APIRouter(prefix="/appointments")
-template_obj = Jinja2Templates(directory=Config.templates_dir)
 
 
 @cbv(router)
-class Appointment:
+class Appointment(BaseRouter):
     @router.get(
         "/new",
         name="get_form",
@@ -39,7 +35,7 @@ class Appointment:
             "form": service.form.model_dump(),
             "user": user
         }
-        return template_obj.TemplateResponse("appointment_new.html", content)
+        return self.template.TemplateResponse("appointment_new.html", content)
 
     @router.post(
         "/new",
@@ -73,13 +69,13 @@ class Appointment:
             appointment = service.get_appointment(token)
         except ExpiredSignatureError:
             response = RedirectResponse(
-                url=request.app.url_path_for("main"),
+                url=request.app.url_path_for("Main.main"),
                 status_code=status.HTTP_303_SEE_OTHER
             )
             return response
         else:
             content = {"request": request, "appointment": appointment}
-            response = template_obj.TemplateResponse(
+            response = self.template.TemplateResponse(
                 "appointment_notification.html", content
             )
             return response

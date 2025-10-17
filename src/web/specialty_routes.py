@@ -1,11 +1,13 @@
 from fastapi import APIRouter, status
 from fastapi_utils.cbv import cbv
 
+from web.base_routes import BaseRouter
+
 router = APIRouter(prefix="/specialties")
 
 
 @cbv(router)
-class Specialty:
+class Specialty(BaseRouter):
     @router.get("/", name="all", status_code=status.HTTP_200_OK)
     def get_all(self) -> None:
         pass

@@ -1,14 +1,19 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, status
+from fastapi_utils.cbv import cbv
 from starlette.templating import _TemplateResponse
-from fastapi.templating import Jinja2Templates
 
-from config import Config
+from web.base_routes import BaseRouter
 
 router = APIRouter()
 
-template_obj = Jinja2Templates(directory=Config.templates_dir)
 
-
-@router.get("/", name="main", response_class=_TemplateResponse)
-def index(request: Request) -> _TemplateResponse:
-    return template_obj.TemplateResponse({"request": request}, "index.html")
+@cbv(router)
+class Main(BaseRouter):
+    @router.get(
+        "/",
+        status_code=status.HTTP_200_OK,
+        name="main",
+        response_class=_TemplateResponse
+    )
+    def index(self, request: Request) -> _TemplateResponse:
+        return self.template.TemplateResponse({"request": request}, "index.html")

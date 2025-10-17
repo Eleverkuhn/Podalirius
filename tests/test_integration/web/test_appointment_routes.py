@@ -8,7 +8,6 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from logger.setup import get_logger
-from exceptions.exc import DataDoesNotMatch
 from utils import SetUpTest
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import Appointment
@@ -162,4 +161,6 @@ class TestAppointmentEndpointCreatedInfo:
         sleep(2)
         response = client.get(url_appointment_created, follow_redirects=False)
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert response.headers.get("location") == client.app.url_path_for("main")
+        assert response.headers.get("location") == client.app.url_path_for(
+            "Main.main"
+        )

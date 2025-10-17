@@ -1,24 +1,21 @@
 from fastapi import APIRouter, Depends, Request, status
-from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
 from fastapi_utils.cbv import cbv
 from pydantic import ValidationError
 from starlette.templating import _TemplateResponse
 from sqlmodel import Session
 
-from config import Config
-from web.routes import Prefixes
+from web.base_routes import BaseRouter, Prefixes
 from model.form_models import PhoneForm, OTPCodeForm
 from service.auth_services import AuthService, OTPCodeService
 from data.mysql import get_session
 
 login_router = APIRouter(prefix=f"{Prefixes.AUTH}/login")
 verify_code_router = APIRouter(prefix=f"{Prefixes.AUTH}/verify-code")
-template_obj = Jinja2Templates(directory=Config.templates_dir)
 
 
 @cbv(login_router)
-class Login:
+class Login(BaseRouter):
     @login_router.get(
         "/",
         name="form",
@@ -28,7 +25,7 @@ class Login:
             self, request: Request, form: PhoneForm = Depends(PhoneForm.empty)
     ) -> _TemplateResponse:
         content = {"request": request, "form": form.model_dump()}
-        return template_obj.TemplateResponse("login.html", content)
+        return self.template.TemplateResponse("login.html", content)
 
     @login_router.post(
         "/", status_code=status.HTTP_303_SEE_OTHER, name="form")
@@ -45,7 +42,7 @@ class Login:
                 "form": form.model_dump(),
                 "errors": exc.errors()
             }
-            return template_obj.TemplateResponse("login.html", content)
+            return self.template.TemplateResponse("login.html", content)
         else:
             response = RedirectResponse(
                 url=request.app.url_path_for("VerifyCode.form"),
@@ -55,7 +52,7 @@ class Login:
 
 
 @cbv(verify_code_router)
-class VerifyCode:
+class VerifyCode(BaseRouter):
     @verify_code_router.get(
         "/", status_code=status.HTTP_200_OK, name="form"
     )
@@ -64,7 +61,7 @@ class VerifyCode:
             form: OTPCodeForm = Depends(OTPCodeForm.empty)
     ) -> _TemplateResponse:
         content = {"request": request, "form": form.model_dump()}
-        return template_obj.TemplateResponse("login.html", content)
+        return self.template.TemplateResponse("login.html", content)
 
     @verify_code_router.post(
         "/", status_code=status.HTTP_303_SEE_OTHER, name="form"

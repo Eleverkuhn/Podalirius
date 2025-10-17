@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, status
 from fastapi_utils.cbv import cbv
 
-from web.routes import Prefixes
+from web.base_routes import Prefixes, BaseRouter
 from service.auth_services import AuthService, get_auth_service
 
 patient_appointments_router = APIRouter(prefix=f"{Prefixes.MY}/appointments")
@@ -9,7 +9,7 @@ patient_info_router = APIRouter(prefix=f"{Prefixes.MY}/info")
 
 
 @cbv(patient_appointments_router)
-class PatientAppointment:
+class PatientAppointment(BaseRouter):
     @patient_appointments_router.get(
         "/", name="all", status_code=status.HTTP_200_OK
     )
@@ -37,7 +37,7 @@ class PatientAppointment:
 
 
 @cbv(patient_info_router)
-class PatientInfo:
+class PatientInfo(BaseRouter):
     @patient_info_router.get(
         "/", name="info", status_code=status.HTTP_200_OK)
     def get(self) -> None:
