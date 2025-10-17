@@ -28,8 +28,8 @@ app.include_router(service_routes.router)
 app.include_router(specialty_routes.router)
 
 app.add_exception_handler(
-    RequestValidationError, handlers.req_validation_err_handler
+    RequestValidationError, handlers.RequestValidationErrorHandler()
 )
 app.add_exception_handler(
-    exc.FormInputError, handlers.form_input_err_handler
+    exc.FormInputError, handlers.FormInputErrHandler()
 )

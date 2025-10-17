@@ -1,57 +1,64 @@
+from typing import override
+
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.templating import Jinja2Templates
-from starlette.templating import _TemplateResponse
 
 from exceptions.exc import FormInputError
 from logger.setup import get_logger
 from config import Config
+from web.base_routes import BaseRouter
 
 template_obj = Jinja2Templates(directory=Config.templates_dir)
 
 
-async def form_input_err_handler(
-        request: Request, exc: FormInputError
-) -> _TemplateResponse:
-    form = await request.form()
-    content = {
-        "request": request,
-        "form_input_err": str(exc),
-        "form": form
-    }
-    if request.url.path == request.url_for("Appointment.send_form").path:
-        template = "appointment_new.html"
-    elif request.url.path == request.url_for("VerifyCode.form").path:
-        template = "verify_login.html"
-    return template_obj.TemplateResponse(
-        template,
-        content,
-        status_code=status.HTTP_400_BAD_REQUEST
-    )
+class BaseExcHandler(BaseRouter):
+    def __init__(self, request: Request = None, form=None) -> None:
+        self.request = request
+        self.form = form
+
+    async def __call__(self, request: Request):
+        self.request = request
+        self.form = await request.form()
+
+    @property
+    def url_path_to_template(self) -> dict[str, str]:
+        return {
+            self.request.url_for("Login.form").path: "login.html",
+            self.request.url_for("VerifyCode.form").path: "verify_login.html",
+            self.request.url_for("Appointment.send_form").path: "appointment_new.html",
+        }
 
 
-async def req_validation_err_handler(
-        request: Request, exc: RequestValidationError
-) -> _TemplateResponse:
-    form = await request.form()
-    errors = {
-        error.get("loc")[0]: error.get("msg")
-        for error in
-        exc.errors()
-    }
-    content = {
-        "request": request,
-        "errors": errors,
-        "form": form,
-    }
-    if request.url.path == request.url_for("Login.form").path:
-        template = "login.html"
-    elif request.url.path == request.url_for("Appointment.send_form").path:
-        template = "appointment_new.html"
-    elif request.url.path == request.url_for("VerifyCode.form").path:
-        template = "verify_login.html"
-    return template_obj.TemplateResponse(
-        template,
-        content,
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
-    )
+class FormInputErrHandler(BaseExcHandler):
+    @override
+    async def __call__(self, request: Request, exc: FormInputError):
+        await super().__call__(request)
+        return self.template.TemplateResponse(
+            self.url_path_to_template.get(self.request.url.path),
+            {
+                "request": self.request,
+                "form_input_err": str(exc),
+                "form": self.form
+            },
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+
+
+class RequestValidationErrorHandler(BaseExcHandler):
+    async def __call__(self, request: Request, exc: RequestValidationError):
+        await super().__call__(request)
+        errors = {
+            error.get("loc")[0]: error.get("msg")
+            for error in
+            exc.errors()
+        }
+        return self.template.TemplateResponse(
+            self.url_path_to_template.get(self.request.url.path),
+            {
+                "request": self.request,
+                "errors": errors,
+                "form": self.form
+            },
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+        )
