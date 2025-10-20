@@ -1,18 +1,17 @@
-import pytest
-from fastapi import status
-from fastapi.testclient import TestClient
+from typing import override
+
+from sqlmodel import Session
 
 from data import sql_models
-from data.crud import BaseCRUD
+from tests.test_integration.web.conftest import EndpointWithURLParams
 
 
-class TestServiceEndpoint:  # INFO: has URL parameters
-    @pytest.mark.parametrize(
-        "get_all", [(sql_models.Service, sql_models.Service)], indirect=True
-    )
-    def test_exists(self, client: TestClient, get_all) -> None:
-        for service in get_all:
-            response = client.get(client.app.url_path_for(
-                "Service.service", title=service.title
-            ))
-            assert response.status_code == status.HTTP_200_OK
+class TestServiceEndpoint(EndpointWithURLParams):
+    # INFO: has URL parameters
+    base_url = "Service.service"
+    param = "title"
+    sql_model = sql_models.Service
+
+    @override
+    def test_multiple_exist(self, session: Session) -> None:
+        super().test_multiple_exist(session)

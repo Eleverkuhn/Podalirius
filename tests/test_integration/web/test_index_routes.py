@@ -1,8 +1,5 @@
-from fastapi import status
-from fastapi.testclient import TestClient
+from tests.test_integration.web.conftest import BaseTestEndpoint
 
 
-class TestIndex:
-    def test_exists(self, client: TestClient) -> None:
-        response = client.get(client.app.url_path_for("Main.main"))
-        assert response.status_code == status.HTTP_200_OK
+class TestIndex(BaseTestEndpoint):
+    base_url = "Main.main"
