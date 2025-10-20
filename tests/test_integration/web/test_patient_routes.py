@@ -25,6 +25,7 @@ class TestPatientEndpoint(BaseTestEndpoint):
         )
         assert response.status_code == status.HTTP_200_OK
 
-    def test_authorization_is_failed(self) -> None:
-        response = self.client.get(self._get_url())
-        assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    def test_unauthorized_patient_get_redirected_to_main(self) -> None:
+        response = self.client.get(self._get_url(), follow_redirects=False)
+        assert response.status_code == status.HTTP_303_SEE_OTHER
+        assert response.headers.get("location") == self._get_url("Main.main")

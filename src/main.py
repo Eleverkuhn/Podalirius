@@ -33,3 +33,6 @@ app.add_exception_handler(
 app.add_exception_handler(
     exc.FormInputError, handlers.FormInputErrHandler()
 )
+app.add_exception_handler(
+    exc.UnauthorizedError, handlers.UnauthorizedErrorHandler()
+)

@@ -3,11 +3,10 @@ from datetime import timedelta
 from time import sleep
 
 import pytest
-from fastapi import HTTPException
 from jose.exceptions import ExpiredSignatureError
 
 from logger.setup import get_logger
-from exceptions.exc import OTPCodeHashDoesNotMatch
+from exceptions.exc import OTPCodeHashDoesNotMatch, UnauthorizedError
 from service.auth_services import AuthService, JWTTokenService, OTPCodeService
 
 
@@ -45,7 +44,7 @@ class TestAuthService:
     def test__get_access_token_from_cookie_raises_http_exc(
             self, auth_service: AuthService
     ) -> None:
-        with pytest.raises(HTTPException):
+        with pytest.raises(UnauthorizedError):
             auth_service._get_access_token_from_cookie({"access_token": None})
 
     @pytest.mark.parametrize(
@@ -55,14 +54,14 @@ class TestAuthService:
             self, auth_service: AuthService, jwt_token_expired: str
     ) -> None:
         sleep(2)
-        with pytest.raises(HTTPException):
+        with pytest.raises(UnauthorizedError):
             auth_service._check_access_token_is_expired(jwt_token_expired)
 
     def test__get_patient_id_from_token_raises_http_exc(
             self, auth_service: AuthService
     ) -> None:
         invalid_payload = {"patient_id": None, "sub": None}
-        with pytest.raises(HTTPException):
+        with pytest.raises(UnauthorizedError):
             auth_service._get_patient_id_from_token(invalid_payload)
 
 

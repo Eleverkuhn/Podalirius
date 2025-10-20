@@ -1,10 +1,11 @@
 from typing import override
 
 from fastapi import Request, status
+from fastapi.responses import RedirectResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.templating import Jinja2Templates
 
-from exceptions.exc import FormInputError
+from exceptions.exc import FormInputError, UnauthorizedError
 from logger.setup import get_logger
 from config import Config
 from web.base_routes import BaseRouter
@@ -28,6 +29,14 @@ class BaseExcHandler(BaseRouter):
             self.request.url_for("VerifyCode.form").path: "verify_login.html",
             self.request.url_for("Appointment.send_form").path: "appointment_new.html",
         }
+
+
+class UnauthorizedErrorHandler:
+    async def __call__(self, request: Request, exc: UnauthorizedError):
+        return RedirectResponse(
+            url=request.url_for("Main.main").path,
+            status_code=status.HTTP_303_SEE_OTHER
+        )
 
 
 class FormInputErrHandler(BaseExcHandler):

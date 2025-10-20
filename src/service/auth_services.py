@@ -3,12 +3,14 @@ import secrets
 import os
 from datetime import datetime, timedelta, timezone
 
-from fastapi import HTTPException, Depends, status
+from fastapi import Depends, Request
 from jose import jwt
 from jose.exceptions import ExpiredSignatureError
 from sqlmodel import Session
 
-from exceptions.exc import FormInputError, OTPCodeHashDoesNotMatch
+from exceptions.exc import (
+    FormInputError, OTPCodeHashDoesNotMatch, UnauthorizedError
+)
 from model.form_models import PhoneForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
@@ -54,19 +56,13 @@ class AuthService:
         token = cookies.get("access_token")
         if token:
             return token
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated"
-        )
+        raise UnauthorizedError(detail="Not authenticated")
 
     def _check_access_token_is_expired(self, access_token: str) -> Payload:
         try:
             payload = JWTTokenService().verify(access_token)
         except ExpiredSignatureError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Access token is expired"
-            )
+            raise UnauthorizedError(detail="Access token is expired")
         else:
             return payload
 
@@ -74,9 +70,7 @@ class AuthService:
         patient_id = payload.get("id")
         if patient_id:
             return patient_id
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
-        )
+        raise UnauthorizedError(detail="Invalid token")
 
 
 class JWTTokenService:
@@ -159,3 +153,10 @@ class OTPCodeService:
 
 def get_auth_service(session: Session = Depends(get_session)) -> AuthService:
     return AuthService(session)
+
+
+def authorize(
+        request: Request,
+        auth: AuthService = Depends(get_auth_service)
+) -> None:
+    auth.authorize(request.cookies)

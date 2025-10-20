@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, status
 from fastapi_utils.cbv import cbv
 
 from web.base_routes import Prefixes, BaseRouter
-from service.auth_services import AuthService, get_auth_service
+from service.auth_services import authorize
 
 patient_appointments_router = APIRouter(prefix=f"{Prefixes.MY}/appointments")
 patient_info_router = APIRouter(prefix=f"{Prefixes.MY}/info")
@@ -11,14 +11,13 @@ patient_info_router = APIRouter(prefix=f"{Prefixes.MY}/info")
 @cbv(patient_appointments_router)
 class PatientAppointment(BaseRouter):
     @patient_appointments_router.get(
-        "/", name="all", status_code=status.HTTP_200_OK
+        "/",
+        name="all",
+        status_code=status.HTTP_200_OK,
+        dependencies=[Depends(authorize)]
     )
-    def get_all(
-            self,
-            request: Request,
-            auth_service: AuthService = Depends(get_auth_service)
-    ) -> None:
-        patient_id = auth_service.authorize(request.cookies)
+    def get_all(self) -> None:
+        pass
 
     @patient_appointments_router.get(
         "/{id}", name="appointment", status_code=status.HTTP_200_OK)
