@@ -3,13 +3,13 @@ from sqlmodel import Session
 from fastapi import Depends
 
 from logger.setup import get_logger
-from exceptions.exc import DataDoesNotMatch, FormInputError
+from exceptions.exc import DataDoesNotMatch, FormInputError, UnauthorizedError
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import (
     Appointment, AppointmentCreate, ServiceToAppointment
 )
 from model.patient_models import PatientCreate
-from service.auth_services import JWTTokenService
+from service.auth_services import AuthService, JWTTokenService
 from service.patient_services import PatientService
 from data import sql_models
 from data.mysql import get_session
@@ -19,39 +19,39 @@ from data.patient_data import PatientCRUD
 
 
 class AppointmentBooking:
-    def __init__(
-            self,
-            session: Session,
-            form: AppointmentBookingForm,
-            access_token: dict[str, str | None]) -> None:
-        self.form = form
+    def __init__(self, session: Session) -> None:
         self.session = session
-        self.access_token = access_token
 
-    @property
-    def patient_id(self) -> str | None:
-        return self.access_token.get("id")
-
-    def book(self) -> None:
+    def book(
+            self, cookies: dict[str, str], form: AppointmentBookingForm
+    ) -> str:
         """
         Initial method which will start appointment booking process
         """
-        if self._check_user_is_logged_in():
-            self._booking_for_logged_in_user()
-        return self._booking_for_unlogged_in_user()
+        patient_id = self._check_user_is_logged_in(cookies)
+        if patient_id:
+            return self._booking_for_logged_in_user()
+        return self._booking_for_unlogged_in_user(form)
 
-    def _check_user_is_logged_in(self) -> str | bool:
-        return self.patient_id is not None
+    def _check_user_is_logged_in(self, cookies: dict[str, str]) -> str | None:
+        try:
+            patient_id = AuthService(self.session).authorize(cookies)
+        except UnauthorizedError:
+            return None
+        else:
+            return patient_id
 
     def _booking_for_logged_in_user(self) -> None:
         pass
 
-    def _booking_for_unlogged_in_user(self) -> str:
+    def _booking_for_unlogged_in_user(
+            self, form: AppointmentBookingForm
+    ) -> str:
         try:
             patient = PatientService(self.session).check_input_data(
-                self.form.get_patient_data()
+                form.get_patient_data()
             )
-            appointment = self._create_appointment(patient.id)
+            appointment = self._create_appointment(patient.id, form)
         except DataDoesNotMatch:
             self.session.rollback()
             raise FormInputError((
@@ -63,31 +63,30 @@ class AppointmentBooking:
             return exc
         else:
             self.session.commit()
-            self._create_entry_in_services_to_appoitments(appointment.id)
+            self._create_entry_in_services_to_appointments(
+                appointment.id, form.service_id
+            )
             token = JWTTokenService().create(appointment.id)
             return token
 
-    def _create_appointment(self, patient_id: bytes) -> Appointment:
-        appointment_data = self._construct_appointment_data(patient_id)
-        appointment = AppointmentCrud(self.session).create(
-            appointment_data
-        )
+    def _create_appointment(
+            self, patient_id: bytes, form: AppointmentBookingForm
+    ) -> Appointment:
+        appointment_data = self._construct_appointment_data(patient_id, form)
+        appointment = AppointmentCrud(self.session).create(appointment_data)
         return appointment
 
     def _construct_appointment_data(
-            self, patient_id: bytes
+            self, patient_id: bytes, form: AppointmentBookingForm
     ) -> AppointmentCreate:
-        return AppointmentCreate(
-            **self.form.get_appointment_data().model_dump(),
-            patient_id=patient_id
-        )
+        return AppointmentCreate(**form.model_dump(), patient_id=patient_id)
 
-    def _create_entry_in_services_to_appoitments(
-            self, appointment_id: int
+    def _create_entry_in_services_to_appointments(
+            self, appointment_id: int, service_id: int
     ) -> None:
         entry = ServiceToAppointment(
             appointment_id=appointment_id,
-            service_id=self.form.service_id
+            service_id=service_id
         )
         BaseCRUD(
             self.session,
@@ -95,7 +94,7 @@ class AppointmentBooking:
             sql_models.ServiceToAppointment
         ).create(entry)
         self.session.commit()
-        
+
     def render_form(self) -> None | PatientCreate:
         patient_id = self._check_user_is_logged_in()
         if patient_id:
@@ -131,18 +130,8 @@ class AppointmentJWTTokenService:
 
 def get_appointment_booking(
         session: Session = Depends(get_session),
-        form: AppointmentBookingForm = Depends(AppointmentBookingForm.empty),
-        access_token: dict[str, str | None] = {}
 ) -> AppointmentBooking:
-    return AppointmentBooking(session, form, access_token)
-
-
-def post_appointment_booking(
-        session: Session = Depends(get_session),
-        form: AppointmentBookingForm = Depends(AppointmentBookingForm.as_form),
-        access_token: dict[str, str | None] = {}
-) -> AppointmentBooking:
-    return AppointmentBooking(session, form, access_token)
+    return AppointmentBooking(session)
 
 
 def get_appointment_jwt_token_service(

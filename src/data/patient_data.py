@@ -4,6 +4,7 @@ from datetime import date
 
 from sqlmodel import Field, Session
 
+from logger.setup import get_logger
 from model.patient_models import PatientInner, PatientOuter
 from data.crud import BaseCRUD
 from data.base_sql_models import PersonSQLModel
@@ -23,9 +24,10 @@ class PatientCRUD(BaseCRUD):
             self,
             session: Session,
             sql_model=PatientSQLModel,
-            return_model=PatientInner) -> None:
+            return_model=PatientInner
+    ) -> None:
         super().__init__(session, sql_model, return_model)
-    
+
     def get(self, patient_id: str) -> PatientOuter:
         patient = super().get(self.uuid_to_bytes(patient_id))
         return self.convert_to_patient_outer(patient)
@@ -59,3 +61,11 @@ class PatientCRUD(BaseCRUD):
         return self.session.exec(
             self.select.where(self.sql_model.phone == phone)
         ).one()
+
+    @classmethod
+    def convert_to_patient_inner(cls, patient: PatientOuter) -> PatientInner:
+        dumped_patient = patient.model_dump()
+        dumped_patient.update(
+            {"id": cls.uuid_to_bytes(dumped_patient.get("id"))}
+        )
+        return PatientInner(**dumped_patient)

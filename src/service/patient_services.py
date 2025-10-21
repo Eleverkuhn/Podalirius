@@ -33,7 +33,8 @@ class PatientService:
         patient_db = self._check_patient_exsits(patient_input_data.phone)
         if patient_db is not None:
             self._compare(patient_db, patient_input_data)
-            return patient_db
+            patient_inner = self.crud.convert_to_patient_inner(patient_db)
+            return patient_inner
         else:
             patient = self.crud.create(patient_input_data)
             return patient

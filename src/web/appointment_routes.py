@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Form, Depends, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi_utils.cbv import cbv
 from jose.exceptions import ExpiredSignatureError
 from starlette.templating import _TemplateResponse
 
 from web.base_routes import BaseRouter
+from model.form_models import AppointmentBookingForm
 from service.appointment_services import (
     AppointmentBooking,
     AppointmentJWTTokenService,
     get_appointment_booking,
-    post_appointment_booking,
     get_appointment_jwt_token_service
 )
 
@@ -27,13 +27,14 @@ class Appointment(BaseRouter):
     def get_appointment(
             self,
             request: Request,
+            form: AppointmentBookingForm = Depends(AppointmentBookingForm.empty),
             service: AppointmentBooking = Depends(get_appointment_booking)
     ) -> _TemplateResponse:
-        user = service.render_form()
+        # user = service.render_form()
         content = {
             "request": request,
-            "form": service.form.model_dump(),
-            "user": user
+            "form": form.model_dump(),
+            "user": None
         }
         return self.template.TemplateResponse("appointment_new.html", content)
 
@@ -46,8 +47,9 @@ class Appointment(BaseRouter):
     def create_appointment(
             self,
             request: Request,
-            service: AppointmentBooking = Depends(post_appointment_booking)):
-        token = service.book()
+            form: AppointmentBookingForm = Depends(AppointmentBookingForm.as_form),
+            service: AppointmentBooking = Depends(get_appointment_booking)):
+        token = service.book(request.cookies, form)
         url = request.app.url_path_for("Appointment.info")
         modified = "".join([url, f"?token={token}"])
         response = RedirectResponse(
