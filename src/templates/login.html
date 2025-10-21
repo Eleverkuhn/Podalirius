@@ -1,9 +1,22 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Login</>
-<form method="post" action="{{ request.url_for('Login.form') }}">
+<h2>Login</h2>
+<form id="login" method="post" action="{{ request.url_for('Login.form') }}">
   {% include "form_rendering.html" %}
   <button type="submit">Log In</button>
 </form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const form = document.getElementById("login");
+  form.addEventListener("submit", function (e) {
+    const phoneInput = form.querySelector('input[name="phone"]');
+    if (phoneInput) {
+      const phone = phoneInput.value;
+      localStorage.setItem("phone", phone)
+    }
+  });
+</script>
 {% endblock %}

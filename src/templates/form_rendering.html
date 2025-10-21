@@ -1,6 +1,10 @@
 {% for field, value in form.items() %}
-  <label>{{ field }}</label>
-  <input type="text" name="{{ field }}" value="" required>
+  {% if field == hidden_field %}
+    <input type="hidden" name="{{ field }}" id="{{ field }}" value="" required>
+  {% else %}
+    <label>{{ field }}</label>
+    <input type="text" name="{{ field }}" id="{{ field }}" value="" required>
+  {% endif %}
   {% if errors and errors.get(field) %}
     <small>{{ errors[field] }}</small>
   {% endif %}

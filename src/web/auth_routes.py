@@ -60,8 +60,11 @@ class VerifyCode(BaseRouter):
             self, request: Request,
             form: OTPCodeForm = Depends(OTPCodeForm.empty)
     ) -> _TemplateResponse:
-        content = {"request": request, "form": form.model_dump()}
-        return self.template.TemplateResponse("login.html", content)
+        content = {
+            "request": request,
+            "form": form.model_dump()
+        }
+        return self.template.TemplateResponse("verify_login.html", content)
 
     @verify_code_router.post(
         "/", status_code=status.HTTP_303_SEE_OTHER, name="form"

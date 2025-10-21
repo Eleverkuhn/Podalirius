@@ -1,8 +1,10 @@
 from typing import override
 
 import pytest
+from bs4 import BeautifulSoup
 from fastapi import status
 
+from logger.setup import get_logger
 from model.form_models import PhoneForm, OTPCodeForm
 from data.auth_data import OTPCodeRedis
 from tests.test_integration.web.conftest import (EndpointWithForm)
@@ -106,6 +108,12 @@ class TestVerifyCodeEndpoint(EndpointWithForm):
     ) -> None:
         response = self._post_req(mismatched_otp_code_data)
         assert "Verification code does not match" in response.text
+
+    def test_phone_field_is_hidden(self) -> None:
+        response = self.client.get(self._get_url())
+        soup = BeautifulSoup(response.text, "html.parser")
+        hidden_elem = soup.find_all("input", {"type": "hidden"})[0]
+        assert hidden_elem.get("id") == "phone"
 
     @pytest.mark.usefixtures("otp_code_db", "patient")
     def test_auth_succeed(self, otp_code_data: dict[str, str]) -> None:
