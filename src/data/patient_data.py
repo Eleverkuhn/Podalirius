@@ -4,10 +4,8 @@ from datetime import date
 
 from sqlmodel import Field, Session
 
-from logger.setup import get_logger
 from model.patient_models import PatientInner, PatientOuter
-from data.crud import BaseCRUD
-from data.base_sql_models import PersonSQLModel
+from data.base_data import BaseCRUD, PersonSQLModel
 
 
 class PatientSQLModel(PersonSQLModel, table=True):

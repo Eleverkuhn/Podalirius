@@ -3,11 +3,8 @@ from pathlib import Path
 import pytest
 from sqlmodel import Session
 
-from logger.setup import get_logger
 from utils import DatabaseSeeder, SetUpTest
-from model.auth_models import OTPCode
-from data.base_sql_models import BaseSQLModel
-from data.crud import BaseCRUD
+from data.base_data import BaseSQLModel, BaseCRUD
 from tests.conftest import SQLModelForTest, SQLModelForTestAlter, SetUpTest
 
 

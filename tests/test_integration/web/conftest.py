@@ -7,8 +7,7 @@ from sqlmodel import Session
 
 from main import app
 from model.base_models import AbstractModel
-from data.base_sql_models import BaseSQLModel
-from data.crud import BaseCRUD
+from data.base_data import BaseSQLModel, BaseCRUD
 
 
 @pytest.fixture(autouse=True)

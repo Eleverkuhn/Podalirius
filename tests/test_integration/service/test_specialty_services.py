@@ -3,7 +3,7 @@ from sqlmodel import Session, Sequence
 
 from logger.setup import get_logger
 from service.specialty_services import SpecialtyDataConstructor
-from data.crud import BaseCRUD
+from data.base_data import BaseCRUD
 from data.sql_models import Specialty
 
 

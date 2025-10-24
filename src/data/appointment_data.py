@@ -1,7 +1,7 @@
 from sqlmodel import Session
 
 from model.appointment_models import Appointment
-from data.crud import BaseCRUD
+from data.base_data import BaseCRUD
 from data import sql_models
 
 

@@ -5,8 +5,7 @@ from sqlalchemy import TextClause
 from sqlalchemy.orm.exc import ObjectDeletedError
 from sqlmodel import Session, Table, text, inspect
 
-from data.base_sql_models import BaseSQLModel
-from data.crud import BaseCRUD
+from data.base_data import BaseSQLModel, BaseCRUD
 from data.patient_data import PatientCRUD
 
 

@@ -2,7 +2,7 @@ from sqlmodel import Sequence
 
 from service.base_services import BaseService
 from service.doctor_services import DoctorDataConstructor
-from data.crud import BaseCRUD
+from data.base_data import BaseCRUD
 from data.sql_models import Doctor, Specialty
 
 

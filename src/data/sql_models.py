@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from sqlmodel import Field, Enum, Relationship
 
-from data.base_sql_models import (
+from data.base_data import (
     BaseSQLModel, BaseEnumSQLModel, FieldDefault, PersonSQLModel
 )
 

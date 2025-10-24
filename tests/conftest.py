@@ -9,8 +9,7 @@ from utils import SetUpTest, read_fixture
 from model.form_models import AppointmentBookingForm, PhoneForm, OTPCodeForm
 from service.auth_services import JWTTokenService, OTPCodeService
 from data.connections import MySQLConnection
-from data.base_sql_models import BaseSQLModel
-from data.crud import BaseCRUD
+from data.base_data import BaseSQLModel, BaseCRUD
 from data.patient_data import PatientSQLModel
 
 

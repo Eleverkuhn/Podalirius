@@ -16,7 +16,7 @@ from service.patient_services import PatientService
 from service.specialty_services import SpecialtyDataConstructor
 from data import sql_models
 from data.connections import MySQLConnection
-from data.crud import BaseCRUD
+from data.base_data import BaseCRUD
 from data.appointment_data import AppointmentCrud
 from data.patient_data import PatientCRUD
 

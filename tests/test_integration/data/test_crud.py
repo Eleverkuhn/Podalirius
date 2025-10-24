@@ -5,9 +5,7 @@ from time import sleep
 import pytest
 from sqlalchemy.exc import NoResultFound
 
-from logger.setup import get_logger
-from data.crud import BaseCRUD
-from data.base_sql_models import BaseSQLModel
+from data.base_data import BaseSQLModel, BaseCRUD
 from tests.conftest import SQLModelForTest
 from utils import SetUpTest, read_fixture
 

@@ -1,14 +1,11 @@
 from collections.abc import Iterator
-from datetime import timedelta
 from random import randint
 
-from pathlib import Path
 from typing import Generator
 
 import pytest
 from sqlmodel import Session
 
-from logger.setup import get_logger
 from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
@@ -16,7 +13,7 @@ from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
 from data import sql_models
-from data.base_sql_models import BaseSQLModel
+from data.base_data import BaseSQLModel
 from data.auth_data import OTPCodeRedis
 from data.patient_data import PatientSQLModel, PatientCRUD
 from utils import SetUpTest

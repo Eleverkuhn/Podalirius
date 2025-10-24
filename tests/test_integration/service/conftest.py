@@ -4,7 +4,7 @@ import pytest
 from sqlmodel import Session, Sequence
 
 from service.doctor_services import DoctorDataConstructor
-from data.crud import BaseCRUD
+from data.base_data import BaseCRUD
 from data.sql_models import Doctor
 
 
