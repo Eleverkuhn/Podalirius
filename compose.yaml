@@ -13,6 +13,11 @@ services:
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_PORT=${MYSQL_PORT}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
     volumes:
       - mysql-data:/var/lib/mysql
       - ./mysql.env:/etc/mysql/config/.env
@@ -29,16 +34,14 @@ services:
       - FASTAPI_PORT=${FASTAPI_PORT}
       - MYSQL_HOST=mysql
       - REDIS_HOST=redis
+    depends_on:
+      mysql:
+        condition: service_healthy
     ports:
       - "${FASTAPI_PORT}:${FASTAPI_PORT}"
-    command: 
-      - uvicorn
-      - src.main:app 
-      - --host 
-      - ${FASTAPI_HOST}
-      - --port 
-      - ${FASTAPI_PORT}
-      - --reload
+    command: bash -c "
+        python src/data/sql/seed_db.py
+        && uvicorn src.main:app --host ${FASTAPI_HOST} --port ${FASTAPI_PORT} --reload"
     volumes: 
       - .:/podalirius
       - ./logs:/podalirius/logs
