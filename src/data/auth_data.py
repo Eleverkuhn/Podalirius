@@ -1,9 +1,8 @@
 from redis import Redis
 
-from logger.setup import get_logger
 from exceptions.exc import OTPCodeNotFound
 from model.auth_models import OTPCode
-from data.redis_config import redis_conn
+from data.connections import redis_conn
 
 
 class OTPCodeRedis:

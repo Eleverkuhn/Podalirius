@@ -15,7 +15,7 @@ from service.auth_services import AuthService, JWTTokenService
 from service.patient_services import PatientService
 from service.specialty_services import SpecialtyDataConstructor
 from data import sql_models
-from data.mysql import get_session
+from data.connections import MySQLConnection
 from data.crud import BaseCRUD
 from data.appointment_data import AppointmentCrud
 from data.patient_data import PatientCRUD
@@ -160,18 +160,18 @@ class AppointmentJWTTokenService:
 
 
 def get_form_content(
-        session: Session = Depends(get_session)
+        session: Session = Depends(MySQLConnection.get_session)
 ) -> FormContent:
     return FormContent(session)
 
 
 def get_appointment_booking(
-        session: Session = Depends(get_session),
+        session: Session = Depends(MySQLConnection.get_session),
 ) -> AppointmentBooking:
     return AppointmentBooking(session)
 
 
 def get_appointment_jwt_token_service(
-        session: Session = Depends(get_session),
+        session: Session = Depends(MySQLConnection.get_session),
 ) -> AppointmentJWTTokenService:
     return AppointmentJWTTokenService(session)

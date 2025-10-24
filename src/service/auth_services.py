@@ -16,7 +16,7 @@ from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
 from service.patient_services import PatientService
 from data.auth_data import OTPCodeRedis
-from data.mysql import get_session
+from data.connections import MySQLConnection
 
 type Payload = dict[str, bytes | int | datetime]
 
@@ -151,7 +151,9 @@ class OTPCodeService:
         raise OTPCodeHashDoesNotMatch()
 
 
-def get_auth_service(session: Session = Depends(get_session)) -> AuthService:
+def get_auth_service(
+        session: Session = Depends(MySQLConnection.get_session)
+) -> AuthService:
     return AuthService(session)
 
 

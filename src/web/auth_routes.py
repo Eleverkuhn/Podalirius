@@ -8,7 +8,7 @@ from sqlmodel import Session
 from web.base_routes import BaseRouter, Prefixes
 from model.form_models import PhoneForm, OTPCodeForm
 from service.auth_services import AuthService, OTPCodeService
-from data.mysql import get_session
+from data.connections import MySQLConnection
 
 login_router = APIRouter(prefix=f"{Prefixes.AUTH}/login")
 verify_code_router = APIRouter(prefix=f"{Prefixes.AUTH}/verify-code")
@@ -72,7 +72,7 @@ class VerifyCode(BaseRouter):
     def send_form(
             self,
             request: Request,
-            session: Session = Depends(get_session),
+            session: Session = Depends(MySQLConnection.get_session),
             form: OTPCodeForm = Depends(OTPCodeForm.as_form)
     ) -> RedirectResponse:
         access_token, refresh_token = AuthService(session).authenticate(form)

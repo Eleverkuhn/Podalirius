@@ -8,7 +8,7 @@ from logger.setup import get_logger
 from utils import SetUpTest, read_fixture
 from model.form_models import AppointmentBookingForm, PhoneForm, OTPCodeForm
 from service.auth_services import JWTTokenService, OTPCodeService
-from data.mysql import get_session, engine
+from data.connections import MySQLConnection
 from data.base_sql_models import BaseSQLModel
 from data.crud import BaseCRUD
 from data.patient_data import PatientSQLModel
@@ -34,7 +34,7 @@ class SQLModelForTestAlter(BaseSQLModel, table=True):
 
 @pytest.fixture(autouse=True)
 def session() -> Session:
-    return next(get_session())
+    return next(MySQLConnection.get_session())
 
 
 @pytest.fixture
@@ -44,7 +44,7 @@ def crud_test(session: Session) -> BaseCRUD:
 
 @pytest.fixture
 def create_table() -> None:
-    SQLModel.metadata.create_all(engine, tables=[
+    SQLModel.metadata.create_all(MySQLConnection.engine, tables=[
         SQLModelForTest.__table__,
         SQLModelForTestAlter.__table__
     ])

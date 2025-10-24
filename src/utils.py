@@ -5,9 +5,6 @@ from sqlalchemy import TextClause
 from sqlalchemy.orm.exc import ObjectDeletedError
 from sqlmodel import Session, Table, text, inspect
 
-from logger.setup import get_logger
-from model.auth_models import OTPCode
-from data.redis_config import redis_conn
 from data.base_sql_models import BaseSQLModel
 from data.crud import BaseCRUD
 from data.patient_data import PatientCRUD
