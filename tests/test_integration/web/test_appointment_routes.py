@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from time import sleep
 from typing import override
 
@@ -6,9 +6,11 @@ import pytest
 from bs4 import BeautifulSoup
 from fastapi import status
 
+from logger.setup import get_logger
 from utils import SetUpTest
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import Appointment
+from data.patient_data import PatientSQLModel
 from tests.test_integration.web.conftest import (
     BaseTestEndpoint, EndpointWithForm
 )
@@ -23,6 +25,26 @@ class TestAppointmentEndpointGetForm(BaseTestEndpoint):
         form_fields = soup.find_all("input")
         for field in form_fields:
             assert field.get("value") == ""
+
+    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+    def test_form_is_pre_filled_for_logged_in_user(
+            self, patient: PatientSQLModel, cookies: dict[str, str]
+    ) -> None:
+        self.client.cookies = cookies
+        response = self.client.get(self._get_url())
+        soup = BeautifulSoup(response.text, "html.parser")
+        field_values = [
+            input_tag.get("value")
+            for input_tag
+            in soup.find_all("input")
+        ]
+        patient_dumped = patient.model_dump(exclude=[
+            "id", "created_at", "updated_at"
+        ])
+        patient_dumped.update({
+            "birth_date": patient_dumped.get("birth_date").isoformat()
+        })
+        assert sorted(field_values) == sorted(list(patient_dumped.values()))
 
 
 class TestAppointmentEndpointSendForm(EndpointWithForm):

@@ -4,6 +4,12 @@ from pydantic import ConfigDict
 from sqlmodel import SQLModel, Field
 
 
+class FieldDefault:
+    SERVICE_TITLE_MAX_LENGHT = 75
+    PRECISION = 8
+    SCALE = 2
+
+
 class BaseSQLModel(SQLModel):
     id: None | int = Field(default=None, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now())

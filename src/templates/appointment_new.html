@@ -3,7 +3,25 @@
 {% block content %}
 <h2>New Appointment</h2>
 <form method="post" action="{{ request.url_for('Appointment.send_form') }}">
-  {% include "form_rendering.html" %}
+  {% if form.get("patient") %}
+    {% for key, value in form.get("patient").items() %}
+      <input type="hidden" name="{{ key }}" value="{{ value }}" required>
+    {% endfor %}
+  {% else %}
+    <label>"Last Name"</label>
+    <input type="text" name="Last Name" value="" required>
+    <label>"Middle Name"</label>
+    <input type="text" name="Middle Name" value="" required>
+    <label>"First Name"</label>
+    <input type="text" name="First Name" value="" required>
+    <label>"Phone"</label>
+    <input type="text" name="Phone" value="" required>
+    <label>"Birth Date"</label>
+    <input type="text" name="Birth Date" value="" required>
+  {% endif %}
+  {% if errors %}
+    <small>{{ errors }}</small>
+  {% endif %}
   <button type="submit">Create Appointment</button>
 </form>
 {% include "form_input_err.html" %}

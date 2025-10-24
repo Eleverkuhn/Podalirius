@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, Depends, Request, status
+from fastapi import APIRouter, Depends, Request, status
 from fastapi.responses import RedirectResponse
 from fastapi_utils.cbv import cbv
 from jose.exceptions import ExpiredSignatureError
@@ -7,9 +7,11 @@ from starlette.templating import _TemplateResponse
 from web.base_routes import BaseRouter
 from model.form_models import AppointmentBookingForm
 from service.appointment_services import (
+    FormContent,
+    get_form_content,
     AppointmentBooking,
-    AppointmentJWTTokenService,
     get_appointment_booking,
+    AppointmentJWTTokenService,
     get_appointment_jwt_token_service
 )
 
@@ -27,14 +29,12 @@ class Appointment(BaseRouter):
     def get_appointment(
             self,
             request: Request,
-            form: AppointmentBookingForm = Depends(AppointmentBookingForm.empty),
-            service: AppointmentBooking = Depends(get_appointment_booking)
+            form_content: FormContent = Depends(get_form_content)
     ) -> _TemplateResponse:
-        # user = service.render_form()
+        form = form_content.construct(request.cookies)
         content = {
             "request": request,
-            "form": form.model_dump(),
-            "user": None
+            "form": form
         }
         return self.template.TemplateResponse("appointment_new.html", content)
 

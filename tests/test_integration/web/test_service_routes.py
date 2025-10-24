@@ -2,7 +2,7 @@ from typing import override
 
 from sqlmodel import Session
 
-from data import sql_models
+from data.sql_models import Service
 from tests.test_integration.web.conftest import EndpointWithURLParams
 
 
@@ -10,7 +10,7 @@ class TestServiceEndpoint(EndpointWithURLParams):
     # INFO: has URL parameters
     base_url = "Service.service"
     param = "title"
-    sql_model = sql_models.Service
+    sql_model = Service
 
     @override
     def test_multiple_exist(self, session: Session) -> None:

@@ -1,16 +1,19 @@
+from typing import override
+
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from fastapi import Depends
 
-from logger.setup import get_logger
 from exceptions.exc import DataDoesNotMatch, FormInputError, UnauthorizedError
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import (
     Appointment, AppointmentCreate, ServiceToAppointment
 )
 from model.patient_models import PatientCreate
+from service.base_services import BaseService
 from service.auth_services import AuthService, JWTTokenService
 from service.patient_services import PatientService
+from service.specialty_services import SpecialtyDataConstructor
 from data import sql_models
 from data.mysql import get_session
 from data.crud import BaseCRUD
@@ -18,10 +21,46 @@ from data.appointment_data import AppointmentCrud
 from data.patient_data import PatientCRUD
 
 
-class AppointmentBooking:
+class BaseAppointmentService(BaseService):
+    def _check_user_is_logged_in(self, cookies: dict[str, str]) -> str | None:
+        try:
+            patient_id = AuthService(self.session).authorize(cookies)
+        except UnauthorizedError:
+            return None
+        else:
+            return patient_id
+
+
+class FormContent(BaseAppointmentService):
+    """Service for rendering content of 'AppointmentBookingForm'"""
+    @override
     def __init__(self, session: Session) -> None:
         self.session = session
 
+    def construct(self, cookies: dict[str, str]) -> dict:
+        """Initial method"""
+        patient = self._get_patient_from_cookies(cookies)
+        specialties = SpecialtyDataConstructor(self.session).exec()
+        content = {
+            "patient": patient,
+            "specialties": specialties
+        }
+        return content
+
+    def _get_patient_from_cookies(self, cookies: dict[str, str]) -> dict | None:
+        patient_id = self._check_user_is_logged_in(cookies)
+        return self._get_patient_data(patient_id)
+
+    def _get_patient_data(self, patient_id: str) -> dict | None:
+        if patient_id:
+            patient_data = PatientService(self.session).construct_patient_data(
+                patient_id
+            )
+            return patient_data
+        return None
+
+
+class AppointmentBooking(BaseAppointmentService):
     def book(
             self, cookies: dict[str, str], form: AppointmentBookingForm
     ) -> str:
@@ -32,14 +71,6 @@ class AppointmentBooking:
         if patient_id:
             return self._booking_for_logged_in_user()
         return self._booking_for_unlogged_in_user(form)
-
-    def _check_user_is_logged_in(self, cookies: dict[str, str]) -> str | None:
-        try:
-            patient_id = AuthService(self.session).authorize(cookies)
-        except UnauthorizedError:
-            return None
-        else:
-            return patient_id
 
     def _booking_for_logged_in_user(self) -> None:
         pass
@@ -126,6 +157,12 @@ class AppointmentJWTTokenService:
     def _get_id_from_token(self, token: str) -> int:
         content = JWTTokenService().verify(token)
         return content.get("id")
+
+
+def get_form_content(
+        session: Session = Depends(get_session)
+) -> FormContent:
+    return FormContent(session)
 
 
 def get_appointment_booking(

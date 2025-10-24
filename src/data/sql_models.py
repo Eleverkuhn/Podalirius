@@ -1,13 +1,51 @@
 from datetime import datetime, date, time
 from decimal import Decimal
 
-from sqlmodel import Field, Enum
+from sqlmodel import Field, Enum, Relationship
 
-from data.base_sql_models import BaseSQLModel, PersonSQLModel, BaseEnumSQLModel
+from data.base_sql_models import (
+    BaseSQLModel, BaseEnumSQLModel, FieldDefault, PersonSQLModel
+)
 
-SERVICE_TITLE_MAX_LENGHT = 75
-PRECISION = 8
-SCALE = 2
+
+class SpecialtyToDoctor(BaseSQLModel, table=True):
+    __tablename__ = "specialties_to_doctors"
+
+    doctor_id: int = Field(foreign_key="doctors.id")
+    specialty_id: int = Field(foreign_key="specialties.id")
+
+
+class DoctorToService(BaseSQLModel, table=True):
+    __tablename__ = "doctors_to_services"
+
+    markup: None | Decimal = Field(
+        default=0,
+        max_digits=FieldDefault.PRECISION,
+        decimal_places=FieldDefault.SCALE
+    )
+
+    doctor_id: int = Field(foreign_key="doctors.id")
+    service_id: int = Field(foreign_key="services.id")
+
+    doctor: "Doctor" = Relationship(back_populates="service_links")
+    service: "Service" = Relationship(back_populates="doctor_links")
+
+
+class ServiceToSpecialty(BaseSQLModel, table=True):
+    __tablename__ = "services_to_specialties"
+
+    service_id: int = Field(foreign_key="services.id")
+    specialty_id: int | None = Field(
+        default=None,
+        foreign_key="specialties.id"
+    )
+
+
+class ServiceToAppointment(BaseSQLModel, table=True):
+    __tablename__ = "services_to_appointments"
+
+    appointment_id: int = Field(foreign_key="appointments.id")
+    service_id: int = Field(foreign_key="services.id")
 
 
 class Specialty(BaseSQLModel, table=True):
@@ -16,24 +54,12 @@ class Specialty(BaseSQLModel, table=True):
     title: str = Field(max_length=30)
     description: None | str = Field(default=None)
 
-
-class ServiceType(BaseSQLModel, table=True):
-    __tablename__ = "services_types"
-
-    title: str = Field(max_length=SERVICE_TITLE_MAX_LENGHT)
-    price: Decimal = Field(max_digits=PRECISION, decimal_places=SCALE)
-
-
-class Service(BaseSQLModel, table=True):
-    __tablename__ = "services"
-
-    title: str = Field(max_length=SERVICE_TITLE_MAX_LENGHT)
-    description: None | str = Field(default=None)
-    markup: None | Decimal = Field(
-        default=0, max_digits=PRECISION, decimal_places=SCALE
+    doctors: list["Doctor"] = Relationship(
+        back_populates="specialties", link_model=SpecialtyToDoctor
     )
-
-    type_id: int = Field(foreign_key="services_types.id")
+    services: list["Service"] = Relationship(
+        back_populates="specialties", link_model=ServiceToSpecialty
+    )
 
 
 class Doctor(PersonSQLModel, table=True):
@@ -41,6 +67,16 @@ class Doctor(PersonSQLModel, table=True):
 
     experience: date
     description: None | str = Field(default=None)
+
+    specialties: list["Specialty"] = Relationship(
+        back_populates="doctors", link_model=SpecialtyToDoctor
+    )
+    services: list["Service"] = Relationship(
+        back_populates="doctors", link_model=DoctorToService
+    )
+    service_links: list[DoctorToService] = Relationship(
+        back_populates="doctor"
+    )
 
 
 class Weekday(str, Enum):
@@ -63,6 +99,44 @@ class WorkSchedule(BaseEnumSQLModel, table=True):
     doctor_id: int = Field(foreign_key="doctors.id")
 
 
+class ServiceType(BaseSQLModel, table=True):
+    __tablename__ = "services_types"
+
+    title: str = Field(max_length=FieldDefault.SERVICE_TITLE_MAX_LENGHT)
+    price: Decimal = Field(
+        max_digits=FieldDefault.PRECISION, decimal_places=FieldDefault.SCALE
+    )
+
+    services: list["Service"] = Relationship(back_populates="type")
+
+
+class Service(BaseSQLModel, table=True):
+    __tablename__ = "services"
+
+    title: str = Field(max_length=FieldDefault.SERVICE_TITLE_MAX_LENGHT)
+    description: None | str = Field(default=None)
+    markup: None | Decimal = Field(
+        default=0,
+        max_digits=FieldDefault.PRECISION,
+        decimal_places=FieldDefault.SCALE
+    )
+
+    type_id: int = Field(foreign_key="services_types.id")
+
+    type: ServiceType = Relationship(back_populates="services")
+    doctors: list["Doctor"] = Relationship(
+        back_populates="services", link_model=DoctorToService
+    )
+    specialties: list["Specialty"] = Relationship(
+        back_populates="services", link_model=ServiceToSpecialty
+    )
+    doctor_links: list[DoctorToService] = Relationship(back_populates="service")
+
+    @property
+    def price(self) -> Decimal:
+        return self.markup + self.type.price
+
+
 class Status(str, Enum):
     PENDING = "pending"
     COMPLETED = "completed"
@@ -78,38 +152,3 @@ class Appointment(BaseEnumSQLModel, table=True):
 
     doctor_id: int = Field(foreign_key="doctors.id")
     patient_id: int = Field(foreign_key="patients.id")
-
-
-class ServiceToSpecialty(BaseSQLModel, table=True):
-    __tablename__ = "services_to_specialties"
-
-    service_id: int = Field(foreign_key="services.id")
-    specialty_id: int | None = Field(
-        default=None,
-        foreign_key="specialties.id"
-    )
-
-
-class SpecialtyToDoctor(BaseSQLModel, table=True):
-    __tablename__ = "specialties_to_doctors"
-
-    doctor_id: int = Field(foreign_key="doctors.id")
-    specialty_id: int = Field(foreign_key="specialties.id")
-
-
-class ServiceToDoctor(BaseSQLModel, table=True):
-    __tablename__ = "services_to_doctors"
-
-    markup: None | Decimal = Field(
-        default=0, max_digits=PRECISION, decimal_places=SCALE
-    )
-
-    doctor_id: int = Field(foreign_key="doctors.id")
-    service_id: int = Field(foreign_key="services.id")
-
-
-class ServiceToAppointment(BaseSQLModel, table=True):
-    __tablename__ = "services_to_appointments"
-
-    appointment_id: int = Field(foreign_key="appointments.id")
-    service_id: int = Field(foreign_key="services.id")

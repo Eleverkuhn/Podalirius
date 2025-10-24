@@ -116,3 +116,20 @@ def otp_code_db(
     otp_code = otp_redis.get(otp_code_form.phone)
     yield otp_code
     otp_redis.delete(otp_code_form.phone)
+
+
+@pytest.fixture
+def patient_str_id(patient: PatientSQLModel) -> str:
+    return PatientCRUD.uuid_to_str(patient.id)
+
+
+@pytest.fixture
+def access_token(
+        patient_str_id: str, jwt_token_service: JWTTokenService
+) -> str:
+    return jwt_token_service.create(patient_str_id)
+
+
+@pytest.fixture
+def cookies(access_token: str) -> dict[str, str]:
+    return {"access_token": access_token}

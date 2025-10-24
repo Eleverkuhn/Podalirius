@@ -1,15 +1,10 @@
-import pytest
-from sqlmodel import Session
+from pathlib import Path
 
-from logger.setup import get_logger
+import pytest
+
 from model.patient_models import PatientCreate
 from service.patient_services import PatientService
 from data.patient_data import PatientSQLModel
-
-
-# @pytest.fixture
-# def service(session: Session) -> PatientService:
-#     return PatientService(session)
 
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
@@ -33,7 +28,7 @@ class TestPatientService:
     def test__check_existing_patient_returns_true(
             self, patient_service: PatientService, patient: PatientSQLModel
     ) -> None:
-        patient_exists = patient_service._check_patient_exsits(patient.phone)
+        patient_exists = patient_service.check_patient_exists(patient.phone)
         assert patient_exists is not None
 
     def test__check_non_existing_patient_returns_false(
@@ -41,7 +36,7 @@ class TestPatientService:
             patient_service: PatientService,
             patient_create: PatientCreate
     ) -> None:
-        patient_exists = patient_service._check_patient_exsits(
+        patient_exists = patient_service.check_patient_exists(
             patient_create.phone
         )
         assert patient_exists is None

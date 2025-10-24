@@ -1,6 +1,5 @@
 import pytest
 
-from logger.setup import get_logger
 from model.patient_models import PatientCreate
 from data.patient_data import PatientCRUD, PatientSQLModel
 

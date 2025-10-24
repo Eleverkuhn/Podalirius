@@ -138,7 +138,7 @@ CREATE TABLE specialties_to_doctors (
     ON UPDATE CASCADE
 ) ENGINE = InnoDB;
 
-CREATE TABLE services_to_doctors (
+CREATE TABLE doctors_to_services (
   id INT AUTO_INCREMENT PRIMARY KEY,
   doctor_id INT NOT NULL,
   service_id INT NOT NULL,

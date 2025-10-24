@@ -39,7 +39,7 @@ class AuthService:
 
     def authenticate(self, form: PhoneForm) -> dict[str, str]:
         if OTPCodeService().verify(form):
-            patient = self.patient_service._check_patient_exsits(form.phone)
+            patient = self.patient_service.check_patient_exists(form.phone)
             if not patient:
                 patient = self.patient_service.registry(
                     PatientCreate(phone=form.phone)

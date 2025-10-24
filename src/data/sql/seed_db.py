@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from data import sql_models
 from data.mysql import get_session
+from data import sql_models
 from utils import DatabaseSeeder
 
 FIXTURE_DIR = Path(__file__).parent.joinpath("fixtures")
@@ -18,8 +18,8 @@ MODELS_TO_FIXTURES = {
     sql_models.SpecialtyToDoctor: FIXTURE_DIR.joinpath(
         "specialties_to_doctors.json"
     ),
-    sql_models.ServiceToDoctor: FIXTURE_DIR.joinpath(
-        "services_to_doctors.json"
+    sql_models.DoctorToService: FIXTURE_DIR.joinpath(
+        "doctors_to_services.json"
     )
 }
 

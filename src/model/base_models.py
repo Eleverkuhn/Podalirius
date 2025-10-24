@@ -15,7 +15,7 @@ def is_alpha(value: str) -> str | None:
 class AbstractModel(BaseModel):  # FIX: rename this to `AbstractModel`
     def is_submodel(self, to_compare: "AbstractModel") -> bool:
         return self.dumped_items <= to_compare.dumped_items
-    
+
     @property
     def dumped_items(self) -> ItemsView:
         return self.model_dump().items()
@@ -32,7 +32,7 @@ class PersonAbstract(AbstractModel):
         None, min_length=2, max_length=40
     )
     middle_name: Annotated[str | None, AfterValidator(is_alpha)] = Field(
-        None, min_length=6, max_length=20
+        None, min_length=3, max_length=20
     )
     first_name: Annotated[str | None, AfterValidator(is_alpha)] = Field(
         None, min_length=2, max_length=40

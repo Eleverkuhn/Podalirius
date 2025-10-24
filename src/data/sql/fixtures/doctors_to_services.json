@@ -1,5 +1,5 @@
 [
-  { "doctor_id": 1, "service_id": 1 },
+  { "doctor_id": 1, "service_id": 1, "markup": 1000 },
   { "doctor_id": 1, "service_id": 11 },
   { "doctor_id": 1, "service_id": 12 },
   { "doctor_id": 2, "service_id": 1 },
