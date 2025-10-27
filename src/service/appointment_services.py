@@ -1,6 +1,5 @@
 from typing import override
 
-from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 from fastapi import Depends
 

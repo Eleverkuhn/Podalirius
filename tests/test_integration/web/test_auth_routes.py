@@ -28,7 +28,7 @@ def otp_code_data(otp_code_form: OTPCodeForm) -> dict[str, str]:
 
 @pytest.fixture
 def invalid_otp_code_data(otp_code_data: dict[str, str]) -> dict[str, str]:
-    otp_code_data.update({"phone": "invalid", "code": "invalid"})
+    otp_code_data.update({"phone": "9999999999", "code": "invalid"})
     return otp_code_data
 
 

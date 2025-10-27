@@ -10,17 +10,29 @@
   {% else %}
     <label>"Last Name"</label>
     <input type="text" name="Last Name" value="" required>
+    {% if errors and errors.get("last_name") %}
+      <small>{{ errors.get("last_name") }}</small>
+    {% endif %}
     <label>"Middle Name"</label>
     <input type="text" name="Middle Name" value="" required>
+    {% if errors and errors.get("middle_name") %}
+      <small>{{ errors.get("middle_name") }}</small>
+    {% endif %}
     <label>"First Name"</label>
     <input type="text" name="First Name" value="" required>
+    {% if errors and errors.get("first_name") %}
+      <small>{{ errors.get("first_name") }}</small>
+    {% endif %}
     <label>"Phone"</label>
     <input type="text" name="Phone" value="" required>
+    {% if errors and errors.get("phone") %}
+      <small>{{ errors.get("phone") }}</small>
+    {% endif %}
     <label>"Birth Date"</label>
     <input type="text" name="Birth Date" value="" required>
-  {% endif %}
-  {% if errors %}
-    <small>{{ errors }}</small>
+    {% if errors and errors.get("birth_date") %}
+      <small>{{ errors.get("birth_date") }}</small>
+    {% endif %}
   {% endif %}
   <button type="submit">Create Appointment</button>
 </form>

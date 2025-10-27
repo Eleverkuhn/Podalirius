@@ -3,7 +3,11 @@
 {% block content %}
 <h2>Login</h2>
 <form id="login" method="post" action="{{ request.url_for('Login.form') }}">
-  {% include "form_rendering.html" %}
+  <label>Phone</label>
+  <input type="text" name="phone" id="phone" value="" required>
+  {% if errors and errors.get("phone") %}
+    <small>{{ errors["phone"] }}</small>
+  {% endif %}
   <button type="submit">Log In</button>
 </form>
 {% endblock %}

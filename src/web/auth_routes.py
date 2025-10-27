@@ -22,10 +22,8 @@ class Login(BaseRouter):
         name="form",
         status_code=status.HTTP_200_OK,
     )
-    def get_form(
-            self, request: Request, form: PhoneForm = Depends(PhoneForm.empty)
-    ) -> _TemplateResponse:
-        content = {"request": request, "form": form.model_dump()}
+    def get_form(self, request: Request) -> _TemplateResponse:
+        content = {"request": request}
         return self.template.TemplateResponse("login.html", content)
 
     @login_router.post(
@@ -57,14 +55,8 @@ class VerifyCode(BaseRouter):
     @verify_code_router.get(
         "/", status_code=status.HTTP_200_OK, name="form"
     )
-    def get_form(
-            self, request: Request,
-            form: OTPCodeForm = Depends(OTPCodeForm.empty)
-    ) -> _TemplateResponse:
-        content = {
-            "request": request,
-            "form": form.model_dump()
-        }
+    def get_form(self, request: Request) -> _TemplateResponse:
+        content = {"request": request}
         return self.template.TemplateResponse("verify_login.html", content)
 
     @verify_code_router.post(

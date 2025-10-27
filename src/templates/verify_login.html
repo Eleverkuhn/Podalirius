@@ -4,7 +4,11 @@
 <h2>Verify</h2>
 {% set hidden_field = "phone" %}
 <form method="post" action="{{ request.url_for('VerifyCode.form') }}">
-  {% include "form_rendering.html" %}
+  <input type="hidden" name="phone" id="phone" value="" required>
+  <input type="text" name="code" id="code" value="" required>
+  {% if errors and errors.get("code") %}
+    <small>{{ errors["code"] }}</small>
+  {% endif %}
   <button type="submit">Send</button>
 </form>
 {% include "form_input_err.html" %}
