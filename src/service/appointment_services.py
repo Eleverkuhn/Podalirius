@@ -9,7 +9,6 @@ from model.form_models import AppointmentBookingForm
 from model.appointment_models import (
     Appointment, AppointmentCreate, ServiceToAppointment
 )
-from model.patient_models import PatientCreate
 from service.base_services import BaseService
 from service.auth_services import AuthService, JWTTokenService
 from service.patient_services import PatientService
@@ -17,8 +16,6 @@ from service.specialty_services import SpecialtyDataConstructor
 from data import sql_models
 from data.connections import MySQLConnection
 from data.base_data import BaseCRUD
-from data.appointment_data import AppointmentCrud
-from data.patient_data import PatientCRUD
 
 
 class BaseAppointmentService(BaseService):
@@ -29,6 +26,13 @@ class BaseAppointmentService(BaseService):
             return None
         else:
             return patient_id
+
+
+class BaseAppointmentServiceWithCRUD(BaseService):
+    @override
+    def __init__(self, session: Session) -> None:
+        super().__init__(session)
+        self.crud = BaseCRUD(session, sql_models.Appointment, Appointment)
 
 
 class FormContent(BaseAppointmentService):
@@ -60,7 +64,9 @@ class FormContent(BaseAppointmentService):
         return None
 
 
-class AppointmentBooking(BaseAppointmentService):
+class AppointmentBooking(
+        BaseAppointmentServiceWithCRUD, BaseAppointmentService
+):
     def book(
             self, cookies: dict[str, str], form: AppointmentBookingForm
     ) -> str:
@@ -104,7 +110,7 @@ class AppointmentBooking(BaseAppointmentService):
             self, patient_id: bytes, form: AppointmentBookingForm
     ) -> Appointment:
         appointment_data = self._construct_appointment_data(patient_id, form)
-        appointment = AppointmentCrud(self.session).create(appointment_data)
+        appointment = self.crud.create(appointment_data)
         return appointment
 
     def _construct_appointment_data(
@@ -126,33 +132,11 @@ class AppointmentBooking(BaseAppointmentService):
         ).create(entry)
         self.session.commit()
 
-    def render_form(self) -> None | PatientCreate:
-        patient_id = self._check_user_is_logged_in()
-        if patient_id:
-            self.render_form_for_logged_in_user(patient_id)
-        self.render_form_for_unlogged_in_user()
 
-    def render_form_for_logged_in_user(self, patient_id: str) -> None:
-        patient = PatientCRUD(self.session).get(patient_id)
-        self.fill_appointment_form_with_user_info(patient)
-
-    def fill_appointment_form_with_user_info(
-            self, user: PatientCreate) -> None:
-        # TODO: expand this with filling other fields
-        pass
-
-    def render_form_for_unlogged_in_user(self) -> None:
-        # TODO: Maybe will be needed in the future. Remove otherwise
-        pass
-
-
-class AppointmentJWTTokenService:
-    def __init__(self, session: Session) -> None:
-        self.session = session
-
+class AppointmentJWTTokenService(BaseAppointmentServiceWithCRUD):
     def get_appointment(self, token: str) -> Appointment:
         id = self._get_id_from_token(token)
-        return AppointmentCrud(self.session).get(id)
+        return self.crud.get(id)
 
     def _get_id_from_token(self, token: str) -> int:
         content = JWTTokenService().verify(token)

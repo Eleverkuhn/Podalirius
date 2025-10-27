@@ -15,7 +15,7 @@ from service.appointment_services import (
     AppointmentJWTTokenService
 )
 from data import sql_models
-from data.appointment_data import AppointmentCrud
+# from data.appointment_data import AppointmentCrud
 from data.patient_data import PatientSQLModel
 from utils import SetUpTest
 
@@ -129,9 +129,7 @@ class TestAppointmentBooking:
         appointment = booking_service._create_appointment(
             patient.id, appointment_model
         )
-        appointment_db = AppointmentCrud(booking_service.session).get(
-            appointment.id
-        )
+        appointment_db = booking_service.crud.get(appointment.id)
         assert appointment.model_dump() == appointment_db.model_dump()
 
     @pytest.mark.parametrize(
