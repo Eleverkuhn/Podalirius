@@ -15,7 +15,6 @@ from service.appointment_services import (
     AppointmentJWTTokenService
 )
 from data import sql_models
-# from data.appointment_data import AppointmentCrud
 from data.patient_data import PatientSQLModel
 from utils import SetUpTest
 

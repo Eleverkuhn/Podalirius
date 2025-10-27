@@ -16,9 +16,8 @@ class TestPatientEndpoint(BaseTestEndpoint):
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.usefixtures("patient")
     def test_exists(self, patient: PatientSQLModel) -> None:
-        access_token = JWTTokenService().create(
-            PatientCRUD.uuid_to_str(patient.id)
-        )
+        patient_id = PatientCRUD.uuid_to_str(patient.id)
+        access_token = JWTTokenService().create(patient_id)
         response = self.client.get(
             self._get_url(),
             cookies={"access_token": access_token}

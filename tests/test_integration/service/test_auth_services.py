@@ -1,15 +1,15 @@
 import pytest
+from fastapi import Response
 from sqlmodel import Session
 
+from logger.setup import get_logger
 from exceptions.exc import (
     FormInputError, OTPCodeHashDoesNotMatch
 )
 from utils import SetUpTest
 from model.form_models import OTPCodeForm
-from model.auth_models import OTPCode
 from service.auth_services import AuthService, OTPCodeService
 from data.auth_data import OTPCodeRedis
-from data.patient_data import PatientSQLModel
 
 
 @pytest.fixture
@@ -27,10 +27,17 @@ class TestAuthService:
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.usefixtures("otp_code_db", "patient")
     def test_auth_succeed_for_existing_patient(
-            self, auth_service: AuthService, otp_code_form: OTPCodeForm
+            self,
+            auth_service: AuthService,
+            otp_code_form: OTPCodeForm,
+            mock_response: Response
     ) -> None:
-        auth_header = auth_service.authenticate(otp_code_form)
-        assert auth_header
+        auth_service.authenticate(otp_code_form, mock_response)
+        access_token, refresh_token = mock_response.headers.values()[1:]
+        assert "access_token" in access_token
+        assert "refresh_token" in refresh_token
+        get_logger().debug(access_token)
+        get_logger().debug(refresh_token)
 
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.usefixtures("otp_code_db")
@@ -38,12 +45,15 @@ class TestAuthService:
             self,
             auth_service: AuthService,
             otp_code_form: OTPCodeForm,
+            mock_response: Response,
             setup_test: SetUpTest,
     ) -> None:
-        auth_header = auth_service.authenticate(otp_code_form)
-        assert auth_header
+        auth_service.authenticate(otp_code_form, mock_response)
+        access_token, refresh_token = mock_response.headers.values()[1:]
+        assert "access_token" in access_token
+        assert "refresh_token" in refresh_token
         setup_test.delete_patient(otp_code_form.phone)
-    
+
 
 class TestOTPCodeService:
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)

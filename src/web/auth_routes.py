@@ -5,6 +5,7 @@ from pydantic import ValidationError
 from starlette.templating import _TemplateResponse
 from sqlmodel import Session
 
+from logger.setup import get_logger
 from web.base_routes import BaseRouter, Prefixes
 from model.form_models import PhoneForm, OTPCodeForm
 from service.auth_services import AuthService, OTPCodeService
@@ -75,24 +76,10 @@ class VerifyCode(BaseRouter):
             session: Session = Depends(MySQLConnection.get_session),
             form: OTPCodeForm = Depends(OTPCodeForm.as_form)
     ) -> RedirectResponse:
-        access_token, refresh_token = AuthService(session).authenticate(form)
         response = RedirectResponse(
             url=request.app.url_path_for("PatientAppointment.all"),
             status_code=status.HTTP_303_SEE_OTHER
         )
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            secure=True,
-            samesite="lax"
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=True,
-            samesite="lax",
-            max_age=60 * 60 * 24 * 7
-        )
+        AuthService(session).authenticate(form, response)
+        get_logger().debug(response.headers)
         return response

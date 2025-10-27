@@ -2,6 +2,7 @@ import uuid
 from pathlib import Path
 
 import pytest
+from fastapi import Response
 from sqlmodel import Session, SQLModel, Field
 
 from logger.setup import get_logger
@@ -118,3 +119,8 @@ def otp_code_form(patients_data: dict) -> OTPCodeForm:
 @pytest.fixture
 def otp_code_service() -> OTPCodeService:
     return OTPCodeService()
+
+
+@pytest.fixture
+def mock_response() -> Response:
+    return Response()

@@ -68,7 +68,8 @@ def appointment(
 def jwt_token_appointment(
         jwt_token_service: JWTTokenService, appointment: sql_models.Appointment
 ) -> str:
-    return jwt_token_service.create(appointment.id)
+    token = jwt_token_service.create(appointment.id)
+    return token
 
 
 @pytest.fixture
@@ -124,7 +125,8 @@ def patient_str_id(patient: PatientSQLModel) -> str:
 def access_token(
         patient_str_id: str, jwt_token_service: JWTTokenService
 ) -> str:
-    return jwt_token_service.create(patient_str_id)
+    token = jwt_token_service.create(patient_str_id)
+    return token
 
 
 @pytest.fixture

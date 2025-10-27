@@ -27,7 +27,7 @@ class DoctorToService(BaseSQLModel, table=True):
     doctor_id: int = Field(foreign_key="doctors.id")
     service_id: int = Field(foreign_key="services.id")
 
-    doctor: "Doctor" = Relationship(back_populates="service_links")
+    # doctor: "Doctor" = Relationship(back_populates="service_links")
     service: "Service" = Relationship(back_populates="doctor_links")
 
 
@@ -73,9 +73,6 @@ class Doctor(PersonSQLModel, table=True):
     )
     services: list["Service"] = Relationship(
         back_populates="doctors", link_model=DoctorToService
-    )
-    service_links: list[DoctorToService] = Relationship(
-        back_populates="doctor"
     )
 
 
