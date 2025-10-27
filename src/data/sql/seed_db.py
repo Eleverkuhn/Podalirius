@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from data.mysql import get_session
+from data.connections import MySQLConnection
 from data import sql_models
 from utils import DatabaseSeeder
 
@@ -23,4 +23,11 @@ MODELS_TO_FIXTURES = {
     )
 }
 
-DatabaseSeeder(next(get_session()), MODELS_TO_FIXTURES).execute()
+
+def seed_db() -> None:
+    session = next(MySQLConnection.get_session())
+    DatabaseSeeder(session, MODELS_TO_FIXTURES).execute()
+
+
+if __name__ == "__main__":
+    seed_db()
