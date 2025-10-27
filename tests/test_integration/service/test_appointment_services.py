@@ -120,13 +120,13 @@ class TestAppointmentBooking:
     @pytest.mark.parametrize(
         "appointments_data", ["booking_form"], indirect=True
     )
-    def test__create_appointment_succeed(
+    def test__create_appointment_entry_succeed(
             self,
             booking_service: AppointmentBooking,
             patient: PatientSQLModel,
             appointment_model: AppointmentBase
     ) -> None:
-        appointment = booking_service._create_appointment(
+        appointment = booking_service._create_appointment_entry(
             patient.id, appointment_model
         )
         appointment_db = booking_service.crud.get(appointment.id)
@@ -135,26 +135,28 @@ class TestAppointmentBooking:
     @pytest.mark.parametrize(
         "appointments_data", ["booking_form"], indirect=True
     )
-    def test__create_appointment_fails_for_unexisting_patient(
+    def test__create_appointment_entry_fails_for_unexisting_patient(
             self,
             booking_service: AppointmentBooking,
             uuid_bytes: bytes,
             appointment_model: AppointmentBase
     ) -> None:
         with pytest.raises(IntegrityError):
-            booking_service._create_appointment(uuid_bytes, appointment_model)
+            booking_service._create_appointment_entry(
+                uuid_bytes, appointment_model
+            )
 
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.parametrize(
         "appointments_data", ["booking_form"], indirect=True
     )
-    def test__create_entry_in_services_to_appointments(
+    def test__create_services_to_appointments_entry(
             self,
             booking_service: AppointmentBooking,
             appointment: sql_models.Appointment,
             appointments_data: dict[str, str | int]
     ) -> None:
-        booking_service._create_entry_in_services_to_appointments(
+        booking_service._create_services_to_appointments_entry(
             appointment.id, appointments_data.get("service_id")
         )
         statement = select(sql_models.ServiceToAppointment).where(

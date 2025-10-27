@@ -6,6 +6,7 @@ from fastapi import Depends
 
 from exceptions.exc import DataDoesNotMatch, FormInputError, UnauthorizedError
 from model.form_models import AppointmentBookingForm
+from model.patient_models import PatientOuter
 from model.appointment_models import (
     Appointment, AppointmentCreate, ServiceToAppointment
 )
@@ -37,10 +38,6 @@ class BaseAppointmentServiceWithCRUD(BaseService):
 
 class FormContent(BaseAppointmentService):
     """Service for rendering content of 'AppointmentBookingForm'"""
-    @override
-    def __init__(self, session: Session) -> None:
-        self.session = session
-
     def construct(self, cookies: dict[str, str]) -> dict:
         """Initial method"""
         patient = self._get_patient_from_cookies(cookies)
@@ -71,7 +68,7 @@ class AppointmentBooking(
             self, cookies: dict[str, str], form: AppointmentBookingForm
     ) -> str:
         """
-        Initial method which will start appointment booking process
+        Initial method which starts appointment booking process
         """
         patient_id = self._check_user_is_logged_in(cookies)
         if patient_id:
@@ -85,28 +82,29 @@ class AppointmentBooking(
             self, form: AppointmentBookingForm
     ) -> str:
         try:
-            patient = PatientService(self.session).check_input_data(
-                form.get_patient_data()
-            )
-            appointment = self._create_appointment(patient.id, form)
+            appointment = self._create_appointment(form)
         except DataDoesNotMatch:
-            self.session.rollback()
-            raise FormInputError((
-                "You are trying to book an appointment for existing user with"
-                "wrong data."
-            ))
-        except IntegrityError as exc:  # INFO: temp exception handler in case if something went wrong
-            self.session.rollback()
-            return exc
+            self._rollback()
         else:
-            self.session.commit()
-            self._create_entry_in_services_to_appointments(
-                appointment.id, form.service_id
-            )
+            self._finish_transaction(appointment.id, form.service_id)
             token = JWTTokenService().create(appointment.id)
             return token
 
     def _create_appointment(
+            self, form: AppointmentBookingForm
+    ) -> Appointment:
+        patient = self._get_patient_from_form(form)
+        appointment = self._create_appointment_entry(patient.id, form)
+        return appointment
+
+    def _get_patient_from_form(
+            self, form: AppointmentBookingForm
+    ) -> PatientOuter:
+        service = PatientService(self.session)
+        patient = service.check_input_data(form.get_patient_data())
+        return patient
+
+    def _create_appointment_entry(
             self, patient_id: bytes, form: AppointmentBookingForm
     ) -> Appointment:
         appointment_data = self._construct_appointment_data(patient_id, form)
@@ -118,19 +116,32 @@ class AppointmentBooking(
     ) -> AppointmentCreate:
         return AppointmentCreate(**form.model_dump(), patient_id=patient_id)
 
-    def _create_entry_in_services_to_appointments(
+    def _finish_transaction(
+            self, appointment_id: int, service_id: int
+    ) -> None:
+        self._create_services_to_appointments_entry(appointment_id, service_id)
+        self.session.commit()
+
+    def _create_services_to_appointments_entry(
             self, appointment_id: int, service_id: int
     ) -> None:
         entry = ServiceToAppointment(
             appointment_id=appointment_id,
             service_id=service_id
         )
-        BaseCRUD(
+        crud = BaseCRUD(
             self.session,
             sql_models.ServiceToAppointment,
             sql_models.ServiceToAppointment
-        ).create(entry)
-        self.session.commit()
+        )
+        crud.create(entry)
+
+    def _rollback(self) -> None:
+        self.session.rollback()
+        raise FormInputError((
+                "You are trying to book an appointment for existing user with"
+                "wrong data."
+            ))
 
 
 class AppointmentJWTTokenService(BaseAppointmentServiceWithCRUD):
