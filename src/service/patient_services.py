@@ -1,18 +1,19 @@
+from typing import override
+
 from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session
 
 from exceptions.exc import DataDoesNotMatch
 from model.patient_models import PatientCreate, PatientOuter
+from service.base_services import BaseService
 from data.patient_data import PatientCRUD
 
 
-class PatientService:
+class PatientService(BaseService):
+    @override
     def __init__(self, session: Session) -> None:
-        self.session = session
-
-    @property
-    def crud(self) -> PatientCRUD:
-        return PatientCRUD(self.session)
+        super().__init__(session)
+        self.crud = PatientCRUD(self.session)
 
     def registry(self, create_data: PatientCreate) -> PatientOuter:
         """
@@ -27,7 +28,7 @@ class PatientService:
         patient = self.crud.get(patient_id)
         return patient.model_dump(exclude=["id"])
 
-    def check_input_data(  # TODO: better naming
+    def check_input_data(
             self, patient_input_data: PatientCreate) -> PatientOuter:
         """
         The method is used in `AppointmentBooking`. Part of logic of
