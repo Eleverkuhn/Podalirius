@@ -7,6 +7,7 @@
   { "doctor_id": 3, "service_id": 1 },
   { "doctor_id": 4, "service_id": 1 },
   { "doctor_id": 5, "service_id": 1 },
+  { "doctor_id": 5, "service_id": 2 },
   { "doctor_id": 6, "service_id": 1 },
   { "doctor_id": 6, "service_id": 2 },
   { "doctor_id": 7, "service_id": 1 },

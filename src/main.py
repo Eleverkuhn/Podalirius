@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import RequestValidationError
 
 from config import Config
@@ -16,6 +17,8 @@ from web import (
 Config.setup()
 
 app = FastAPI()
+
+app.mount("/static", StaticFiles(directory=Config.static_dir), name="static")
 
 app.include_router(appointment_routes.router)
 app.include_router(auth_routes.login_router)

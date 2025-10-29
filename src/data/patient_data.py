@@ -4,6 +4,7 @@ from datetime import date
 
 from sqlmodel import Field, Session
 
+from logger.setup import get_logger
 from model.patient_models import PatientInner, PatientOuter
 from data.base_data import BaseCRUD, PersonSQLModel
 
@@ -67,3 +68,9 @@ class PatientCRUD(BaseCRUD):
             {"id": cls.uuid_to_bytes(dumped_patient.get("id"))}
         )
         return PatientInner(**dumped_patient)
+
+    @classmethod
+    def convert_birth_date_to_str(cls, dumped_patient: dict) -> None:
+        birth_date = dumped_patient.get("birth_date")
+        get_logger().debug(type(birth_date))
+        dumped_patient.update({"birth_date": birth_date.isoformat()})

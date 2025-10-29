@@ -30,6 +30,7 @@ class _Settings(BaseSettings):
 class Config:
     _settings = _Settings()
     templates_dir = pathlib.Path(__file__).resolve().parent.joinpath("templates")
+    static_dir = pathlib.Path(__file__).resolve().parent.joinpath("static")
 
     @classmethod
     @lru_cache

@@ -26,7 +26,9 @@ class PatientService(BaseService):
 
     def construct_patient_data(self, patient_id: str) -> dict[str, str]:
         patient = self.crud.get(patient_id)
-        return patient.model_dump(exclude=["id"])
+        dumped = patient.model_dump(exclude=["id"])
+        self.crud.convert_birth_date_to_str(dumped)
+        return dumped
 
     def check_input_data(
             self, patient_input_data: PatientCreate) -> PatientOuter:

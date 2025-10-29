@@ -34,7 +34,40 @@
       <small>{{ errors.get("birth_date") }}</small>
     {% endif %}
   {% endif %}
+
+  <label>
+    Specialtiy:
+    <select id="specialties" name="specialties">
+      <option value="">Select specialty</option>
+    </select>
+  </label>
+
+  <label>
+    Doctor:
+    <select id="doctors" name="doctors">
+      <option value="">Select doctor</option>
+    </select>
+  </label>
+
+  <label>
+    Service:
+    <select id="services" name="services">
+      <option value="">Select service</option>
+    </select>
+  </label>
+
   <button type="submit">Create Appointment</button>
+
 </form>
 {% include "form_input_err.html" %}
+{% endblock %}
+
+{% block scripts %}
+
+<script id="form-data" type="application/json">
+  {{ form.get("specialties") | tojson }}
+</script>
+
+<script src="{{ url_for('static', path='render_booking_form.js') }}" defer></script>
+
 {% endblock %}

@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 
 from model.patient_models import PatientCreate
@@ -9,6 +7,15 @@ from data.patient_data import PatientSQLModel
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
 class TestPatientService:
+    def test_construct_patient_data(
+            self,
+            patient_service: PatientService,
+            patient: PatientSQLModel
+    ) -> None:
+        patient_id = patient_service.crud.uuid_to_str(patient.id)
+        patient_data = patient_service.construct_patient_data(patient_id)
+        assert patient_data
+
     def test_check_input_data_returns_patient(
             self, patient_service: PatientService, patient: PatientSQLModel
     ) -> None:  # TODO: test both workflows for new and existing patient

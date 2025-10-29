@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -70,7 +68,9 @@ class TestFormContent:
     def test_construct(
             self, form_content: FormContent, cookies: dict[str, str]
     ) -> None:
-        assert form_content.construct(cookies)
+        content = form_content.construct(cookies)
+        assert content
+        get_logger().debug(content)
 
 
 class TestAppointmentBooking:

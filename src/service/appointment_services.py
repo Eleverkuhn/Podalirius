@@ -41,10 +41,7 @@ class FormContent(BaseAppointmentService):
         """Initial method"""
         patient = self._get_patient_from_cookies(cookies)
         specialties = SpecialtyDataConstructor(self.session).exec()
-        content = {
-            "patient": patient,
-            "specialties": specialties
-        }
+        content = {"patient": patient, "specialties": specialties}
         return content
 
     def _get_patient_from_cookies(self, cookies: dict[str, str]) -> dict | None:
