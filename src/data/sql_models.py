@@ -32,6 +32,13 @@ class DoctorToService(BaseSQLModel, table=True):
     service: "Service" = Relationship(back_populates="doctor_links")
 
 
+class DoctorToAppointment(BaseSQLModel, table=True):
+    __tablename__ = "doctors_to_appointments"
+
+    doctor_id: int = Field(foreign_key="doctors.id")
+    appointment_id: int = Field(foreign_key="appointments.id")
+
+
 class ServiceToSpecialty(BaseSQLModel, table=True):
     __tablename__ = "services_to_specialties"
 
@@ -76,6 +83,9 @@ class Doctor(PersonSQLModel, table=True):
         back_populates="doctors", link_model=DoctorToService
     )
     work_days: list["WorkSchedule"] = Relationship(back_populates="doctors")
+    appointments: list["Appointment"] = Relationship(
+        back_populates="doctors", link_model=DoctorToAppointment
+    )
 
 
 class Weekday(str, Enum):
@@ -152,6 +162,9 @@ class Appointment(BaseEnumSQLModel, table=True):
 
     doctor_id: int = Field(foreign_key="doctors.id")
     patient_id: int = Field(foreign_key="patients.id")
+    doctors: list["Doctor"] = Relationship(
+        back_populates="appointments", link_model=DoctorToAppointment
+    )
 
 
 class Patient(PersonSQLModel, table=True):

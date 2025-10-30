@@ -169,6 +169,21 @@ CREATE TABLE services_to_appointments (
     ON UPDATE CASCADE
 ) ENGINE = InnoDB;
 
+CREATE TABLE doctors_to_appointments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  doctor_id INT NOT NULL,
+  appointment_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+    ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (doctor_id) REFERENCES doctors(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  FOREIGN KEY (appointment_id) REFERENCES appointments(id)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE = InnoDB;
+
 CREATE TABLE patients_documents (
   id INT AUTO_INCREMENT PRIMARY KEY,
   appointment_id INT NOT NULL,
