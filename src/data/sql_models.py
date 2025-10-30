@@ -162,9 +162,11 @@ class Appointment(BaseEnumSQLModel, table=True):
 
     doctor_id: int = Field(foreign_key="doctors.id")
     patient_id: int = Field(foreign_key="patients.id")
+
     doctors: list["Doctor"] = Relationship(
         back_populates="appointments", link_model=DoctorToAppointment
     )
+    patient: "Patient" = Relationship(back_populates="appointments")
 
 
 class Patient(PersonSQLModel, table=True):
@@ -173,3 +175,5 @@ class Patient(PersonSQLModel, table=True):
     id: bytes = Field(primary_key=True, default=uuid4().bytes)
     phone: str
     birth_date: date
+
+    appointments: list["Appointment"] = Relationship(back_populates="patient")
