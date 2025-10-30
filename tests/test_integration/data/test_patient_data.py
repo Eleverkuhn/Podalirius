@@ -1,11 +1,7 @@
-import json
-
 import pytest
-from sqlmodel import Session
 
-from logger.setup import get_logger
 from model.patient_models import PatientCreate
-from data.patient_data import PatientCRUD, PatientSQLModel
+from data.patient_data import PatientCRUD, Patient
 
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
@@ -20,13 +16,13 @@ class TestPatientCRUD:
         patient_crud.session.rollback()
 
     def test_get_by_phone(
-            self, patient_crud: PatientCRUD, patient: PatientSQLModel
+            self, patient_crud: PatientCRUD, patient: Patient
     ) -> None:
         patient_db = patient_crud.get_by_phone(patient.phone)
         assert patient_db.phone == patient.phone
 
     def test_get(
-            self, patient_crud: PatientCRUD, patient: PatientSQLModel
+            self, patient_crud: PatientCRUD, patient: Patient
     ) -> None:
         str_uuid = patient_crud.uuid_to_str(patient.id)
         patient_db = patient_crud.get(str_uuid)
@@ -34,14 +30,14 @@ class TestPatientCRUD:
         assert patient_db.id == str_uuid
 
     def test_convert_to_patient_inner(
-            self, patient_sql_model: PatientSQLModel
+            self, patient_sql_model: Patient
     ) -> None:
         patient_inner = PatientCRUD.convert_to_patient_outer(patient_sql_model)
         assert type(patient_inner.id) is str
 
     def test_convert_birth_date_to_str(
             self,
-            patient: PatientSQLModel,
+            patient: Patient,
             patients_data: dict[str, str]
     ) -> None:
         dumped_patient = patient.model_dump()

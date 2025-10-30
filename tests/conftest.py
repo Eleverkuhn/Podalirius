@@ -11,7 +11,7 @@ from model.form_models import AppointmentBookingForm, PhoneForm, OTPCodeForm
 from service.auth_services import JWTTokenService, OTPCodeService
 from data.connections import MySQLConnection
 from data.base_data import BaseSQLModel, BaseCRUD
-from data.patient_data import PatientSQLModel
+from data.patient_data import Patient
 
 
 class SQLModelForTest(BaseSQLModel, table=True):
@@ -77,8 +77,8 @@ def patients_data(fixture_dir: Path, request: pytest.FixtureRequest) -> dict:
 
 
 @pytest.fixture
-def patient_sql_model(patients_data: dict) -> PatientSQLModel:
-    return PatientSQLModel(**patients_data)
+def patient_sql_model(patients_data: dict) -> Patient:
+    return Patient(**patients_data)
 
 
 @pytest.fixture

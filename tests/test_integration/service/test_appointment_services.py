@@ -13,7 +13,7 @@ from service.appointment_services import (
     AppointmentJWTTokenService
 )
 from data import sql_models
-from data.patient_data import PatientSQLModel
+from data.patient_data import Patient
 from utils import SetUpTest
 
 
@@ -122,7 +122,7 @@ class TestAppointmentBooking:
     def test__create_appointment_entry_succeed(
             self,
             booking_service: AppointmentBooking,
-            patient: PatientSQLModel,
+            patient: Patient,
             appointment_model: AppointmentBase
     ) -> None:
         appointment = booking_service._create_appointment_entry(

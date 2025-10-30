@@ -1,20 +1,12 @@
 from typing import override
-from uuid import UUID, uuid4
-from datetime import date
+from uuid import UUID
 
-from sqlmodel import Field, Session
+from sqlmodel import Session
 
 from logger.setup import get_logger
 from model.patient_models import PatientInner, PatientOuter
-from data.base_data import BaseCRUD, PersonSQLModel
-
-
-class PatientSQLModel(PersonSQLModel, table=True):
-    __tablename__ = "patients"
-
-    id: bytes = Field(primary_key=True, default=uuid4().bytes)
-    phone: str
-    birth_date: date
+from data.base_data import BaseCRUD
+from data.sql_models import Patient
 
 
 class PatientCRUD(BaseCRUD):
@@ -22,7 +14,7 @@ class PatientCRUD(BaseCRUD):
     def __init__(
             self,
             session: Session,
-            sql_model=PatientSQLModel,
+            sql_model=Patient,
             return_model=PatientInner
     ) -> None:
         super().__init__(session, sql_model, return_model)
@@ -41,7 +33,7 @@ class PatientCRUD(BaseCRUD):
 
     @classmethod
     def convert_to_patient_outer(
-            cls, patient: PatientInner | PatientSQLModel) -> PatientOuter:
+            cls, patient: PatientInner | Patient) -> PatientOuter:
         dumped_patient = patient.model_dump()
         dumped_patient.update(
             {"id": cls.uuid_to_str(dumped_patient.get("id"))}
@@ -56,7 +48,7 @@ class PatientCRUD(BaseCRUD):
     def uuid_to_bytes(cls, id: str) -> bytes:
         return UUID(id).bytes
 
-    def _get_by_phone(self, phone: str) -> PatientSQLModel:  # FIX:
+    def _get_by_phone(self, phone: str) -> Patient:  # FIX:
         return self.session.exec(
             self.select.where(self.sql_model.phone == phone)
         ).one()

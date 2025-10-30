@@ -15,7 +15,7 @@ from service.patient_services import PatientService
 from data import sql_models
 from data.base_data import BaseSQLModel
 from data.auth_data import OTPCodeRedis
-from data.patient_data import PatientSQLModel, PatientCRUD
+from data.patient_data import Patient, PatientCRUD
 from utils import SetUpTest
 
 type CreatedTestEntry = Generator[BaseSQLModel, None, None]
@@ -43,8 +43,8 @@ def patient_crud(session: Session) -> PatientCRUD:
 
 @pytest.fixture
 def patient(
-        setup_test: SetUpTest, patient_sql_model: PatientSQLModel
-) -> Iterator[PatientSQLModel]:
+        setup_test: SetUpTest, patient_sql_model: Patient
+) -> Iterator[Patient]:
     created = setup_test.create_entry(patient_sql_model)
     yield created
     setup_test.tear_down(created)
@@ -53,7 +53,7 @@ def patient(
 @pytest.fixture
 def appointment(
         appointments_data: dict,
-        patient: PatientSQLModel,
+        patient: Patient,
         setup_test: SetUpTest
 ) -> Iterator[sql_models.Appointment]:
     appointment_model = sql_models.Appointment(
@@ -117,7 +117,7 @@ def otp_code_db(
 
 
 @pytest.fixture
-def patient_str_id(patient: PatientSQLModel) -> str:
+def patient_str_id(patient: Patient) -> str:
     return PatientCRUD.uuid_to_str(patient.id)
 
 

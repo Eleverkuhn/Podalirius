@@ -10,7 +10,7 @@ from logger.setup import get_logger
 from utils import SetUpTest
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import Appointment
-from data.patient_data import PatientSQLModel
+from data.patient_data import Patient
 from tests.test_integration.web.conftest import (
     BaseTestEndpoint, EndpointWithForm
 )
@@ -28,7 +28,7 @@ class TestAppointmentEndpointGetForm(BaseTestEndpoint):
 
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     def test_form_is_pre_filled_for_logged_in_user(
-            self, patient: PatientSQLModel, cookies: dict[str, str]
+            self, patient: Patient, cookies: dict[str, str]
     ) -> None:
         self.client.cookies = cookies
         response = self.client.get(self._get_url())

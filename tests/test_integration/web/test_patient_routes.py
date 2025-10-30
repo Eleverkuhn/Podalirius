@@ -4,7 +4,7 @@ import pytest
 from fastapi import status
 
 from service.auth_services import JWTTokenService
-from data.patient_data import PatientCRUD, PatientSQLModel
+from data.patient_data import PatientCRUD, Patient
 from tests.test_integration.web.conftest import BaseTestEndpoint
 
 
@@ -15,7 +15,7 @@ class TestPatientEndpoint(BaseTestEndpoint):
     @override
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.usefixtures("patient")
-    def test_exists(self, patient: PatientSQLModel) -> None:
+    def test_exists(self, patient: Patient) -> None:
         patient_id = PatientCRUD.uuid_to_str(patient.id)
         access_token = JWTTokenService().create(patient_id)
         response = self.client.get(

@@ -1,5 +1,6 @@
 from datetime import datetime, date, time
 from decimal import Decimal
+from uuid import uuid4
 
 from sqlmodel import Field, Enum, Relationship
 
@@ -74,6 +75,7 @@ class Doctor(PersonSQLModel, table=True):
     services: list["Service"] = Relationship(
         back_populates="doctors", link_model=DoctorToService
     )
+    work_days: list["WorkSchedule"] = Relationship(back_populates="doctors")
 
 
 class Weekday(str, Enum):
@@ -94,6 +96,7 @@ class WorkSchedule(BaseEnumSQLModel, table=True):
     end_time: time
 
     doctor_id: int = Field(foreign_key="doctors.id")
+    doctors: Doctor = Relationship(back_populates="work_days")
 
 
 class ServiceType(BaseSQLModel, table=True):
@@ -149,3 +152,11 @@ class Appointment(BaseEnumSQLModel, table=True):
 
     doctor_id: int = Field(foreign_key="doctors.id")
     patient_id: int = Field(foreign_key="patients.id")
+
+
+class Patient(PersonSQLModel, table=True):
+    __tablename__ = "patients"
+
+    id: bytes = Field(primary_key=True, default=uuid4().bytes)
+    phone: str
+    birth_date: date
