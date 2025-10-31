@@ -31,6 +31,6 @@ class ServiceDataConstructor(BaseService):
     def _get_doctor_to_service_markup(
             self, doctor_id: int, service: Service
     ) -> Decimal:
-        for link in service.doctor_links:
+        for link in service.service_links:
             if link.doctor_id == doctor_id and link.service_id == service.id:
                 return link.markup

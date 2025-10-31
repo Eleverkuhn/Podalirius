@@ -28,15 +28,8 @@ class DoctorToService(BaseSQLModel, table=True):
     doctor_id: int = Field(foreign_key="doctors.id")
     service_id: int = Field(foreign_key="services.id")
 
-    # doctor: "Doctor" = Relationship(back_populates="service_links")
-    service: "Service" = Relationship(back_populates="doctor_links")
-
-
-class DoctorToAppointment(BaseSQLModel, table=True):
-    __tablename__ = "doctors_to_appointments"
-
-    doctor_id: int = Field(foreign_key="doctors.id")
-    appointment_id: int = Field(foreign_key="appointments.id")
+    doctor: "Doctor" = Relationship(back_populates="doctor_links")
+    service: "Service" = Relationship(back_populates="service_links")
 
 
 class ServiceToSpecialty(BaseSQLModel, table=True):
@@ -79,12 +72,12 @@ class Doctor(PersonSQLModel, table=True):
     specialties: list["Specialty"] = Relationship(
         back_populates="doctors", link_model=SpecialtyToDoctor
     )
-    services: list["Service"] = Relationship(
-        back_populates="doctors", link_model=DoctorToService
-    )
     work_days: list["WorkSchedule"] = Relationship(back_populates="doctors")
-    appointments: list["Appointment"] = Relationship(
-        back_populates="doctors", link_model=DoctorToAppointment
+    appointments: list["Appointment"] = Relationship(back_populates="doctor")
+    doctor_links: list[DoctorToService] = Relationship(back_populates="doctor")
+    services: list["Service"] = Relationship(
+        back_populates="doctors",
+        sa_relationship_kwargs={"secondary": "doctors_to_services"}
     )
 
 
@@ -134,15 +127,16 @@ class Service(BaseSQLModel, table=True):
     type_id: int = Field(foreign_key="services_types.id")
 
     type: ServiceType = Relationship(back_populates="services")
-    doctors: list["Doctor"] = Relationship(
-        back_populates="services", link_model=DoctorToService
-    )
     specialties: list["Specialty"] = Relationship(
         back_populates="services", link_model=ServiceToSpecialty
     )
-    doctor_links: list[DoctorToService] = Relationship(back_populates="service")
+    service_links: list[DoctorToService] = Relationship(back_populates="service")
+    doctors: list["Doctor"] = Relationship(
+        back_populates="services",
+        sa_relationship_kwargs={"secondary": "doctors_to_services"}
+    )
 
-    @property
+    @property  # TODO: move this to ServiceService
     def price(self) -> Decimal:
         return self.markup + self.type.price
 
@@ -176,7 +170,5 @@ class Appointment(BaseEnumSQLModel, table=True):
     doctor_id: int = Field(foreign_key="doctors.id")
     patient_id: bytes = Field(foreign_key="patients.id")
 
-    doctors: list["Doctor"] = Relationship(
-        back_populates="appointments", link_model=DoctorToAppointment
-    )
+    doctor: Doctor = Relationship(back_populates="appointments")
     patient: Patient = Relationship(back_populates="appointments")
