@@ -25,7 +25,7 @@ class ServiceDataConstructor(BaseService):
 
     def _calculate_price(self, doctor_id: int, service: Service) -> int:
         doctor_markup = self._get_doctor_to_service_markup(doctor_id, service)
-        price = service.price + doctor_markup
+        price = service.type.price + service.markup + doctor_markup
         return int(price)
 
     def _get_doctor_to_service_markup(

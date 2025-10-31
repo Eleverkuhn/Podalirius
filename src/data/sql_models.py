@@ -77,7 +77,10 @@ class Doctor(PersonSQLModel, table=True):
     doctor_links: list[DoctorToService] = Relationship(back_populates="doctor")
     services: list["Service"] = Relationship(
         back_populates="doctors",
-        sa_relationship_kwargs={"secondary": "doctors_to_services"}
+        sa_relationship_kwargs={
+            "secondary": "doctors_to_services",
+            "overlaps": "service,doctor,doctor_links"
+        },
     )
 
 
@@ -130,15 +133,17 @@ class Service(BaseSQLModel, table=True):
     specialties: list["Specialty"] = Relationship(
         back_populates="services", link_model=ServiceToSpecialty
     )
-    service_links: list[DoctorToService] = Relationship(back_populates="service")
+    service_links: list[DoctorToService] = Relationship(
+        back_populates="service",
+        sa_relationship_kwargs={"overlaps": "services"}
+    )
     doctors: list["Doctor"] = Relationship(
         back_populates="services",
-        sa_relationship_kwargs={"secondary": "doctors_to_services"}
+        sa_relationship_kwargs={
+            "secondary": "doctors_to_services",
+            "overlaps": "doctor,doctor_links,service,service_links"
+        },
     )
-
-    @property  # TODO: move this to ServiceService
-    def price(self) -> Decimal:
-        return self.markup + self.type.price
 
 
 class Status(str, Enum):
