@@ -12,8 +12,8 @@ from model.patient_models import PatientCreate
 from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
-from data import sql_models
 from data.base_data import BaseSQLModel
+from data.sql_models import Appointment
 from data.auth_data import OTPCodeRedis
 from data.patient_data import Patient, PatientCRUD
 from utils import SetUpTest
@@ -55,8 +55,8 @@ def appointment(
         appointments_data: dict,
         patient: Patient,
         setup_test: SetUpTest
-) -> Iterator[sql_models.Appointment]:
-    appointment_model = sql_models.Appointment(
+) -> Iterator[Appointment]:
+    appointment_model = Appointment(
         **appointments_data, patient_id=patient.id
     )
     created = setup_test.create_entry(appointment_model)
@@ -66,7 +66,7 @@ def appointment(
 
 @pytest.fixture
 def jwt_token_appointment(
-        jwt_token_service: JWTTokenService, appointment: sql_models.Appointment
+        jwt_token_service: JWTTokenService, appointment: Appointment
 ) -> str:
     token = jwt_token_service.create(appointment.id)
     return token

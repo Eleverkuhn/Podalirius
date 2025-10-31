@@ -1,12 +1,15 @@
+import base64
 import json
 from pathlib import Path
 
-from sqlalchemy import TextClause
 from sqlalchemy.orm.exc import ObjectDeletedError
-from sqlmodel import Session, Table, text, inspect
+from sqlmodel import Session, inspect
 
 from data.base_data import BaseSQLModel, BaseCRUD
+from data.sql_models import Patient, Appointment
 from data.patient_data import PatientCRUD
+
+type FixtureContent = dict[str, dict] | list[dict]
 
 
 def read_fixture(fixture: Path) -> dict | list:
@@ -26,24 +29,66 @@ class DatabaseSeeder:
 
     def execute(self) -> None:
         for sql_model, fixture in self.models_to_fixtures.items():
-            crud = BaseCRUD(self.session, sql_model, sql_model)
-            content = read_fixture(fixture)
-            self._content_type_check(crud, content)
+            self._prepare_data(sql_model, fixture)
+            self._populate()
 
-    def _content_type_check(
-            self, crud: BaseCRUD, content: dict | list
+    def _prepare_data(
+        self, sql_model: type[BaseSQLModel], fixture: Path
     ) -> None:
-        if type(content) is dict:  # REF: temporal solution
-            for data in content.values():
-                self._populate_table(crud, data)
-        elif type(content) is list:
-            for data in content:
-                self._populate_table(crud, data)
+        """Sets data which will be used in all other methods of the class"""
+        self._set_id_key(sql_model)
+        self.crud = BaseCRUD(self.session, sql_model, sql_model)
+        self.content = read_fixture(fixture)
 
-    def _populate_table(self, crud: BaseCRUD, data: dict) -> None:
-        instance = crud.sql_model(**data)
-        crud.create(instance)
-        crud.session.commit()
+    def _set_id_key(self, sql_model: type[BaseSQLModel]) -> None:
+        """
+        Sets a flag with which will be possible to check whether id
+        conversion is needed or not
+        """
+        if sql_model is Patient:
+            self.key = "id"
+        elif sql_model is Appointment:
+            self.key = "patient_id"
+        else:
+            self.key = None
+
+    def _populate(self) -> None:
+        if self._fixture_is_dict:
+            self._populate_from_dict()
+        elif self._fixture_is_list:
+            self._populate_from_list()
+
+    @property
+    def _fixture_is_dict(self) -> bool:
+        return type(self.content) is dict
+
+    @property
+    def _fixture_is_list(self) -> bool:
+        return type(self.content) is list
+
+    def _populate_from_dict(self) -> None:
+        for data in self.content.values():
+            self._populate_table(data)
+
+    def _populate_from_list(self) -> None:
+        for data in self.content:
+            self._populate_table(data)
+
+    def _populate_table(self, data: dict) -> None:
+        self._check_key_exists(data)
+        self._create_entry(data)
+
+    def _check_key_exists(self, data: dict) -> None:
+        if self.key:
+            self._convert_id(data)
+
+    def _convert_id(self, data: dict) -> None:
+        data[self.key] = base64.b64decode(data[self.key])
+
+    def _create_entry(self, data: dict) -> None:
+        instance = self.crud.sql_model(**data)
+        self.crud.create(instance)
+        self.crud.session.commit()
 
 
 class SetUpTest:
@@ -81,25 +126,3 @@ class SetUpTest:
     def _delete_entry(self, entry: BaseSQLModel) -> None:
         self.session.delete(entry)
         self.session.commit()
-
-
-class DatabaseTruncator:  # REF: probably need to remove this
-    _set_fk_0: TextClause = text("SET FOREIGN_KEY_CHECKS = 0;")
-    _set_fk_1: TextClause = text("SET FOREIGN_KEY_CHECKS = 1;")  # TODO: this can be refactored
-
-    def __init__(self, session: Session) -> None:
-        self.session = session
-
-    def reset_database(self) -> None:
-        self.session.exec(self._set_fk_0)
-        self._truncate_tables()
-        self.session.exec(self._set_fk_1)
-
-    def _truncate_tables(self) -> None:
-        for table in reversed(BaseSQLModel.metadata.sorted_tables):
-            statement = self._get_truncate_table_query_string(table)
-            self.session.exec(text(statement))
-
-    @staticmethod
-    def _get_truncate_table_query_string(table: Table) -> TextClause:
-        return text(f"TRUNCATE TABLE `{table.name}`;")

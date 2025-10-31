@@ -7,7 +7,9 @@ from utils import DatabaseSeeder
 FIXTURE_DIR = Path(__file__).parent.joinpath("fixtures")
 
 MODELS_TO_FIXTURES = {
+    sql_models.Patient: FIXTURE_DIR.joinpath("patients.json"),
     sql_models.Doctor: FIXTURE_DIR.joinpath("doctors.json"),
+    sql_models.Appointment: FIXTURE_DIR.joinpath("appointments.json"),
     sql_models.WorkSchedule: FIXTURE_DIR.joinpath("work_schedules.json"),
     sql_models.ServiceType: FIXTURE_DIR.joinpath("services_types.json"),
     sql_models.Service: FIXTURE_DIR.joinpath("services.json"),

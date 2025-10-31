@@ -153,6 +153,19 @@ class Status(str, Enum):
     CANCELLED = "cancelled"
 
 
+class Patient(PersonSQLModel, table=True):
+    __tablename__ = "patients"
+
+    id: bytes = Field(primary_key=True, default=uuid4().bytes)
+    phone: str
+    birth_date: date
+
+    appointments: list["Appointment"] = Relationship(
+        back_populates="patient",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
+    )
+
+
 class Appointment(BaseEnumSQLModel, table=True):
     __tablename__ = "appointments"
 
@@ -161,19 +174,9 @@ class Appointment(BaseEnumSQLModel, table=True):
     is_paid: bool = Field(default=False)
 
     doctor_id: int = Field(foreign_key="doctors.id")
-    patient_id: int = Field(foreign_key="patients.id")
+    patient_id: bytes = Field(foreign_key="patients.id")
 
     doctors: list["Doctor"] = Relationship(
         back_populates="appointments", link_model=DoctorToAppointment
     )
-    patient: "Patient" = Relationship(back_populates="appointments")
-
-
-class Patient(PersonSQLModel, table=True):
-    __tablename__ = "patients"
-
-    id: bytes = Field(primary_key=True, default=uuid4().bytes)
-    phone: str
-    birth_date: date
-
-    appointments: list["Appointment"] = Relationship(back_populates="patient")
+    patient: Patient = Relationship(back_populates="appointments")

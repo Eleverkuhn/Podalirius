@@ -17,7 +17,7 @@ class AppointmentCreate(AppointmentBase):
     is_paid: bool = Field(default=False)
 
 
-class Appointment(AppointmentCreate):
+class AppointmentInner(AppointmentCreate):
     id: int
 
 

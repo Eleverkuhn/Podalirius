@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
 from time import sleep
 from typing import override
 
@@ -6,10 +6,9 @@ import pytest
 from bs4 import BeautifulSoup
 from fastapi import status
 
-from logger.setup import get_logger
 from utils import SetUpTest
 from model.form_models import AppointmentBookingForm
-from model.appointment_models import Appointment
+from model.appointment_models import AppointmentInner
 from data.patient_data import Patient
 from tests.test_integration.web.conftest import (
     BaseTestEndpoint, EndpointWithForm
@@ -115,7 +114,7 @@ class TestAppointmentEndpointCreatedInfo(BaseTestEndpoint):
         assert response.status_code == status.HTTP_200_OK
 
     def test_created_info_contains_appointment_info(
-            self, jwt_token_appointment: str, appointment: Appointment
+            self, jwt_token_appointment: str, appointment: AppointmentInner
     ) -> None:
         response = self.client.get(self._token_url(jwt_token_appointment))
         soup = BeautifulSoup(response.text, "html.parser")

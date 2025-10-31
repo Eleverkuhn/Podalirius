@@ -7,15 +7,15 @@ from exceptions.exc import DataDoesNotMatch, FormInputError, UnauthorizedError
 from model.form_models import AppointmentBookingForm
 from model.patient_models import PatientOuter
 from model.appointment_models import (
-    Appointment, AppointmentCreate, ServiceToAppointment
+    AppointmentInner, AppointmentCreate
 )
 from service.base_services import BaseService
 from service.auth_services import AuthService, JWTTokenService
 from service.patient_services import PatientService
 from service.specialty_services import SpecialtyDataConstructor
-from data import sql_models
 from data.connections import MySQLConnection
 from data.base_data import BaseCRUD
+from data.sql_models import Appointment, ServiceToAppointment
 
 
 class BaseAppointmentService(BaseService):
@@ -32,7 +32,7 @@ class BaseAppointmentServiceWithCRUD(BaseService):
     @override
     def __init__(self, session: Session) -> None:
         super().__init__(session)
-        self.crud = BaseCRUD(session, sql_models.Appointment, Appointment)
+        self.crud = BaseCRUD(session, Appointment, AppointmentInner)
 
 
 class FormContent(BaseAppointmentService):
@@ -102,7 +102,7 @@ class AppointmentBooking(
 
     def _create_appointment_entry(
             self, patient_id: bytes, form: AppointmentBookingForm
-    ) -> Appointment:
+    ) -> AppointmentInner:
         appointment_data = self._construct_appointment_data(patient_id, form)
         appointment = self.crud.create(appointment_data)
         return appointment
@@ -127,8 +127,8 @@ class AppointmentBooking(
         )
         crud = BaseCRUD(
             self.session,
-            sql_models.ServiceToAppointment,
-            sql_models.ServiceToAppointment
+            ServiceToAppointment,
+            ServiceToAppointment
         )
         crud.create(entry)
 
@@ -141,7 +141,7 @@ class AppointmentBooking(
 
 
 class AppointmentJWTTokenService(BaseAppointmentServiceWithCRUD):
-    def get_appointment(self, token: str) -> Appointment:
+    def get_appointment(self, token: str) -> AppointmentInner:
         id = self._get_id_from_token(token)
         return self.crud.get(id)
 
