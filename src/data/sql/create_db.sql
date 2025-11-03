@@ -47,7 +47,7 @@ CREATE TABLE doctors (
 CREATE TABLE work_schedules (
   id INT AUTO_INCREMENT PRIMARY KEY,
   doctor_id INT NOT NULL,
-  weekday ENUM("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday") NOT NULL,
+  weekday ENUM("0", "1", "2", "3", "4", "5", "6") NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

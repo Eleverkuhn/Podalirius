@@ -1,3 +1,5 @@
+from datetime import date, datetime, time, timedelta
+
 import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
@@ -9,10 +11,12 @@ from model.appointment_models import AppointmentBase
 from service.appointment_services import (
     BaseAppointmentService,
     FormContent,
+    AppointmentShceduleDataConstructor,
     AppointmentBooking,
     AppointmentJWTTokenService
 )
-from data import sql_models
+from service.doctor_services import WorkScheduleDataConstructor
+from data.sql_models import Appointment, ServiceToAppointment, Doctor
 from data.patient_data import Patient
 from utils import SetUpTest
 
@@ -71,6 +75,28 @@ class TestFormContent:
         content = form_content.construct(cookies)
         assert content
         get_logger().debug(content)
+
+
+class TestAppointmentScheduleDataConstructor:
+    @pytest.mark.parametrize("doctor", [1], indirect=True)
+    def test_doctor_with_fully_booked_day_returns_none(
+            self, doctor: Doctor
+    ) -> None:
+        week_day = doctor.work_days[0]
+        schedule_constructor = WorkScheduleDataConstructor(week_day)
+        doctor_schedule = {int(week_day.weekday): schedule_constructor.exec()}
+        booked = [
+            appointment.date
+            for appointment
+            in doctor.appointments
+            if appointment.date.date() == date(2025, 11, 10)
+        ]
+        appointment_constructor = AppointmentShceduleDataConstructor(
+            doctor_schedule, booked, timedelta(days=1)
+        )
+        appointment_constructor.today += timedelta(days=7)
+        appoointment_schedule = appointment_constructor.exec()
+        assert not appoointment_schedule
 
 
 class TestAppointmentBooking:
@@ -150,14 +176,14 @@ class TestAppointmentBooking:
     def test__create_services_to_appointments_entry(
             self,
             booking_service: AppointmentBooking,
-            appointment: sql_models.Appointment,
+            appointment: Appointment,
             appointments_data: dict[str, str | int]
     ) -> None:
         booking_service._create_services_to_appointments_entry(
             appointment.id, appointments_data.get("service_id")
         )
-        statement = select(sql_models.ServiceToAppointment).where(
-                sql_models.ServiceToAppointment.appointment_id == appointment.id
+        statement = select(ServiceToAppointment).where(
+                ServiceToAppointment.appointment_id == appointment.id
             )
         entry = booking_service.session.exec(statement).one()
         assert entry
@@ -173,7 +199,7 @@ class TestAppointmentJWTTokenService:
             self,
             appointment_token_service: AppointmentJWTTokenService,
             jwt_token_appointment: str,
-            appointment: sql_models.Appointment
+            appointment: Appointment
     ) -> None:
         appointment_from_token = appointment_token_service.get_appointment(
             jwt_token_appointment

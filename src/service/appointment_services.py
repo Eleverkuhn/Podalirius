@@ -1,8 +1,10 @@
+from datetime import date, time, datetime, timedelta
 from typing import override
 
 from sqlmodel import Session
 from fastapi import Depends
 
+from logger.setup import get_logger
 from exceptions.exc import DataDoesNotMatch, FormInputError, UnauthorizedError
 from model.form_models import AppointmentBookingForm
 from model.patient_models import PatientOuter
@@ -16,6 +18,8 @@ from service.specialty_services import SpecialtyDataConstructor
 from data.connections import MySQLConnection
 from data.base_data import BaseCRUD
 from data.sql_models import Appointment, ServiceToAppointment
+
+type AppointmentSchedule = dict[date, set[time]]
 
 
 class BaseAppointmentService(BaseService):
@@ -55,6 +59,90 @@ class FormContent(BaseAppointmentService):
             )
             return patient_data
         return None
+
+
+class AppointmentShceduleDataConstructor:
+    """Part of 'FormContent.construct()'"""
+    def __init__(
+            self,
+            doctor_schedule: dict,
+            appointment_times: list[datetime],
+            booking_range: timedelta = timedelta(days=30)
+    ) -> None:
+        self.doctor_schedule = doctor_schedule
+        self.booked_appointment_times = self._group_by_date(appointment_times)
+        self._today = date.today()
+        self.booking_range = self._set_booking_range(booking_range)
+        self.schedule = {}
+
+    @property
+    def today(self) -> date:
+        return self._today
+
+    @today.setter
+    def today(self, updated: date) -> None:
+        self._today = updated
+
+    @property
+    def today_iso(self) -> str:
+        return self.today.isoformat()
+
+    @property
+    def doctor_working_hours(self) -> set[str]:
+        return self.doctor_schedule.get(self.today.weekday())
+
+    def _group_by_date(
+            self, appointment_times: list[datetime]
+    ) -> AppointmentSchedule:
+        schedule = {}
+        for appointment_time in appointment_times:
+            self._create_date_to_time_dict(schedule, appointment_time)
+        return schedule
+
+    def _create_date_to_time_dict(
+            self, schedule: dict, appointment_time: datetime
+    ) -> None:
+        appointment_date = appointment_time.date()
+        if schedule.get(appointment_date):
+            schedule[appointment_date].add(appointment_time.time().isoformat())
+        else:
+            schedule[appointment_date] = {appointment_time.time().isoformat()}
+
+    def _set_booking_range(self, booking_range: timedelta) -> date:
+        return self.today + booking_range
+
+    def exec(self) -> dict:
+        while self.today < self.booking_range:
+            self._check_doctor_working_hours()
+            self._proceed_to_next_day()
+        return self.schedule
+
+    def _check_doctor_working_hours(self) -> None:
+        if self.doctor_working_hours:
+            self._set_free_appointment_dates()
+
+    def _proceed_to_next_day(self) -> None:
+        self.today += timedelta(days=1)
+
+    def _set_free_appointment_dates(self) -> None:
+        self._prepare_set_free_appointment_dates_data()
+        self._set_free_appointment_times()
+
+    def _prepare_set_free_appointment_dates_data(self) -> None:
+        "Sets data for executing '_set_free_hours()'"
+        self.booked_hours = self.booked_appointment_times.get(self.today)
+        self._set_free_hours()
+
+    def _set_free_hours(self) -> None:
+        if self.booked_hours:
+            self.free_hours = self.doctor_working_hours - self.booked_hours
+            get_logger().debug(self.free_hours)
+        else:
+            self.free_hours = self.doctor_working_hours
+
+    def _set_free_appointment_times(self) -> None:
+        if self.free_hours:
+            self.schedule[self.today_iso] = sorted(list(self.free_hours))
 
 
 class AppointmentBooking(

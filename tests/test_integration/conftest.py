@@ -4,7 +4,7 @@ from random import randint
 from typing import Generator
 
 import pytest
-from sqlmodel import Session
+from sqlmodel import Session, Sequence
 
 from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
@@ -12,8 +12,8 @@ from model.patient_models import PatientCreate
 from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
-from data.base_data import BaseSQLModel
-from data.sql_models import Appointment
+from data.base_data import BaseSQLModel, BaseCRUD
+from data.sql_models import Appointment, Doctor
 from data.auth_data import OTPCodeRedis
 from data.patient_data import Patient, PatientCRUD
 from utils import SetUpTest
@@ -132,3 +132,15 @@ def access_token(
 @pytest.fixture
 def cookies(access_token: str) -> dict[str, str]:
     return {"access_token": access_token}
+
+
+@pytest.fixture
+def doctors(session: Session) -> Sequence[Doctor]:
+    return BaseCRUD(session, Doctor, Doctor).get_all()
+
+
+@pytest.fixture
+def doctor(
+        doctors: Sequence[Doctor], request: pytest.FixtureRequest
+) -> Doctor:
+    return doctors[request.param]

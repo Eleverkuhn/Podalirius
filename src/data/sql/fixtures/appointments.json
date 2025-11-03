@@ -82,7 +82,7 @@
   {
     "doctor_id": 1,
     "patient_id": "5bbPsqlHQdW6j0HblMIuGA==",
-    "date": "2025-11-27T08:30:00"
+    "date": "2025-11-27T12:30:00"
   },
   {
     "doctor_id": 2,
@@ -98,5 +98,36 @@
     "doctor_id": 9,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
     "date": "2025-11-30T14:30:00"
+  },
+  {
+    "doctor_id": 1,
+    "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
+    "date": "2025-11-29T14:30:00",
+    "status": "completed"
+  },
+  {
+    "doctor_id": 1,
+    "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
+    "date": "2025-11-29T14:30:00"
+  },
+  {
+    "doctor_id": 2,
+    "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
+    "date": "2025-11-10T8:00:00"
+  },
+  {
+    "doctor_id": 2,
+    "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
+    "date": "2025-11-10T8:30:00"
+  },
+  {
+    "doctor_id": 2,
+    "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
+    "date": "2025-11-10T9:00:00"
+  },
+  {
+    "doctor_id": 2,
+    "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
+    "date": "2025-11-10T9:30:00"
   }
 ]

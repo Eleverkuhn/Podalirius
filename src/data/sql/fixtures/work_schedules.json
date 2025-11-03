@@ -1,9 +1,15 @@
 [
   {
     "doctor_id": 1,
-    "weekday": "1",
+    "weekday": "0",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
+  },
+  {
+    "doctor_id": 1,
+    "weekday": "1",
+    "start_time": "08:00:00",
+    "end_time": "12:00:00"
   },
   {
     "doctor_id": 1,
@@ -24,10 +30,10 @@
     "end_time": "16:00:00"
   },
   {
-    "doctor_id": 1,
-    "weekday": "5",
+    "doctor_id": 2,
+    "weekday": "0",
     "start_time": "08:00:00",
-    "end_time": "16:00:00"
+    "end_time": "10:00:00"
   },
   {
     "doctor_id": 2,
@@ -54,8 +60,8 @@
     "end_time": "16:00:00"
   },
   {
-    "doctor_id": 2,
-    "weekday": "5",
+    "doctor_id": 3,
+    "weekday": "0",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
   },
@@ -84,8 +90,8 @@
     "end_time": "16:00:00"
   },
   {
-    "doctor_id": 3,
-    "weekday": "5",
+    "doctor_id": 4,
+    "weekday": "0",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
   },
@@ -114,8 +120,8 @@
     "end_time": "16:00:00"
   },
   {
-    "doctor_id": 4,
-    "weekday": "5",
+    "doctor_id": 5,
+    "weekday": "0",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
   },
@@ -144,8 +150,8 @@
     "end_time": "16:00:00"
   },
   {
-    "doctor_id": 5,
-    "weekday": "5",
+    "doctor_id": 6,
+    "weekday": "0",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
   },
@@ -174,8 +180,8 @@
     "end_time": "16:00:00"
   },
   {
-    "doctor_id": 6,
-    "weekday": "5",
+    "doctor_id": 7,
+    "weekday": "0",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
   },
@@ -204,8 +210,8 @@
     "end_time": "16:00:00"
   },
   {
-    "doctor_id": 7,
-    "weekday": "5",
+    "doctor_id": 8,
+    "weekday": "0",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
   },
@@ -234,8 +240,8 @@
     "end_time": "16:00:00"
   },
   {
-    "doctor_id": 8,
-    "weekday": "5",
+    "doctor_id": 9,
+    "weekday": "0",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
   },
@@ -260,12 +266,6 @@
   {
     "doctor_id": 9,
     "weekday": "4",
-    "start_time": "08:00:00",
-    "end_time": "16:00:00"
-  },
-  {
-    "doctor_id": 9,
-    "weekday": "5",
     "start_time": "08:00:00",
     "end_time": "16:00:00"
   }
