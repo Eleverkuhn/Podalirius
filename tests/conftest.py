@@ -85,7 +85,9 @@ def patient_sql_model(patients_data: dict) -> Patient:
 def appointments_data(
         fixture_dir: Path, request: pytest.FixtureRequest
 ) -> dict:
-    data = read_fixture(fixture_dir.joinpath("test_appointments.json"))
+    data = read_fixture(
+        fixture_dir.joinpath("test_appointment_form_data.json")
+    )
     return data.get(request.param)
 
 
