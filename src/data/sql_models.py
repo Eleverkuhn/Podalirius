@@ -192,7 +192,8 @@ class Appointment(BaseEnumSQLModel, table=True):
     doctor: Doctor = Relationship(back_populates="appointments")
     patient: Patient = Relationship(back_populates="appointments")
     appointment_links: list[ServiceToAppointment] = Relationship(
-        back_populates="appointment"
+        back_populates="appointment",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
     services: list["Service"] = Relationship(
         back_populates="appointments",
