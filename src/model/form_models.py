@@ -1,5 +1,4 @@
-from datetime import datetime
-from datetime import date
+from datetime import date, time
 from typing import override
 
 from pydantic import Field, ValidationError
@@ -51,7 +50,8 @@ class AppointmentBookingForm(AppointmentBase, PatientCreate):
             specialty_id: int = Form(...),
             service_id: int = Form(...),
             doctor_id: int = Form(...),
-            date: datetime = Form(...)
+            date: date = Form(...),
+            time: time = Form(...)
     ) -> "AppointmentBookingForm":
         try:
             return cls(
@@ -63,6 +63,8 @@ class AppointmentBookingForm(AppointmentBase, PatientCreate):
                 specialty_id=specialty_id,
                 service_id=service_id,
                 doctor_id=doctor_id,
-                date=date)
+                date=date,
+                time=time
+            )
         except ValidationError as exc:
             raise RequestValidationError(exc.errors())

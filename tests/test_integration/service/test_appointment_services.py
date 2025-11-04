@@ -86,10 +86,10 @@ class TestAppointmentScheduleDataConstructor:
         schedule_constructor = WorkScheduleDataConstructor(week_day)
         doctor_schedule = {int(week_day.weekday): schedule_constructor.exec()}
         booked = [
-            appointment.date
+            (appointment.date, appointment.time)
             for appointment
             in doctor.appointments
-            if appointment.date.date() == date(2025, 11, 10)
+            if appointment.date == date(2025, 11, 10)
         ]
         appointment_constructor = AppointmentShceduleDataConstructor(
             doctor_schedule, booked, timedelta(days=1)

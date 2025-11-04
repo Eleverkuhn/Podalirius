@@ -2,34 +2,34 @@
 
 {% block content %}
 <h2>New Appointment</h2>
-<form method="post" action="{{ request.url_for('Appointment.send_form') }}">
+<form id="appointment-form" method="post" action="{{ request.url_for('Appointment.send_form') }}">
   {% if form.get("patient") %}
     {% for key, value in form.get("patient").items() %}
       <input type="hidden" name="{{ key }}" value="{{ value }}" required>
     {% endfor %}
   {% else %}
     <label>"Last Name"</label>
-    <input type="text" name="Last Name" value="" required>
+    <input type="text" name="last_name" value="" required>
     {% if errors and errors.get("last_name") %}
       <small>{{ errors.get("last_name") }}</small>
     {% endif %}
     <label>"Middle Name"</label>
-    <input type="text" name="Middle Name" value="" required>
+    <input type="text" name="middle_name" value="" required>
     {% if errors and errors.get("middle_name") %}
       <small>{{ errors.get("middle_name") }}</small>
     {% endif %}
     <label>"First Name"</label>
-    <input type="text" name="First Name" value="" required>
+    <input type="text" name="first_name" value="" required>
     {% if errors and errors.get("first_name") %}
       <small>{{ errors.get("first_name") }}</small>
     {% endif %}
     <label>"Phone"</label>
-    <input type="text" name="Phone" value="" required>
+    <input type="text" name="phone" value="" required>
     {% if errors and errors.get("phone") %}
       <small>{{ errors.get("phone") }}</small>
     {% endif %}
     <label>"Birth Date"</label>
-    <input type="text" name="Birth Date" value="" required>
+    <input type="text" name="birth_date" value="" required>
     {% if errors and errors.get("birth_date") %}
       <small>{{ errors.get("birth_date") }}</small>
     {% endif %}
@@ -37,35 +37,35 @@
 
   <label>
     Specialtiy:
-    <select id="specialties" name="specialties">
+    <select id="specialties" name="specialty_id">
       <option value="">Select specialty</option>
     </select>
   </label>
 
   <label>
     Doctor:
-    <select id="doctors" name="doctors">
+    <select id="doctors" name="doctor_id">
       <option value="">Select doctor</option>
     </select>
   </label>
 
   <label>
     Service:
-    <select id="services" name="services">
+    <select id="services" name="service_id">
       <option value="">Select service</option>
     </select>
   </label>
 
   <label>
     Appointment Date
-    <select id="appointment_date" name="appointment_date">
+    <select id="appointment_date" name="date">
       <option value="">Select appointment date</option>
     </select>
   </label>
 
   <label>
     Appointment Time
-    <select id="appointment_time" name="appointment_time">
+    <select id="appointment_time" name="time">
       <option value="">Select appointment time</option>
     </select>
   </label>

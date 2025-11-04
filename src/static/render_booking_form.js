@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const formData = JSON.parse(
     document.getElementById("form-data").textContent
   );
-  console.log(formData);
 
   const specialties = document.getElementById("specialties");
   const doctors = document.getElementById("doctors");

@@ -168,7 +168,8 @@ class Patient(PersonSQLModel, table=True):
 class Appointment(BaseEnumSQLModel, table=True):
     __tablename__ = "appointments"
 
-    date: datetime
+    date: date
+    time: time
     status: Status = Field(default=Status.PENDING)
     is_paid: bool = Field(default=False)
 

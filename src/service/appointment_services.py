@@ -66,11 +66,11 @@ class AppointmentShceduleDataConstructor:
     def __init__(
             self,
             doctor_schedule: dict,
-            appointment_times: list[datetime],
+            appointment_datetimes: set[tuple[date, time]],
             booking_range: timedelta = timedelta(days=30)
     ) -> None:
         self.doctor_schedule = doctor_schedule
-        self.booked_appointment_times = self._group_by_date(appointment_times)
+        self.booked_appointment_times = self._group_by_date(appointment_datetimes)
         self._today = date.today()
         self.booking_range = self._set_booking_range(booking_range)
         self.schedule = {}
@@ -92,21 +92,21 @@ class AppointmentShceduleDataConstructor:
         return self.doctor_schedule.get(self.today.weekday())
 
     def _group_by_date(
-            self, appointment_times: list[datetime]
+            self, appointment_datetimes: set[tuple[date, time]]
     ) -> AppointmentSchedule:
         schedule = {}
-        for appointment_time in appointment_times:
-            self._create_date_to_time_dict(schedule, appointment_time)
+        for appointment_datetime in appointment_datetimes:
+            self._create_date_to_time_dict(schedule, appointment_datetime)
         return schedule
 
     def _create_date_to_time_dict(
-            self, schedule: dict, appointment_time: datetime
+            self, schedule: dict, appointment_datetime: tuple[date, time]
     ) -> None:
-        appointment_date = appointment_time.date()
+        appointment_date, appointment_time = appointment_datetime[0], appointment_datetime[1]
         if schedule.get(appointment_date):
-            schedule[appointment_date].add(appointment_time.time().isoformat())
+            schedule[appointment_date].add(appointment_time.isoformat())
         else:
-            schedule[appointment_date] = {appointment_time.time().isoformat()}
+            schedule[appointment_date] = {appointment_time.isoformat()}
 
     def _set_booking_range(self, booking_range: timedelta) -> date:
         return self.today + booking_range

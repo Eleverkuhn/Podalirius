@@ -2,132 +2,158 @@
   {
     "doctor_id": 3,
     "patient_id": "GY7UmkfiQQeU7hWQ7I7z2g==",
-    "date": "2025-11-14T08:30:00"
+    "date": "2025-11-14",
+    "time": "08:30:00"
   },
   {
     "doctor_id": 7,
     "patient_id": "xrBk5wLaTs6bt0TOyNbjrg==",
-    "date": "2025-11-15T14:00:00"
+    "date": "2025-11-15",
+    "time": "14:00:00"
   },
   {
     "doctor_id": 2,
     "patient_id": "EqTr+tG+QoaMl7P5ZM6f8Q==",
-    "date": "2025-11-16T10:30:00"
+    "date": "2025-11-16",
+    "time": "10:30:00"
   },
   {
     "doctor_id": 9,
     "patient_id": "gwZ44wYCSBuZHpeEi6GBZA==",
-    "date": "2025-11-17T11:30:00"
+    "date": "2025-11-17",
+    "time": "11:30:00"
   },
   {
     "doctor_id": 5,
     "patient_id": "nguRndPWRpqlmbeYg4Lrlw==",
-    "date": "2025-11-17T15:00:00"
+    "date": "2025-11-17",
+    "time": "15:00:00"
   },
   {
     "doctor_id": 8,
     "patient_id": "kfPHC86BR6O27u+Tp6G5Gw==",
-    "date": "2025-11-18T09:30:00"
+    "date": "2025-11-18",
+    "time": "09:30:00"
   },
   {
     "doctor_id": 1,
     "patient_id": "qNsYw0q2Rh+OOpxXl/7JQA==",
-    "date": "2025-11-19T08:00:00"
+    "date": "2025-11-19",
+    "time": "08:00:00"
   },
   {
     "doctor_id": 6,
     "patient_id": "GY7UmkfiQQeU7hWQ7I7z2g==",
-    "date": "2025-11-19T13:30:00"
+    "date": "2025-11-19",
+    "time": "13:30:00"
   },
   {
     "doctor_id": 3,
     "patient_id": "ELPCz+rVRKmm7pHRYYDz/w==",
-    "date": "2025-11-20T15:30:00"
+    "date": "2025-11-20",
+    "time": "15:30:00"
   },
   {
     "doctor_id": 4,
     "patient_id": "5bbPsqlHQdW6j0HblMIuGA==",
-    "date": "2025-11-21T16:00:00"
+    "date": "2025-11-21",
+    "time": "16:00:00"
   },
   {
     "doctor_id": 2,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
-    "date": "2025-11-22T08:00:00"
+    "date": "2025-11-22",
+    "time": "08:00:00"
   },
   {
     "doctor_id": 9,
     "patient_id": "8hPTxbfyRP+a+xrPRjH7XQ==",
-    "date": "2025-11-23T10:30:00"
+    "date": "2025-11-23",
+    "time": "10:30:00"
   },
   {
     "doctor_id": 4,
     "patient_id": "EqTr+tG+QoaMl7P5ZM6f8Q==",
-    "date": "2025-11-24T14:30:00"
+    "date": "2025-11-24",
+    "time": "14:30:00"
   },
   {
     "doctor_id": 5,
     "patient_id": "xrBk5wLaTs6bt0TOyNbjrg==",
-    "date": "2025-11-25T09:00:00"
+    "date": "2025-11-25",
+    "time": "09:00:00"
   },
   {
     "doctor_id": 7,
     "patient_id": "ELPCz+rVRKmm7pHRYYDz/w==",
-    "date": "2025-11-25T15:30:00"
+    "date": "2025-11-25",
+    "time": "15:30:00"
   },
   {
     "doctor_id": 8,
     "patient_id": "qNsYw0q2Rh+OOpxXl/7JQA==",
-    "date": "2025-11-26T10:30:00"
+    "date": "2025-11-26",
+    "time": "10:30:00"
   },
   {
     "doctor_id": 1,
     "patient_id": "5bbPsqlHQdW6j0HblMIuGA==",
-    "date": "2025-11-27T12:30:00"
+    "date": "2025-11-27",
+    "time": "12:30:00"
   },
   {
     "doctor_id": 2,
     "patient_id": "kfPHC86BR6O27u+Tp6G5Gw==",
-    "date": "2025-11-28T11:00:00"
+    "date": "2025-11-28",
+    "time": "11:00:00"
   },
   {
     "doctor_id": 6,
     "patient_id": "GY7UmkfiQQeU7hWQ7I7z2g==",
-    "date": "2025-11-29T12:30:00"
+    "date": "2025-11-29",
+    "time": "12:30:00"
   },
   {
     "doctor_id": 9,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
-    "date": "2025-11-30T14:30:00"
+    "date": "2025-11-30",
+    "time": "14:30:00"
   },
   {
     "doctor_id": 1,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
-    "date": "2025-11-29T14:30:00",
+    "date": "2025-11-29",
+    "time": "14:30:00",
     "status": "completed"
   },
   {
     "doctor_id": 1,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
-    "date": "2025-11-29T14:30:00"
+    "date": "2025-11-29",
+    "time": "14:30:00"
   },
   {
     "doctor_id": 2,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
-    "date": "2025-11-10T8:00:00"
+    "date": "2025-11-10",
+    "time": "08:00:00"
   },
   {
     "doctor_id": 2,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
-    "date": "2025-11-10T8:30:00"
+    "date": "2025-11-10",
+    "time": "08:30:00"
   },
   {
     "doctor_id": 2,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
-    "date": "2025-11-10T9:00:00"
+    "date": "2025-11-10",
+    "time": "09:00:00"
   },
   {
     "doctor_id": 2,
     "patient_id": "lwk+y7WzSM6jUIDiCQUc9A==",
-    "date": "2025-11-10T9:30:00"
+    "date": "2025-11-10",
+    "time": "09:30:00"
   }
 ]

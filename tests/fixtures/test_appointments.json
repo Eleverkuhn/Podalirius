@@ -1,7 +1,8 @@
 {
   "booking_form": 
   {
-    "date": "2025-10-03T08:17:49",
+    "date": "2025-10-03",
+    "time": "08:17:49",
     "doctor_id": 1,
     "specialty_id": 1,
     "service_id": 1,
@@ -13,7 +14,8 @@
   },
   "miss_matched_user_data":
   {
-    "date": "2025-10-03T08:17:49",
+    "date": "2025-10-03",
+    "time": "08:17:49",
     "doctor_id": 1,
     "specialty_id": 1,
     "service_id": 1,
@@ -25,7 +27,8 @@
   },
   "invalid_booking_form":
   {
-    "date": "2025-10-03T08:17:49",
+    "date": "2025-10-03",
+    "time": "08:17:49",
     "doctor_id": 1,
     "specialty_id": 1,
     "service_id": 1,

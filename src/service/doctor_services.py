@@ -39,8 +39,6 @@ class DoctorDataConstructor(BaseService):
         from service.appointment_services import AppointmentShceduleDataConstructor
 
         doctor_schedule = self._get_schedule(doctor)
-        get_logger().debug(doctor_schedule)
-        get_logger().debug(f"Appointments: {self._get_appointments(doctor)}")
         appointment_schedule = AppointmentShceduleDataConstructor(
             doctor_schedule, self._get_appointments(doctor)
         ).exec()
@@ -54,9 +52,9 @@ class DoctorDataConstructor(BaseService):
         }
         return schedule
 
-    def _get_appointments(self, doctor: Doctor) -> set[Appointment]:
+    def _get_appointments(self, doctor: Doctor) -> set[tuple[date, time]]:
         appointments = set(
-            appointment.date
+            (appointment.date, appointment.time)
             for appointment
             in doctor.appointments
             if appointment.status == "pending"

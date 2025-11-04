@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, time
 from typing import Literal
 
 from pydantic import Field
@@ -8,7 +8,8 @@ from model.base_models import AbstractModel
 
 class AppointmentBase(AbstractModel):
     doctor_id: int
-    date: datetime
+    date: date
+    time: time
 
 
 class AppointmentCreate(AppointmentBase):

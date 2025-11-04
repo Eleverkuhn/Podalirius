@@ -32,12 +32,12 @@ def free_hours() -> str:
 @pytest.fixture
 def booked_appointment_times(
         week: list[date], booked_hours: list[str]
-) -> list[datetime]:
-    data = [
-        datetime.combine(day, time.fromisoformat(booked_time))
+) -> set[tuple[date, time]]:
+    data = {
+        (day, time.fromisoformat(booked_time))
         for day in week
         for booked_time in booked_hours
-    ]
+    }
     return data
 
 
