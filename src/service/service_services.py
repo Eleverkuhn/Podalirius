@@ -23,10 +23,10 @@ class ServiceDataConstructor(BaseService):
         dumped_service.update({"price": str(price)})
         return dumped_service
 
-    def _calculate_price(self, doctor_id: int, service: Service) -> int:
+    def _calculate_price(self, doctor_id: int, service: Service) -> Decimal:
         doctor_markup = self._get_doctor_to_service_markup(doctor_id, service)
         price = service.type.price + service.markup + doctor_markup
-        return int(price)
+        return price
 
     def _get_doctor_to_service_markup(
             self, doctor_id: int, service: Service

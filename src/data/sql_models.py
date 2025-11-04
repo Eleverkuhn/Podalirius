@@ -1,4 +1,4 @@
-from datetime import datetime, date, time
+from datetime import date, time
 from decimal import Decimal
 from uuid import uuid4
 
@@ -47,6 +47,9 @@ class ServiceToAppointment(BaseSQLModel, table=True):
 
     appointment_id: int = Field(foreign_key="appointments.id")
     service_id: int = Field(foreign_key="services.id")
+
+    appointment: "Appointment" = Relationship(back_populates="appointment_links")
+    service: "Service" = Relationship(back_populates="to_appointments_links")
 
 
 class Specialty(BaseSQLModel, table=True):
@@ -144,6 +147,16 @@ class Service(BaseSQLModel, table=True):
             "overlaps": "doctor,doctor_links,service,service_links"
         },
     )
+    to_appointments_links: list[ServiceToAppointment] = Relationship(
+        back_populates="service"
+    )
+    appointments: list["Appointment"] = Relationship(
+        back_populates="services",
+        sa_relationship_kwargs={
+            "secondary": "services_to_appointments",
+            "overlaps": "appointment,appointment_links,service,to_appointments_links"
+        }
+    )
 
 
 class Status(str, Enum):
@@ -178,3 +191,13 @@ class Appointment(BaseEnumSQLModel, table=True):
 
     doctor: Doctor = Relationship(back_populates="appointments")
     patient: Patient = Relationship(back_populates="appointments")
+    appointment_links: list[ServiceToAppointment] = Relationship(
+        back_populates="appointment"
+    )
+    services: list["Service"] = Relationship(
+        back_populates="appointments",
+        sa_relationship_kwargs={
+            "secondary": "services_to_appointments",
+            "overlaps": "service,appointment,appointment_links"
+        }
+    )

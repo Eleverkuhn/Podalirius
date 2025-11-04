@@ -24,12 +24,6 @@ from data.connections import MySQLConnection
 type Payload = dict[str, bytes | int | datetime]
 
 
-# class JWTToken:
-#     def __init__(self, token: str, exp: datetime) -> None:
-#         self.token = token
-#         self.exp = exp
-
-
 class JWTTokenService:
     secret = secrets.token_hex(16)
     alg = "HS256"
@@ -45,7 +39,6 @@ class JWTTokenService:
         payload = self._construct_payload(id)
         token = jwt.encode(payload, self.secret, algorithm=self.alg)
         return token
-        # return JWTToken(token, payload.get("exp"))
 
     def verify(self, token: str) -> Payload:
         payload = jwt.decode(token, self.secret, algorithms=[self.alg])

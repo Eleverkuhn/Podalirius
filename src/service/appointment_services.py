@@ -1,4 +1,4 @@
-from datetime import date, time, datetime, timedelta
+from datetime import date, time, timedelta
 from typing import override
 
 from sqlmodel import Session
@@ -15,9 +15,10 @@ from service.base_services import BaseService
 from service.auth_services import AuthService, JWTTokenService
 from service.patient_services import PatientService
 from service.specialty_services import SpecialtyDataConstructor
+from service.service_services import ServiceDataConstructor
 from data.connections import MySQLConnection
 from data.base_data import BaseCRUD
-from data.sql_models import Appointment, ServiceToAppointment
+from data.sql_models import Appointment, Service
 
 type AppointmentSchedule = dict[date, set[time]]
 
@@ -170,7 +171,7 @@ class AppointmentBooking(
         except DataDoesNotMatch:
             self._rollback()
         else:
-            self._finish_transaction(appointment.id, form.service_id)
+            self.session.commit()
             token = JWTTokenService().create(appointment.id)
             return token
 
@@ -199,26 +200,6 @@ class AppointmentBooking(
             self, patient_id: bytes, form: AppointmentBookingForm
     ) -> AppointmentCreate:
         return AppointmentCreate(**form.model_dump(), patient_id=patient_id)
-
-    def _finish_transaction(
-            self, appointment_id: int, service_id: int
-    ) -> None:
-        self._create_services_to_appointments_entry(appointment_id, service_id)
-        self.session.commit()
-
-    def _create_services_to_appointments_entry(
-            self, appointment_id: int, service_id: int
-    ) -> None:
-        entry = ServiceToAppointment(
-            appointment_id=appointment_id,
-            service_id=service_id
-        )
-        crud = BaseCRUD(
-            self.session,
-            ServiceToAppointment,
-            ServiceToAppointment
-        )
-        crud.create(entry)
 
     def _rollback(self) -> None:
         self.session.rollback()

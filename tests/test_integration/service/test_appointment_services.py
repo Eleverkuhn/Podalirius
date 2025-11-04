@@ -1,8 +1,8 @@
-from datetime import date, datetime, time, timedelta
+from datetime import date, timedelta
 
 import pytest
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, select
+from sqlmodel import Session
 
 from logger.setup import get_logger
 from exceptions.exc import FormInputError
@@ -16,7 +16,7 @@ from service.appointment_services import (
     AppointmentJWTTokenService
 )
 from service.doctor_services import WorkScheduleDataConstructor
-from data.sql_models import Appointment, ServiceToAppointment, Doctor
+from data.sql_models import Appointment, Doctor
 from data.patient_data import Patient
 from utils import SetUpTest
 
@@ -168,26 +168,6 @@ class TestAppointmentBooking:
             booking_service._create_appointment_entry(
                 uuid_bytes, appointment_model
             )
-
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
-    )
-    def test__create_services_to_appointments_entry(
-            self,
-            booking_service: AppointmentBooking,
-            appointment: Appointment,
-            appointments_data: dict[str, str | int]
-    ) -> None:
-        booking_service._create_services_to_appointments_entry(
-            appointment.id, appointments_data.get("service_id")
-        )
-        statement = select(ServiceToAppointment).where(
-                ServiceToAppointment.appointment_id == appointment.id
-            )
-        entry = booking_service.session.exec(statement).one()
-        assert entry
-        get_logger().debug(entry)
 
 
 class TestAppointmentJWTTokenService:

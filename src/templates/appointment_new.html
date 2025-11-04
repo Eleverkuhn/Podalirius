@@ -4,35 +4,43 @@
 <h2>New Appointment</h2>
 <form id="appointment-form" method="post" action="{{ request.url_for('Appointment.send_form') }}">
   {% if form.get("patient") %}
+
     {% for key, value in form.get("patient").items() %}
       <input type="hidden" name="{{ key }}" value="{{ value }}" required>
     {% endfor %}
+
   {% else %}
+
     <label>"Last Name"</label>
     <input type="text" name="last_name" value="" required>
     {% if errors and errors.get("last_name") %}
       <small>{{ errors.get("last_name") }}</small>
     {% endif %}
+
     <label>"Middle Name"</label>
     <input type="text" name="middle_name" value="" required>
     {% if errors and errors.get("middle_name") %}
       <small>{{ errors.get("middle_name") }}</small>
     {% endif %}
+
     <label>"First Name"</label>
     <input type="text" name="first_name" value="" required>
     {% if errors and errors.get("first_name") %}
       <small>{{ errors.get("first_name") }}</small>
     {% endif %}
+
     <label>"Phone"</label>
     <input type="text" name="phone" value="" required>
     {% if errors and errors.get("phone") %}
       <small>{{ errors.get("phone") }}</small>
     {% endif %}
+
     <label>"Birth Date"</label>
     <input type="text" name="birth_date" value="" required>
     {% if errors and errors.get("birth_date") %}
       <small>{{ errors.get("birth_date") }}</small>
     {% endif %}
+
   {% endif %}
 
   <label>
