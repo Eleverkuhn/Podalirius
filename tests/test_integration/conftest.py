@@ -15,7 +15,7 @@ from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
 from data.base_data import BaseSQLModel, BaseCRUD
-from data.sql_models import Appointment, Doctor
+from data.sql_models import Appointment, Doctor, ServiceToAppointment
 from data.auth_data import OTPCodeRedis
 from data.patient_data import Patient, PatientCRUD
 from utils import SetUpTest
@@ -82,6 +82,31 @@ def appointment(
     created = setup_test.create_entry(appointment_model)
     yield created
     setup_test.tear_down(created)
+
+
+@pytest.fixture
+def appointments(
+        patient: Patient, appointments_data: dict, setup_test: SetUpTest
+) -> list[Appointment]:
+    appointments = [
+        Appointment(**appointment, patient_id=patient.id)
+        for appointment
+        in appointments_data
+    ]
+    setup_test.create_multiple(appointments)
+    return appointments
+
+
+@pytest.fixture
+def link_services_to_appointments(
+        appointments: list[Appointment], setup_test: SetUpTest
+) -> None:
+    services_to_appointments = [
+        ServiceToAppointment(service_id=1, appointment_id=appointment.id)
+        for appointment
+        in appointments
+    ]
+    setup_test.create_multiple(services_to_appointments)
 
 
 @pytest.fixture

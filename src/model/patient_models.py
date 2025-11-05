@@ -4,6 +4,7 @@ from typing import Annotated
 from pydantic import Field, AfterValidator
 
 from model.base_models import AbstractModel, PersonAbstract
+from model.appointment_models import AppointmentOuter
 
 
 def is_numeric(value: str) -> str:
@@ -24,6 +25,10 @@ class PatientCreate(PersonAbstract, Phone):
 
 class PatientOuter(PatientCreate):
     id: str
+
+
+class PatientWithAppointments(PatientOuter):
+    appointments: list[AppointmentOuter]
 
 
 class PatientInner(PatientOuter):

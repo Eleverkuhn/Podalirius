@@ -1,5 +1,6 @@
 import pytest
 
+from logger.setup import get_logger
 from model.patient_models import PatientCreate
 from data.patient_data import PatientCRUD, Patient
 
@@ -44,3 +45,12 @@ class TestPatientCRUD:
         PatientCRUD.convert_birth_date_to_str(dumped_patient)
         converted_birth_date = dumped_patient.get("birth_date")
         assert converted_birth_date == patients_data.get("birth_date")
+
+    @pytest.mark.parametrize("appointments_data", ["patient_1"], indirect=True)
+    @pytest.mark.usefixtures("appointments", "link_services_to_appointments")
+    def test_get_with_appointments(
+            self, patient_crud: PatientCRUD, patient_str_id: str
+    ) -> None:
+        patient = patient_crud.get_with_appointments(patient_str_id)
+        assert patient
+        get_logger().debug(patient)
