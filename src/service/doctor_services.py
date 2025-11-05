@@ -26,7 +26,7 @@ class DoctorDataConstructor(BaseService):
     def _add_services(
             self, dumped_doctor: dict[str, str], services: list[Service]
     ) -> dict:
-        services = ServiceDataConstructor(self.session)._traverse(
+        services = ServiceDataConstructor()._traverse(
             dumped_doctor.get("id"), services
         )
         dumped_doctor.update({"services": services})

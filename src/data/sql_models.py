@@ -199,6 +199,6 @@ class Appointment(BaseEnumSQLModel, table=True):
         back_populates="appointments",
         sa_relationship_kwargs={
             "secondary": "services_to_appointments",
-            "overlaps": "service,appointment,appointment_links"
+            "overlaps": "service,appointment,appointment_links,to_appointments_links"
         }
     )

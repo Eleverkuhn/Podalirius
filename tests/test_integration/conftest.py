@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from pathlib import Path
 from random import randint
 
 from typing import Generator
@@ -6,6 +7,7 @@ from typing import Generator
 import pytest
 from sqlmodel import Session, Sequence
 
+from utils import read_fixture
 from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
@@ -51,13 +53,31 @@ def patient(
 
 
 @pytest.fixture
+def appointments_data(
+        fixture_dir: Path, request: pytest.FixtureRequest
+) -> list[dict]:
+    data = read_fixture(
+        fixture_dir.joinpath("test_appointments.json")
+    )
+    return data.get(request.param)
+
+
+@pytest.fixture
+def get_appointment(
+        appointments_data: list[dict], request: pytest.FixtureRequest
+) -> dict:
+    appointment = appointments_data[request.param]
+    return appointment
+
+
+@pytest.fixture
 def appointment(
-        appointment_form_data: dict,
+        get_appointment: dict,
         patient: Patient,
         setup_test: SetUpTest
 ) -> Iterator[Appointment]:
     appointment_model = Appointment(
-        **appointment_form_data, patient_id=patient.id
+        **get_appointment, patient_id=patient.id
     )
     created = setup_test.create_entry(appointment_model)
     yield created

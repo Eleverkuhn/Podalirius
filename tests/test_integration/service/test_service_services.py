@@ -23,8 +23,8 @@ def doctors_to_services_data(
 
 
 @pytest.fixture
-def service(session: Session) -> ServiceDataConstructor:
-    return ServiceDataConstructor(session)
+def service() -> ServiceDataConstructor:
+    return ServiceDataConstructor()
 
 
 class TestServiceDataConstructor:

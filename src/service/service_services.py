@@ -4,7 +4,7 @@ from service.base_services import BaseService
 from data.sql_models import Service
 
 
-class ServiceDataConstructor(BaseService):
+class ServiceDataConstructor:
     def _traverse(self, doctor_id: int, services: list[Service]) -> list[dict]:
         return [self._dump(doctor_id, service) for service in services]
 

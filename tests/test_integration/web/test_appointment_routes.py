@@ -100,8 +100,9 @@ class TestAppointmentEndpointSendForm(EndpointWithForm):
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
 @pytest.mark.parametrize(
-    "appointment_form_data", ["booking_form"], indirect=True
+    "appointments_data", ["patient_1"], indirect=True
 )
+@pytest.mark.parametrize("get_appointment", [0], indirect=True)
 class TestAppointmentEndpointCreatedInfo(BaseTestEndpoint):
     base_url = "Appointment.info"
 
