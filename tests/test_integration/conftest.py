@@ -52,12 +52,12 @@ def patient(
 
 @pytest.fixture
 def appointment(
-        appointments_data: dict,
+        appointment_form_data: dict,
         patient: Patient,
         setup_test: SetUpTest
 ) -> Iterator[Appointment]:
     appointment_model = Appointment(
-        **appointments_data, patient_id=patient.id
+        **appointment_form_data, patient_id=patient.id
     )
     created = setup_test.create_entry(appointment_model)
     yield created

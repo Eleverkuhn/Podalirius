@@ -22,8 +22,8 @@ from utils import SetUpTest
 
 
 @pytest.fixture
-def form(appointments_data: dict[str, str | int]) -> AppointmentBookingForm:
-    return AppointmentBookingForm(**appointments_data)
+def form(appointment_form_data: dict[str, str | int]) -> AppointmentBookingForm:
+    return AppointmentBookingForm(**appointment_form_data)
 
 
 @pytest.fixture
@@ -43,9 +43,9 @@ def booking_service(session: Session) -> AppointmentBooking:
 
 @pytest.fixture
 def appointment_model(
-    appointments_data: dict[str, str | int]
+    appointment_form_data: dict[str, str | int]
 ) -> AppointmentBase:
-    return AppointmentBase(**appointments_data)
+    return AppointmentBase(**appointment_form_data)
 
 
 class TestBaseAppointmentService:
@@ -102,7 +102,7 @@ class TestAppointmentScheduleDataConstructor:
 class TestAppointmentBooking:
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
+        "appointment_form_data", ["booking_form"], indirect=True
     )
     @pytest.mark.usefixtures("patient")
     def test__booking_for_existing_unlogged_in_user_succeed(
@@ -114,7 +114,7 @@ class TestAppointmentBooking:
         assert token
 
     @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
+        "appointment_form_data", ["booking_form"], indirect=True
     )
     def test__booking_for_unexistent_unlogged_in_user_succeed(
             self,
@@ -128,7 +128,7 @@ class TestAppointmentBooking:
 
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.parametrize(
-        "appointments_data", ["miss_matched_user_data"], indirect=True
+        "appointment_form_data", ["miss_matched_user_data"], indirect=True
     )
     @pytest.mark.usefixtures("patient")
     def test__booking_for_unlogged_in_user_rollbacks_if_miss_matched(
@@ -141,7 +141,7 @@ class TestAppointmentBooking:
 
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
+        "appointment_form_data", ["booking_form"], indirect=True
     )
     def test__create_appointment_entry_succeed(
             self,
@@ -156,7 +156,7 @@ class TestAppointmentBooking:
         assert appointment.model_dump() == appointment_db.model_dump()
 
     @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
+        "appointment_form_data", ["booking_form"], indirect=True
     )
     def test__create_appointment_entry_fails_for_unexisting_patient(
             self,
@@ -173,7 +173,7 @@ class TestAppointmentBooking:
 class TestAppointmentJWTTokenService:
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
+        "appointment_form_data", ["booking_form"], indirect=True
     )
     def test_get_appointment(
             self,

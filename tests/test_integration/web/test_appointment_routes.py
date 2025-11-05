@@ -51,56 +51,56 @@ class TestAppointmentEndpointSendForm(EndpointWithForm):
 
     @override
     @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
+        "appointment_form_data", ["booking_form"], indirect=True
     )
     def test_redirects(
-            self, appointments_data: dict, setup_test: SetUpTest,
+            self, appointment_form_data: dict, setup_test: SetUpTest,
     ) -> None:
-        response = self._post_req(appointments_data)
+        response = self._post_req(appointment_form_data)
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        setup_test.delete_patient(appointments_data.get("phone"))
+        setup_test.delete_patient(appointment_form_data.get("phone"))
 
     @override
     @pytest.mark.parametrize(
-        "appointments_data", ["booking_form"], indirect=True
+        "appointment_form_data", ["booking_form"], indirect=True
     )
     def test_invalid_form_data_returns_422(
-            self, appointments_data: dict
+            self, appointment_form_data: dict
     ) -> None:
-        appointments_data.update({"last_name": "1232"})
-        super().test_invalid_form_data_returns_422(appointments_data)
+        appointment_form_data.update({"last_name": "1232"})
+        super().test_invalid_form_data_returns_422(appointment_form_data)
 
     @override
     @pytest.mark.parametrize(
-        "appointments_data", ["invalid_booking_form"], indirect=True
+        "appointment_form_data", ["invalid_booking_form"], indirect=True
     )
     def test_validation_err_msgs_are_rendered_correctly(
-            self, appointments_data: dict
+            self, appointment_form_data: dict
     ) -> None:
         super().test_validation_err_msgs_are_rendered_correctly(
-            AppointmentBookingForm, appointments_data
+            AppointmentBookingForm, appointment_form_data
         )
 
     @pytest.mark.parametrize(
-        "appointments_data", ["miss_matched_user_data"], indirect=True
+        "appointment_form_data", ["miss_matched_user_data"], indirect=True
     )
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.usefixtures("patient")
     def test_miss_matching_data_raises_request_validation_error(
-            self, appointments_data: dict, setup_test: SetUpTest,
+            self, appointment_form_data: dict, setup_test: SetUpTest,
     ) -> None:
-        response = self.client.post(self._get_url(), data=appointments_data)
+        response = self.client.post(self._get_url(), data=appointment_form_data)
         err_msg = (
             "You are trying to book an appointment for existing user with"
             "wrong data."
         )
         assert err_msg in response.text
-        setup_test.delete_patient(appointments_data.get("phone"))
+        setup_test.delete_patient(appointment_form_data.get("phone"))
 
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
 @pytest.mark.parametrize(
-    "appointments_data", ["booking_form"], indirect=True
+    "appointment_form_data", ["booking_form"], indirect=True
 )
 class TestAppointmentEndpointCreatedInfo(BaseTestEndpoint):
     base_url = "Appointment.info"

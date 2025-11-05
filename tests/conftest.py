@@ -82,7 +82,7 @@ def patient_sql_model(patients_data: dict) -> Patient:
 
 
 @pytest.fixture
-def appointments_data(
+def appointment_form_data(
         fixture_dir: Path, request: pytest.FixtureRequest
 ) -> dict:
     data = read_fixture(
