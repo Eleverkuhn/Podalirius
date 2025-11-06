@@ -20,7 +20,7 @@ class PatientAppointment(BaseRouter):
     def get_all(
             self,
             request: Request,
-            appointment_status: str | None = None,
+            appointment_status: str = "pending",
             patient_page: PatientPage = Depends(get_patient_page)
     ) -> _TemplateResponse:
         appointments = patient_page.get_appointments(appointment_status)

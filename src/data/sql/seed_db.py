@@ -22,6 +22,9 @@ MODELS_TO_FIXTURES = {
     ),
     sql_models.DoctorToService: FIXTURE_DIR.joinpath(
         "doctors_to_services.json"
+    ),
+    sql_models.ServiceToAppointment: FIXTURE_DIR.joinpath(
+        "services_to_appointments.json"
     )
 }
 

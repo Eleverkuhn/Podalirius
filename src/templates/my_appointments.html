@@ -18,12 +18,11 @@
 
 {% if appointments %}
   {% for appointment in appointments %}
-    <dl>
-      {% for key, value in appointment %}
-        <dt>{{ key }}</dt>
-        <dd>{{ value }}</dd>
+    <ul>
+      {% for value in appointment.model_dump().values() %}
+        <li>{{ value }}</li>
       {% endfor %}
-    </dl>
+    </ul>
   {% endfor %}
 {% endif %}
 

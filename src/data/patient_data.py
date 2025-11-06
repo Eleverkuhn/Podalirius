@@ -13,7 +13,7 @@ from data.sql_models import Patient, Appointment
 from data.appointment_data import AppointmentDataConverter
 
 
-class PatientCRUD(BaseCRUD):
+class PatientCRUD(BaseCRUD):  # TODO: split conversion methods into separate class
     @override
     def __init__(
             self,

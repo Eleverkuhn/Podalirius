@@ -4,7 +4,6 @@ import pytest
 from fastapi import status, Response
 from fastapi.testclient import TestClient
 
-from logger.setup import get_logger
 from main import app
 from model.appointment_models import AppointmentOuter
 from service.auth_services import JWTTokenService
@@ -49,23 +48,15 @@ class TestPatientEndpoint(BaseAuthorizedPatientEndpointTest):
 @pytest.mark.parametrize("appointments", [0], indirect=True)
 @pytest.mark.usefixtures("link_services_to_appointments")
 class TestPatientEndpointWithAppointments(BaseAuthorizedPatientEndpointTest):
-    def test_get_all_displays_all_appointments(
-            self, converted_appointments: list[AppointmentOuter]
-    ) -> None:
-        response = self.client.get(self._get_url())
-        self._find_appointment_info_in_response(
-            converted_appointments, response
-        )
-
     @pytest.mark.parametrize(
         "filtered_appointments", appointment_status, indirect=True
     )
-    def test_get_all_filtered_by_pending_status(
+    def test_get_all_filtered_by_status(
             self, filtered_appointments: list[AppointmentOuter]
     ) -> None:
         appointment_status, appointments = filtered_appointments
         pending_url = "".join(
-            [self._get_url(), f"?status={appointment_status}"]
+            [self._get_url(), f"?appointment_status={appointment_status}"]
         )
         response = self.client.get(pending_url)
         self._find_appointment_info_in_response(appointments, response)

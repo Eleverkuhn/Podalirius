@@ -54,6 +54,21 @@
     "time": "15:30:00"
   },
   {
+    "doctor_id": 3,
+    "patient_id": "ELPCz+rVRKmm7pHRYYDz/w==",
+    "date": "2025-11-19",
+    "time": "15:30:00",
+    "status": "cancelled"
+  },
+  {
+    "doctor_id": 3,
+    "patient_id": "ELPCz+rVRKmm7pHRYYDz/w==",
+    "date": "2025-11-04",
+    "time": "15:30:00",
+    "status": "completed",
+    "is_paid": true
+  },
+  {
     "doctor_id": 4,
     "patient_id": "5bbPsqlHQdW6j0HblMIuGA==",
     "date": "2025-11-21",

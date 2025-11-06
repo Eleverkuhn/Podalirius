@@ -6,7 +6,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Depends, Request
 from fastapi.responses import RedirectResponse
 from jose import jwt
-from jose.exceptions import ExpiredSignatureError
+from jose.exceptions import ExpiredSignatureError, JWSSignatureError, JWTError
 from sqlmodel import Session
 
 from logger.setup import get_logger
@@ -80,6 +80,8 @@ class AuthService(BaseService):
             payload = JWTTokenService().verify(access_token)
         except ExpiredSignatureError:
             raise UnauthorizedError(detail="Access token is expired")
+        except JWTError as exc:
+            raise UnauthorizedError(detail=str(exc))
         else:
             return payload
 
@@ -155,7 +157,7 @@ class OTPCodeService:
         return str(secrets.randbelow(10**6)).zfill(6)
 
     def _send_otp_code(self, code: str) -> None:  # INFO: deprecated
-        pass
+        print(code)  # INFO: For test purposes
 
     def _save_otp_code(self, phone: str, code: str) -> None:
         salt, hashed_value = self._hash_otp_code(code)
