@@ -69,6 +69,13 @@
     "is_paid": true
   },
   {
+    "doctor_id": 3,
+    "patient_id": "ELPCz+rVRKmm7pHRYYDz/w==",
+    "date": "2025-11-10",
+    "time": "11:30:00",
+    "is_paid": true
+  },
+  {
     "doctor_id": 4,
     "patient_id": "5bbPsqlHQdW6j0HblMIuGA==",
     "date": "2025-11-21",

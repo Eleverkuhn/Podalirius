@@ -84,7 +84,18 @@ class PatientPage(BasePatientService):
                 in self.patient.appointments
                 if appointment.status == status
             ]
-        return filtered_appointments
+        sorted_appointments = self._sort_appointments_by_date(
+            filtered_appointments
+        )
+        return sorted_appointments
+
+    def _sort_appointments_by_date(
+            self, appointments: list[AppointmentOuter]
+    ) -> list[AppointmentOuter]:
+        sorted_appointments = sorted(
+            appointments, key=lambda appointment: appointment.date
+        )
+        return sorted_appointments
 
 
 def get_patient_page(

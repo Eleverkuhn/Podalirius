@@ -110,5 +110,9 @@
   {
     "appointment_id": 28,
     "service_id": 1
+  },
+  {
+    "appointment_id": 29,
+    "service_id": 1
   }
 ]
