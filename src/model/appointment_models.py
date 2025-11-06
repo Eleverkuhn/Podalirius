@@ -31,6 +31,7 @@ class AppointmentInner(AppointmentCreate):
 
 
 class AppointmentOuter(AppointmentBaseOuter):
+    id: int
     doctor: str
     price: Decimal = Field(
         max_digits=FieldDefault.PRECISION,

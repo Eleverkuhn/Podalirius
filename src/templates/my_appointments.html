@@ -18,11 +18,13 @@
 
 {% if appointments %}
   {% for appointment in appointments %}
-    <ul>
-      {% for value in appointment.model_dump().values() %}
-        <li>{{ value }}</li>
-      {% endfor %}
-    </ul>
+  <a href="{{ request.url_for('PatientAppointment.appointment', id=appointment.id)}}">
+      <ul>
+        {% for value in appointment.model_dump().values() %}
+          <li>{{ value }}</li>
+        {% endfor %}
+      </ul>
+    </a>
   {% endfor %}
 {% endif %}
 
