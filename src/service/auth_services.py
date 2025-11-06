@@ -17,7 +17,7 @@ from model.form_models import PhoneForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate, PatientOuter
 from service.base_services import BaseService
-from service.patient_services import PatientService
+# from service.patient_services import PatientService
 from data.auth_data import OTPCodeRedis
 from data.connections import MySQLConnection
 
@@ -90,6 +90,8 @@ class AuthService(BaseService):
         raise UnauthorizedError(detail="Invalid token")
 
     def _get_patient(self, phone: str) -> PatientOuter:
+        from service.patient_services import PatientService
+
         service = PatientService(self.session)
         patient = service.check_patient_exists(phone)
         if not patient:
@@ -191,5 +193,5 @@ def get_auth_service(
 def authorize(
         request: Request,
         auth: AuthService = Depends(get_auth_service)
-) -> None:
-    auth.authorize(request.cookies)
+) -> str:
+    return auth.authorize(request.cookies)

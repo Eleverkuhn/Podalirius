@@ -11,6 +11,7 @@ from utils import read_fixture
 from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
+from model.appointment_models import AppointmentOuter
 from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
@@ -21,6 +22,11 @@ from data.patient_data import Patient, PatientCRUD
 from utils import SetUpTest
 
 type CreatedTestEntry = Generator[BaseSQLModel, None, None]
+
+
+@pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+class BasePatientTest:
+    pass
 
 
 @pytest.fixture
@@ -95,6 +101,15 @@ def appointments(
     ]
     setup_test.create_multiple(appointments)
     return appointments
+
+
+@pytest.fixture
+def converted_appointments(
+        appointments: list[Appointment]
+) -> list[AppointmentOuter]:
+    patient_crud = PatientCRUD(None, None, None)
+    converted_appointments = patient_crud._convert_appointments(appointments)
+    return converted_appointments
 
 
 @pytest.fixture

@@ -15,7 +15,7 @@ class MySQLConnection:
 
     @classmethod
     def get_session(cls) -> Session:
-        with Session(cls.engine) as session:
+        with Session(cls.engine, expire_on_commit=False) as session:
             yield session
 
 

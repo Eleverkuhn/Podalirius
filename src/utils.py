@@ -5,6 +5,7 @@ from pathlib import Path
 from sqlalchemy.orm.exc import ObjectDeletedError
 from sqlmodel import Session, inspect
 
+from logger.setup import get_logger
 from data.base_data import BaseSQLModel, BaseCRUD
 from data.sql_models import Patient, Appointment
 from data.patient_data import PatientCRUD
@@ -101,6 +102,11 @@ class SetUpTest:
         self.session.refresh(entry)
         return entry
 
+    def create_multiple(self, entries: list[BaseSQLModel]) -> None:
+        self.session.add_all(entries)
+        self.session.commit()
+        self._refresh_multiple(entries)
+
     def delete_multiple(self, data: list[BaseSQLModel]) -> None:
         for entry in data:
             self._delete_entry(entry)
@@ -114,6 +120,11 @@ class SetUpTest:
             self._inspect(entry)
         except ObjectDeletedError:
             pass
+
+    def _refresh_multiple(self, entries: list[BaseSQLModel]) -> None:
+        for entry in entries:
+            self.session.refresh(entry)
+            # self.session.expunge(entry)
 
     def _inspect(self, entry: BaseSQLModel) -> None:
         try:

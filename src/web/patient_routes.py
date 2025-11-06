@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Request
 from fastapi_utils.cbv import cbv
+from starlette.templating import _TemplateResponse
 
 from web.base_routes import Prefixes, BaseRouter
-from service.auth_services import authorize
+from service.patient_services import PatientPage, get_patient_page
 
 patient_appointments_router = APIRouter(prefix=f"{Prefixes.MY}/appointments")
 patient_info_router = APIRouter(prefix=f"{Prefixes.MY}/info")
@@ -14,10 +15,16 @@ class PatientAppointment(BaseRouter):
         "/",
         name="all",
         status_code=status.HTTP_200_OK,
-        dependencies=[Depends(authorize)]
     )
-    def get_all(self) -> None:
-        pass
+    def get_all(
+            self,
+            request: Request,
+            patient_page: PatientPage = Depends(get_patient_page)
+    ) -> _TemplateResponse:
+        content = {
+            "request": request, "appointments": patient_page.appointments
+        }
+        return self.template.TemplateResponse("my_appointments.html", content)
 
     @patient_appointments_router.get(
         "/{id}", name="appointment", status_code=status.HTTP_200_OK)

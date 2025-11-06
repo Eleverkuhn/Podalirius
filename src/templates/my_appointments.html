@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Appointments</h2>
+
+{% if appointments %}
+  {% for appointment in appointments %}
+    <dl>
+      {% for key, value in appointment %}
+        <dt>{{ key }}</dt>
+        <dd>{{ value }}</dd>
+      {% endfor %}
+    </dl>
+  {% endfor %}
+{% endif %}
+
+{% endblock %}

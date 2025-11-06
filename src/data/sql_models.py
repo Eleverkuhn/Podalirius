@@ -86,6 +86,11 @@ class Doctor(PersonSQLModel, table=True):
         },
     )
 
+    @property
+    def full_name(self) -> str:
+        full_name = f"{self.first_name} {self.middle_name} {self.last_name}"
+        return full_name
+
 
 class Weekday(str, Enum):
     MONDAY = "0"

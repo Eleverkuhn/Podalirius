@@ -1,12 +1,26 @@
 import pytest
+from sqlmodel import Session
 
+from logger.setup import get_logger
 from model.patient_models import PatientCreate
-from service.patient_services import PatientService
-from data.patient_data import Patient
+from model.appointment_models import AppointmentOuter
+from service.patient_services import PatientService, PatientPage
+from data.sql_models import Appointment, Patient
+from data.patient_data import PatientCRUD
+from tests.test_integration.conftest import BasePatientTest
 
 
-@pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-class TestPatientService:
+@pytest.fixture
+def patient_page(
+        session: Session,
+        patient_str_id: str,
+        appointments: list[Appointment],
+        link_services_to_appointments: None
+) -> PatientPage:
+    return PatientPage(session, patient_str_id)
+
+
+class TestPatientService(BasePatientTest):
     def test_construct_patient_data(
             self,
             patient_service: PatientService,
@@ -47,3 +61,19 @@ class TestPatientService:
             patient_create.phone
         )
         assert patient_exists is None
+
+
+@pytest.mark.parametrize("appointments_data", ["patient_1"], indirect=True)
+@pytest.mark.usefixtures("appointments", "link_services_to_appointments")
+class TestPatientPage(BasePatientTest):
+    @pytest.fixture(autouse=True)
+    def _patient_page(self, patient_page: PatientPage) -> None:
+        self.patient_page = patient_page
+
+    def test_init(self) -> None:
+        assert self.patient_page.patient
+
+    def test_appointments(
+            self, converted_appointments: list[AppointmentOuter]
+    ) -> None:
+        assert self.patient_page.appointments == converted_appointments

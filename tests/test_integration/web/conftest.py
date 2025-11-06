@@ -18,8 +18,9 @@ def client() -> TestClient:
 class BaseTestEndpoint:
     base_url: str
 
-    def setup_method(self) -> None:
-        self.client = TestClient(app)
+    @pytest.fixture(autouse=True)
+    def setup_method(self, client: TestClient) -> None:
+        self.client = client
 
     def _get_url(self, name: str | None = None) -> str:
         if name:

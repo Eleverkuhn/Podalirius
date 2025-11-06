@@ -1,20 +1,28 @@
 from typing import override
 
+from fastapi import Depends
 from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session
 
 from exceptions.exc import DataDoesNotMatch
-from model.patient_models import PatientCreate, PatientOuter
+from model.patient_models import (
+    PatientCreate, PatientOuter, PatientWithAppointments
+)
+from model.appointment_models import AppointmentOuter
 from service.base_services import BaseService
+from service.auth_services import authorize
+from data.connections import MySQLConnection
 from data.patient_data import PatientCRUD
 
 
-class PatientService(BaseService):
+class BasePatientService(BaseService):
     @override
     def __init__(self, session: Session) -> None:
         super().__init__(session)
         self.crud = PatientCRUD(self.session)
 
+
+class PatientService(BasePatientService):  # TODO: split this into Registry and ApponitmentCreationHelper
     def registry(self, create_data: PatientCreate) -> PatientOuter:
         """
         Separate method created for possible scalability
@@ -61,3 +69,22 @@ class PatientService(BaseService):
             return True
         else:
             raise DataDoesNotMatch()
+
+
+class PatientPage(BasePatientService):
+    @override
+    def __init__(self, session: Session, patient_id: str) -> None:
+        super().__init__(session)
+        self.patient = self.crud.get_with_appointments(patient_id)
+
+    @property
+    def appointments(self) -> list[AppointmentOuter]:
+        return self.patient.appointments
+
+
+def get_patient_page(
+        session: Session = Depends(MySQLConnection.get_session),
+        patient_id: str = Depends(authorize)
+) -> PatientPage:
+    patient_page = PatientPage(session, patient_id)
+    return patient_page

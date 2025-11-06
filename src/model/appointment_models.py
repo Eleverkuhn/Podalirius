@@ -14,17 +14,21 @@ class AppointmentBase(AbstractModel):
     time: time
 
 
-class AppointmentCreate(AppointmentBase):
-    patient_id: bytes
+class AppointmentBaseOuter(AppointmentBase):
     status: Literal["pending", "completed", "cancelled"] = "pending"
     is_paid: bool = Field(default=False)
+
+
+class AppointmentCreate(AppointmentBase):
+    patient_id: bytes
 
 
 class AppointmentInner(AppointmentCreate):
     id: int
 
 
-class AppointmentOuter(AppointmentCreate):
+class AppointmentOuter(AppointmentBaseOuter):
+    doctor: str
     price: Decimal = Field(
         max_digits=FieldDefault.PRECISION,
         decimal_places=FieldDefault.SCALE

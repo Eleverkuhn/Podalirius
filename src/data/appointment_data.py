@@ -17,7 +17,8 @@ class AppointmentDataConverter:
 
     def to_outer(self) -> AppointmentOuter:
         outer = AppointmentOuter(
-            **self.appointment.model_dump(),
+            **self.appointment.model_dump(exclude=["patient_id"]),
+            doctor=self.appointment.doctor.full_name,
             price=self._calculate_appointment_price()
         )
         return outer
