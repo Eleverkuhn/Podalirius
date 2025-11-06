@@ -59,7 +59,9 @@ def to_outer_expected_output(
         appointment: Appointment, calculate_price_expected_output: Decimal
 ) -> AppointmentOuter:
     outer = AppointmentOuter(
-        **appointment.model_dump(), price=calculate_price_expected_output
+        **appointment.model_dump(),
+        doctor=appointment.doctor.full_name,
+        price=calculate_price_expected_output
     )
     return outer
 

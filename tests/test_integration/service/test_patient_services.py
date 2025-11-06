@@ -6,8 +6,7 @@ from model.patient_models import PatientCreate
 from model.appointment_models import AppointmentOuter
 from service.patient_services import PatientService, PatientPage
 from data.sql_models import Appointment, Patient
-from data.patient_data import PatientCRUD
-from tests.test_integration.conftest import BasePatientTest
+from tests.test_integration.conftest import BasePatientTest, appointment_status
 
 
 @pytest.fixture
@@ -73,7 +72,14 @@ class TestPatientPage(BasePatientTest):
     def test_init(self) -> None:
         assert self.patient_page.patient
 
-    def test_appointments(
-            self, converted_appointments: list[AppointmentOuter]
+    @pytest.mark.parametrize(
+        "filtered_appointments", appointment_status, indirect=True
+    )
+    def test_get_appointments(
+            self, filtered_appointments: list[AppointmentOuter]
     ) -> None:
-        assert self.patient_page.appointments == converted_appointments
+        appointment_status, expected_result = filtered_appointments
+        pending_appointments = self.patient_page.get_appointments(
+            appointment_status
+        )
+        assert pending_appointments == expected_result

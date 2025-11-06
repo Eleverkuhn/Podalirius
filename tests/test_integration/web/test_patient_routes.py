@@ -1,14 +1,14 @@
 from typing import override
 
 import pytest
-from fastapi import status
+from fastapi import status, Response
 from fastapi.testclient import TestClient
 
 from logger.setup import get_logger
 from main import app
 from model.appointment_models import AppointmentOuter
 from service.auth_services import JWTTokenService
-from tests.test_integration.conftest import BasePatientTest
+from tests.test_integration.conftest import BasePatientTest, appointment_status
 from tests.test_integration.web.conftest import BaseTestEndpoint
 
 
@@ -27,31 +27,55 @@ class BasePatientEndpointTest(BaseTestEndpoint):
     base_url = "PatientAppointment.all"
 
 
-@pytest.mark.usefixtures("patient")
-class TestPatientEndpoint(BasePatientEndpointTest, BasePatientTest):
-    # INFO: has URL parameters
+class BaseAuthorizedPatientEndpointTest(
+        BasePatientEndpointTest, BasePatientTest
+):
     @override
     @pytest.fixture(autouse=True)
     def setup_method(self, authorized_client: TestClient) -> None:
         self.client = authorized_client
 
+
+@pytest.mark.usefixtures("patient")
+class TestPatientEndpoint(BaseAuthorizedPatientEndpointTest):
+    # INFO: has URL parameters
     @override
     def test_exists(self) -> None:
         response = self.client.get(self._get_url())
         assert response.status_code == status.HTTP_200_OK
 
-    @pytest.mark.parametrize("appointments_data", ["patient_1"], indirect=True)
-    @pytest.mark.parametrize("appointments", [0], indirect=True)
-    @pytest.mark.usefixtures("link_services_to_appointments")
+
+@pytest.mark.parametrize("appointments_data", ["patient_1"], indirect=True)
+@pytest.mark.parametrize("appointments", [0], indirect=True)
+@pytest.mark.usefixtures("link_services_to_appointments")
+class TestPatientEndpointWithAppointments(BaseAuthorizedPatientEndpointTest):
     def test_get_all_displays_all_appointments(
             self, converted_appointments: list[AppointmentOuter]
     ) -> None:
         response = self.client.get(self._get_url())
-        for appointment in converted_appointments:
+        self._find_appointment_info_in_response(
+            converted_appointments, response
+        )
+
+    @pytest.mark.parametrize(
+        "filtered_appointments", appointment_status, indirect=True
+    )
+    def test_get_all_filtered_by_pending_status(
+            self, filtered_appointments: list[AppointmentOuter]
+    ) -> None:
+        appointment_status, appointments = filtered_appointments
+        pending_url = "".join(
+            [self._get_url(), f"?status={appointment_status}"]
+        )
+        response = self.client.get(pending_url)
+        self._find_appointment_info_in_response(appointments, response)
+
+    def _find_appointment_info_in_response(
+        self, appointments: list[AppointmentOuter], response: Response
+    ) -> None:
+        for appointment in appointments:
             for value in appointment.model_dump().values():
                 assert str(value) in response.text
-        get_logger().debug(converted_appointments)
-        get_logger().debug(response.text)
 
 
 class TestPatientEndpointAnuthorized(BasePatientEndpointTest):

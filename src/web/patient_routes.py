@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status, Request
 from fastapi_utils.cbv import cbv
 from starlette.templating import _TemplateResponse
 
+from logger.setup import get_logger
 from web.base_routes import Prefixes, BaseRouter
 from service.patient_services import PatientPage, get_patient_page
 
@@ -19,11 +20,11 @@ class PatientAppointment(BaseRouter):
     def get_all(
             self,
             request: Request,
+            appointment_status: str | None = None,
             patient_page: PatientPage = Depends(get_patient_page)
     ) -> _TemplateResponse:
-        content = {
-            "request": request, "appointments": patient_page.appointments
-        }
+        appointments = patient_page.get_appointments(appointment_status)
+        content = {"request": request, "appointments": appointments}
         return self.template.TemplateResponse("my_appointments.html", content)
 
     @patient_appointments_router.get(

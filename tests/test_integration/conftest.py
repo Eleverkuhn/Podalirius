@@ -23,6 +23,8 @@ from utils import SetUpTest
 
 type CreatedTestEntry = Generator[BaseSQLModel, None, None]
 
+appointment_status = ["pending", "completed", "cancelled"]  # Is used for parametrizing 'filtered_appointments' fixture
+
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
 class BasePatientTest:
@@ -110,6 +112,21 @@ def converted_appointments(
     patient_crud = PatientCRUD(None, None, None)
     converted_appointments = patient_crud._convert_appointments(appointments)
     return converted_appointments
+
+
+@pytest.fixture
+def filtered_appointments(
+        converted_appointments: list[AppointmentOuter],
+        request: pytest.FixtureRequest
+) -> tuple[str, list[AppointmentOuter]]:
+    status = request.param
+    pending_appointments = [
+        appointment
+        for appointment
+        in converted_appointments
+        if appointment.status == request.param
+    ]
+    return (status, pending_appointments)
 
 
 @pytest.fixture

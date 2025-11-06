@@ -77,9 +77,21 @@ class PatientPage(BasePatientService):
         super().__init__(session)
         self.patient = self.crud.get_with_appointments(patient_id)
 
-    @property
-    def appointments(self) -> list[AppointmentOuter]:
+    def get_appointments(
+            self, status: str | None = None
+    ) -> list[AppointmentOuter]:
+        if status:
+            return self._filter(status)
         return self.patient.appointments
+
+    def _filter(self, status: str) -> list[AppointmentOuter]:
+        filtered_appointments = [
+                appointment
+                for appointment
+                in self.patient.appointments
+                if appointment.status == status
+            ]
+        return filtered_appointments
 
 
 def get_patient_page(
