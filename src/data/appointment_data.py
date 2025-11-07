@@ -1,9 +1,23 @@
 from decimal import Decimal
-from typing import Callable
+from typing import override, Callable
 
-from model.appointment_models import AppointmentOuter
+from sqlmodel import Session
+
+from model.appointment_models import AppointmentOuter, AppointmentInner
 from service.service_services import ServiceDataConstructor
+from data.base_data import BaseCRUD
 from data.sql_models import Appointment, Service
+
+
+class AppointmentCRUD(BaseCRUD):  # TODO: remove
+    @override
+    def __init__(
+            self,
+            session: Session,
+            sql_model: type[Appointment] = Appointment,
+            return_model: type[AppointmentInner] = AppointmentInner
+    ) -> None:
+        super().__init__(session, sql_model, return_model)
 
 
 class AppointmentDataConverter:

@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, status, Request
+from fastapi.responses import RedirectResponse
 from fastapi_utils.cbv import cbv
 from starlette.templating import _TemplateResponse
 
 from logger.setup import get_logger
 from web.base_routes import Prefixes, BaseRouter
 from service.patient_services import PatientPage, get_patient_page
+from data.sql_models import Status
 
 patient_appointments_router = APIRouter(prefix=f"{Prefixes.MY}/appointments")
 patient_info_router = APIRouter(prefix=f"{Prefixes.MY}/info")
@@ -25,7 +27,10 @@ class PatientAppointment(BaseRouter):
     ) -> _TemplateResponse:
         appointments = patient_page.get_appointments(appointment_status)
         content = {"request": request, "appointments": appointments}
-        return self.template.TemplateResponse("my_appointments.html", content)
+        response = self.template.TemplateResponse(
+            "my_appointments.html", content
+        )
+        return response
 
     @patient_appointments_router.get(
         "/{id}", name="appointment", status_code=status.HTTP_200_OK)
@@ -37,9 +42,10 @@ class PatientAppointment(BaseRouter):
     ) -> _TemplateResponse:
         appointment = patient_page.get_appointment(int(id))
         content = {"request": request, "appointment": appointment}
-        return self.template.TemplateResponse(
+        response = self.template.TemplateResponse(
             "my_appointment_info.html", content
         )
+        return response
 
     @patient_appointments_router.put(
         "/{id}", name="appointment", status_code=status.HTTP_200_OK)
@@ -48,8 +54,18 @@ class PatientAppointment(BaseRouter):
 
     @patient_appointments_router.patch(
         "/{id}", name="appointment", status_code=status.HTTP_200_OK)
-    def cancel(self) -> None:
-        pass
+    def cancel(
+            self,
+            request: Request,
+            id: str,
+            patient_page: PatientPage = Depends(get_patient_page)
+    ) -> RedirectResponse:
+        patient_page.change_appointment_status(int(id), Status.CANCELLED)
+        url = request.app.url_path_for("PatientAppointment.appointment", id=id)
+        response = RedirectResponse(
+            url=url, status_code=status.HTTP_303_SEE_OTHER
+        )
+        return response
 
 
 @cbv(patient_info_router)

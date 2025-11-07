@@ -8,4 +8,14 @@
   {{ appointment_info(appointment) }}
 </ul>
 
+{% if appointment.status == 'pending' %}
+  <button id="update" data-appointment-id={{ appointment.id }}>Cancel Appointment</button>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+
+<script src="{{ url_for('static', path='patch.js') }}" defer></script>
+
 {% endblock %}

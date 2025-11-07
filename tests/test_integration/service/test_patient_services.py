@@ -94,3 +94,13 @@ class TestPatientPage(BasePatientTest):
     def test_get_appointment_raises_appointment_not_found(self) -> None:
         with pytest.raises(AppointmentNotFound):
             self.patient_page.get_appointment(0)
+
+    def test_cancel_appointment_succeed(
+            self, appointments: list[Appointment]
+    ) -> None:
+        appointment = appointments[0]
+        assert appointment.status == "pending"
+        self.patient_page.change_appointment_status(appointment.id, "cancelled")
+        assert appointment.status == "cancelled"
+        appointment_db = self.patient_page.appointment_crud._get(appointment.id)
+        get_logger().debug(appointment_db.status)

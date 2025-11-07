@@ -4,6 +4,7 @@ import pytest
 from fastapi import status, Response
 from fastapi.testclient import TestClient
 
+from logger.setup import get_logger
 from main import app
 from model.appointment_models import AppointmentOuter
 from service.auth_services import JWTTokenService
@@ -20,6 +21,15 @@ def authorized_client(access_token: str) -> TestClient:
 def access_token(patient_str_id: str) -> str:
     access_token = JWTTokenService().create(patient_str_id)
     return access_token
+
+
+@pytest.fixture
+def converted_appointment(
+        converted_appointments: list[AppointmentOuter],
+        request: pytest.FixtureRequest
+) -> AppointmentOuter:
+    converted_appointment = converted_appointments[request.param]
+    return converted_appointment
 
 
 class BasePatientEndpointTest(BaseTestEndpoint):
@@ -74,20 +84,31 @@ class TestPatientEndpointWithAppointments(BaseAuthorizedPatientEndpointTest):
             [self._get_url(), f"?appointment_status={appointment_status}"]
         )
         response = self.client.get(pending_url)
-        self._find_appointment_info_in_response(appointments, response)
+        for appointment in appointments:
+            self._find_appointment_info_in_response(appointment, response)
+
+    @pytest.mark.parametrize("converted_appointment", [0], indirect=True)
+    def test_get_displays_appointment_info(
+            self, converted_appointment: AppointmentOuter
+    ) -> None:
+        response = self.client.get(self._get_url(id=converted_appointment.id))
+        self._find_appointment_info_in_response(converted_appointment, response)
+
+    @pytest.mark.parametrize("converted_appointment", [0], indirect=True)
+    def test_cancel_is_succeed(
+            self, converted_appointment: AppointmentOuter
+    ) -> None:
+        response = self.client.get(self._get_url(id=converted_appointment.id))
+        assert "pending" in response.text
+        response = self.client.patch(
+            self._get_url(id=converted_appointment.id), follow_redirects=True
+        )
+        get_logger().debug(response.text)
+        assert "cancelled" in response.text
 
     def _find_appointment_info_in_response(
-        self, appointments: list[AppointmentOuter], response: Response
+            self, appointment: AppointmentOuter, response: Response
     ) -> None:
-        for appointment in appointments:
-            for value in appointment.model_dump().values():
-                assert str(value) in response.text
-
-    def test_get_displays_appointment_info(
-            self, converted_appointments: list[AppointmentOuter]
-    ) -> None:
-        appointment = converted_appointments[0]
-        response = self.client.get(self._get_url(id=appointment.id))
         for value in appointment.model_dump().values():
             assert str(value) in response.text
 

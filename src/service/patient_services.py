@@ -4,6 +4,7 @@ from fastapi import Depends
 from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session
 
+from logger.setup import get_logger
 from exceptions.exc import DataDoesNotMatch, AppointmentNotFound
 from model.patient_models import (
     PatientCreate, PatientOuter, PatientWithAppointments
@@ -12,7 +13,9 @@ from model.appointment_models import AppointmentOuter
 from service.base_services import BaseService
 from service.auth_services import authorize
 from data.connections import MySQLConnection
+from data.base_data import BaseCRUD
 from data.patient_data import PatientCRUD
+from data.appointment_data import Appointment
 
 
 class BasePatientService(BaseService):
@@ -76,6 +79,22 @@ class PatientPage(BasePatientService):
     def __init__(self, session: Session, patient_id: str) -> None:
         super().__init__(session)
         self.patient = self.crud.get_with_appointments(patient_id)
+
+    @property
+    def appointment_crud(self) -> BaseCRUD:
+        appointment_crud = BaseCRUD(self.session, Appointment, Appointment)
+        return appointment_crud
+
+    def change_appointment_status(self, id: int, status: str) -> None:
+        update_data = self._prepare_update_appointment_data(id, status)
+        self.appointment_crud.update(id, update_data)
+        self.session.commit()
+
+    def _prepare_update_appointment_data(self, id: int, status: str) -> dict:
+        appointment = self.get_appointment(id)
+        appointment.status = status
+        appointment_dumped = appointment.model_dump(exclude=["doctor", "price"])
+        return appointment_dumped
 
     def get_appointment(self, id: int) -> AppointmentOuter:
         for appointment in self.patient.appointments:
