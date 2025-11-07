@@ -2,6 +2,7 @@ import pytest
 from sqlmodel import Session
 
 from logger.setup import get_logger
+from exceptions.exc import AppointmentNotFound
 from model.patient_models import PatientCreate
 from model.appointment_models import AppointmentOuter
 from service.patient_services import PatientService, PatientPage
@@ -83,3 +84,13 @@ class TestPatientPage(BasePatientTest):
             appointment_status
         )
         assert pending_appointments == expected_result
+
+    def test_get_appointment_returns_target_result(
+            self, appointments: list[Appointment]
+    ) -> None:
+        appointment = self.patient_page.get_appointment(appointments[0].id)
+        assert appointment
+
+    def test_get_appointment_raises_appointment_not_found(self) -> None:
+        with pytest.raises(AppointmentNotFound):
+            self.patient_page.get_appointment(0)

@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session
 
-from exceptions.exc import DataDoesNotMatch
+from exceptions.exc import DataDoesNotMatch, AppointmentNotFound
 from model.patient_models import (
     PatientCreate, PatientOuter, PatientWithAppointments
 )
@@ -76,6 +76,13 @@ class PatientPage(BasePatientService):
     def __init__(self, session: Session, patient_id: str) -> None:
         super().__init__(session)
         self.patient = self.crud.get_with_appointments(patient_id)
+
+    def get_appointment(self, id: int) -> AppointmentOuter:
+        for appointment in self.patient.appointments:
+            if appointment.id == id:
+                return appointment
+        else:
+            raise AppointmentNotFound()
 
     def get_appointments(self, status: str) -> list[AppointmentOuter]:
         filtered_appointments = [

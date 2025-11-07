@@ -29,8 +29,17 @@ class PatientAppointment(BaseRouter):
 
     @patient_appointments_router.get(
         "/{id}", name="appointment", status_code=status.HTTP_200_OK)
-    def get(self) -> None:
-        pass
+    def get(
+            self,
+            request: Request,
+            id: str,
+            patient_page: PatientPage = Depends(get_patient_page)
+    ) -> _TemplateResponse:
+        appointment = patient_page.get_appointment(int(id))
+        content = {"request": request, "appointment": appointment}
+        return self.template.TemplateResponse(
+            "my_appointment_info.html", content
+        )
 
     @patient_appointments_router.put(
         "/{id}", name="appointment", status_code=status.HTTP_200_OK)

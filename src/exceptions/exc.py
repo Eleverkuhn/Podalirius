@@ -26,3 +26,8 @@ class UnauthorizedError(HTTPException):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=detail
         )
+
+
+class AppointmentNotFound(HTTPException):
+    def __init__(self, detail: str = "Appointment not found"):
+        super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail=detail)

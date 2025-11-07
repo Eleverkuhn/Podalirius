@@ -48,6 +48,21 @@ class TestPatientEndpoint(BaseAuthorizedPatientEndpointTest):
 @pytest.mark.parametrize("appointments", [0], indirect=True)
 @pytest.mark.usefixtures("link_services_to_appointments")
 class TestPatientEndpointWithAppointments(BaseAuthorizedPatientEndpointTest):
+    appointment_url = "PatientAppointment.appointment"
+
+    @override
+    def _get_url(
+            self,
+            name: str | None = None,
+            id: int | str | None = None
+    ) -> None:
+        # FIX: rework `_get_url in general`
+        if name:
+            return self.client.app.url_path_for(name)
+        elif id:
+            return self.client.app.url_path_for(self.appointment_url, id=id)
+        return self.client.app.url_path_for(self.base_url)
+
     @pytest.mark.parametrize(
         "filtered_appointments", appointment_status, indirect=True
     )
@@ -67,6 +82,14 @@ class TestPatientEndpointWithAppointments(BaseAuthorizedPatientEndpointTest):
         for appointment in appointments:
             for value in appointment.model_dump().values():
                 assert str(value) in response.text
+
+    def test_get_displays_appointment_info(
+            self, converted_appointments: list[AppointmentOuter]
+    ) -> None:
+        appointment = converted_appointments[0]
+        response = self.client.get(self._get_url(id=appointment.id))
+        for value in appointment.model_dump().values():
+            assert str(value) in response.text
 
 
 class TestPatientEndpointAnuthorized(BasePatientEndpointTest):
