@@ -1,0 +1,8 @@
+{# macros.html #}
+{% macro appointment_info(appointment) %}
+
+  {% for value in appointment.model_dump().values() %}
+    <li>{{ value }}</li>
+  {% endfor %}
+
+{% endmacro %}

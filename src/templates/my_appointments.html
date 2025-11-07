@@ -20,9 +20,8 @@
   {% for appointment in appointments %}
   <a href="{{ request.url_for('PatientAppointment.appointment', id=appointment.id)}}">
       <ul>
-        {% for value in appointment.model_dump().values() %}
-          <li>{{ value }}</li>
-        {% endfor %}
+        {% from "macros.html" import appointment_info %}
+        {{ appointment_info(appointment) }}
       </ul>
     </a>
   {% endfor %}
