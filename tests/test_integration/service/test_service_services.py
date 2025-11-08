@@ -1,11 +1,9 @@
 from pathlib import Path
 
 import pytest
-from sqlmodel import Session
 
-from logger.setup import get_logger
 from utils import read_fixture
-from service.service_services import ServiceDataConstructor
+from service.service_services import ServiceDataConstructor, PriceCalculator
 from data.sql_models import Doctor
 
 
@@ -22,37 +20,37 @@ def doctors_to_services_data(
     return content[request.param]
 
 
-@pytest.fixture
-def service() -> ServiceDataConstructor:
-    return ServiceDataConstructor()
+@pytest.mark.parametrize("doctor", [0], indirect=True)
+class BaseServiceTest:
+    @pytest.fixture(autouse=True)
+    def _doctor(self, doctor: Doctor) -> None:
+        self.doctor = doctor
 
 
-class TestServiceDataConstructor:
-    @pytest.mark.parametrize("doctor", [0], indirect=True)
-    def test__traverese(
-            self, doctor: Doctor, service: ServiceDataConstructor
-    ) -> None:
-        traversed = service._traverse(doctor.id, doctor.services)
-        assert traversed
-        get_logger().debug(traversed)
+class TestServiceDataConstructor(BaseServiceTest):
 
-    @pytest.mark.parametrize("doctor", [0], indirect=True)
-    def test__calculate_price(
-            self, doctor: Doctor, service: ServiceDataConstructor
-    ) -> None:
-        price = service._calculate_price(doctor.id, doctor.services[0])
+    @pytest.fixture(autouse=True)
+    def _constructor(self, doctor: Doctor) -> None:
+        self.constructor = ServiceDataConstructor(doctor)
+
+    def test_exec(self) -> None:
+        dumped_services = self.constructor.exec()
+        assert dumped_services
+
+
+class TestPriceCalculator(BaseServiceTest):
+    @pytest.fixture(autouse=True)
+    def _calculator(self, doctor: Doctor) -> None:
+        self.calculator = PriceCalculator(doctor, doctor.services[0])
+
+    def test__calculate_price(self) -> None:
+        price = self.calculator.exec()
         expected_price = 3000
         assert price == expected_price
 
     @pytest.mark.parametrize("doctors_to_services_data", [0], indirect=True)
-    @pytest.mark.parametrize("doctor", [0], indirect=True)
     def test__get_doctor_to_service_markup(
-            self,
-            doctor: Doctor,
-            service: ServiceDataConstructor,
-            doctors_to_services_data: dict[str, str]
+            self, doctors_to_services_data: dict[str, str]
     ) -> None:
-        markup = service._get_doctor_to_service_markup(
-            doctor.id, doctor.services[0]
-        )
+        markup = self.calculator._get_doctor_to_service_markup()
         assert markup == doctors_to_services_data.get("markup")

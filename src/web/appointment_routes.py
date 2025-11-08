@@ -7,13 +7,12 @@ from starlette.templating import _TemplateResponse
 from web.base_routes import BaseRouter
 from model.form_models import AppointmentBookingForm
 from service.appointment_services import (
-    FormContent,
-    get_form_content,
     AppointmentBooking,
     get_appointment_booking,
     AppointmentJWTTokenService,
     get_appointment_jwt_token_service
 )
+from service.form_services import get_booking_form_data_constructor
 
 router = APIRouter(prefix="/appointments")
 
@@ -29,13 +28,10 @@ class Appointment(BaseRouter):
     def get_appointment(
             self,
             request: Request,
-            form_content: FormContent = Depends(get_form_content)
+            form_content=Depends(get_booking_form_data_constructor)
     ) -> _TemplateResponse:
-        form = form_content.construct(request.cookies)
-        content = {
-            "request": request,
-            "form": form
-        }
+        form = form_content.exec()
+        content = {"request": request, "form": form}
         return self.template.TemplateResponse("appointment_new.html", content)
 
     @router.post(

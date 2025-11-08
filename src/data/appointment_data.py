@@ -1,23 +1,8 @@
 from decimal import Decimal
-from typing import override, Callable
 
-from sqlmodel import Session
-
-from model.appointment_models import AppointmentOuter, AppointmentInner
-from service.service_services import ServiceDataConstructor
-from data.base_data import BaseCRUD
+from model.appointment_models import AppointmentOuter
+from service.service_services import PriceCalculator, ServiceDataConstructor
 from data.sql_models import Appointment, Service
-
-
-class AppointmentCRUD(BaseCRUD):  # TODO: remove
-    @override
-    def __init__(
-            self,
-            session: Session,
-            sql_model: type[Appointment] = Appointment,
-            return_model: type[AppointmentInner] = AppointmentInner
-    ) -> None:
-        super().__init__(session, sql_model, return_model)
 
 
 class AppointmentDataConverter:
@@ -27,7 +12,7 @@ class AppointmentDataConverter:
     """
     def __init__(self, appointment: Appointment) -> None:
         self.appointment = appointment
-        self.service_constructor = ServiceDataConstructor()
+        self.service_constructor = ServiceDataConstructor(appointment.doctor)
 
     def to_outer(self) -> AppointmentOuter:
         outer = AppointmentOuter(
@@ -38,19 +23,15 @@ class AppointmentDataConverter:
         return outer
 
     def _calculate_appointment_price(self) -> Decimal:
-        price = self._calculate_total_price(
-            self.service_constructor._calculate_price
-        )
-        return price
+        total_price = sum(self._get_prices())
+        return total_price
 
-    def _calculate_total_price(self, calculate_price: Callable) -> Decimal:
-        return sum(self._get_prices(calculate_price))
-
-    def _get_prices(self, calculate_price: Callable) -> map:
-        prices = map(
-            lambda service: calculate_price(self.appointment.doctor_id, service),
-            self._get_services()
-        )
+    def _get_prices(self) -> list[Decimal]:
+        prices = [
+            PriceCalculator(self.appointment.doctor, service).exec()
+            for service
+            in self._get_services()
+        ]
         return prices
 
     def _get_services(self) -> list[Service]:

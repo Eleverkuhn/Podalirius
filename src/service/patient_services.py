@@ -25,6 +25,18 @@ class BasePatientService(BaseService):
         self.crud = PatientCRUD(self.session)
 
 
+class PatientDataConstructor(BasePatientService):
+    @override
+    def __init__(self, session: Session, patient_id: str) -> None:
+        super().__init__(session)
+        self.patient = self.crud.get(patient_id)
+
+    def exec(self) -> dict[str, str]:
+        dumped = self.patient.model_dump(exclude=["id"])
+        self.crud.convert_birth_date_to_str(dumped)
+        return dumped
+
+
 class PatientService(BasePatientService):  # TODO: split this into Registry and ApponitmentCreationHelper
     def registry(self, create_data: PatientCreate) -> PatientOuter:
         """

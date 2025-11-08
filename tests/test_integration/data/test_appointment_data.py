@@ -6,7 +6,7 @@ from sqlmodel import Session
 from logger.setup import get_logger
 from utils import SetUpTest
 from model.appointment_models import AppointmentOuter
-from service.service_services import ServiceDataConstructor
+from service.service_services import PriceCalculator
 from data.base_data import BaseCRUD
 from data.sql_models import Appointment, Service, ServiceToAppointment
 from data.appointment_data import AppointmentDataConverter
@@ -44,8 +44,8 @@ def service(session: Session, service_id: int) -> Service:
 def calculate_price_expected_output(
         appointment: Appointment, service: Service
 ) -> Decimal:
-    constructor = ServiceDataConstructor()
-    price = constructor._calculate_price(appointment.doctor_id, service)
+    calculator = PriceCalculator(appointment.doctor, service)
+    price = calculator.exec()
     return price
 
 

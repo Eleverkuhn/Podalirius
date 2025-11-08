@@ -1,28 +1,40 @@
-from sqlmodel import Sequence
+from typing import override
+
+from sqlmodel import Session, Sequence
 
 from service.base_services import BaseService
 from service.doctor_services import DoctorDataConstructor
-from data.base_data import BaseCRUD
-from data.sql_models import Doctor, Specialty
+from data.sql_models import Specialty
 
 
 class SpecialtyDataConstructor(BaseService):
-    def exec(self) -> list[Specialty]:
-        specialties = BaseCRUD(self.session, Specialty, Specialty).get_all()
-        traversed = self._traverse(specialties)
-        return traversed
+    @override
+    def __init__(
+            self, session: Session, specialties: Sequence[Specialty]
+    ) -> None:
+        super().__init__(session)
+        self.specialties = specialties
 
-    def _traverse(self, specialties: Sequence[Specialty]) -> list[dict]:
-        return [self._dump(specialty) for specialty in specialties]
+    @property
+    def doctor_data_constructor(self) -> DoctorDataConstructor:
+        constructor = DoctorDataConstructor(self.specialty.doctors)
+        return constructor
+
+    def exec(self) -> list[dict]:
+        dumped_specialties = [
+            self._dump(specialty) for specialty in self.specialties
+        ]
+        return dumped_specialties
 
     def _dump(self, specialty: Specialty) -> dict:
-        dumped = specialty.model_dump(include=["id", "title"])
-        dumped_with_doctors = self._add_doctors(dumped, specialty.doctors)
-        return dumped_with_doctors
+        self._set_specialty_data(specialty)
+        self._add_doctors()
+        return self.dumped_specialty
 
-    def _add_doctors(
-            self, dumped_specialty: dict[str, str], doctors: list[Doctor]
-    ) -> dict:
-        doctors = DoctorDataConstructor(self.session)._traverse(doctors)
-        dumped_specialty.update({"doctors": doctors})
-        return dumped_specialty
+    def _set_specialty_data(self, specialty: Specialty) -> None:
+        self.specialty = specialty
+        self.dumped_specialty = specialty.model_dump(include=["id", "title"])
+
+    def _add_doctors(self) -> None:
+        doctors = self.doctor_data_constructor.exec()
+        self.dumped_specialty.update({"doctors": doctors})

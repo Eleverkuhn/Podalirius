@@ -4,13 +4,11 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
-from logger.setup import get_logger
 from exceptions.exc import FormInputError
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import AppointmentBase
 from service.appointment_services import (
     BaseAppointmentService,
-    FormContent,
     AppointmentShceduleDataConstructor,
     AppointmentBooking,
     AppointmentJWTTokenService
@@ -29,11 +27,6 @@ def form(appointment_form_data: dict[str, str | int]) -> AppointmentBookingForm:
 @pytest.fixture
 def base_appointment_service(session: Session) -> BaseAppointmentService:
     return BaseAppointmentService(session)
-
-
-@pytest.fixture
-def form_content(session: Session) -> FormContent:
-    return FormContent(session)
 
 
 @pytest.fixture
@@ -65,16 +58,6 @@ class TestBaseAppointmentService:
         cookies = {}
         patient_id = base_appointment_service._check_user_is_logged_in(cookies)
         assert not patient_id
-
-
-class TestFormContent:
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    def test_construct(
-            self, form_content: FormContent, cookies: dict[str, str]
-    ) -> None:
-        content = form_content.construct(cookies)
-        assert content
-        get_logger().debug(content)
 
 
 class TestAppointmentScheduleDataConstructor:

@@ -77,7 +77,6 @@ class PatientCRUD(BaseCRUD):  # TODO: split conversion methods into separate cla
     @classmethod
     def convert_birth_date_to_str(cls, dumped_patient: dict) -> None:
         birth_date = dumped_patient.get("birth_date")
-        get_logger().debug(type(birth_date))
         dumped_patient.update({"birth_date": birth_date.isoformat()})
 
     def _convert_to_patient_with_apppointments(

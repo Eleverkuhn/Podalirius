@@ -8,25 +8,20 @@ from data.sql_models import Specialty
 
 
 @pytest.fixture
-def service(session: Session) -> SpecialtyDataConstructor:
-    return SpecialtyDataConstructor(session)
-
-
-@pytest.fixture
 def specialties(session: Session) -> Sequence[Specialty]:
-    specialties = BaseCRUD(session, Specialty, Specialty).get_all()
+    specialties_crud = BaseCRUD(session, Specialty, Specialty)
+    specialties = specialties_crud.get_all()
     return specialties
 
 
 class TestSpecialtyDataConstructor:
-    def test_exec(self, service: SpecialtyDataConstructor) -> None:
-        assert service.exec()
-
-    def test__traverse(
-            self,
-            service: SpecialtyDataConstructor,
-            specialties: Sequence[Specialty]
+    @pytest.fixture(autouse=True)
+    def _constructor(
+            self, session: Session, specialties: Sequence[Specialty]
     ) -> None:
-        result = service._traverse(specialties)
-        assert result
-        get_logger().debug(result)
+        self.constructor = SpecialtyDataConstructor(session, specialties)
+
+    def test_exec(self) -> None:
+        dumped_specialties = self.constructor.exec()
+        assert dumped_specialties
+        get_logger().debug(dumped_specialties)

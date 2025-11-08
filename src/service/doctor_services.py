@@ -1,62 +1,84 @@
 from datetime import datetime, date, time, timedelta
 
-from logger.setup import get_logger
-from service.base_services import BaseService
+from service.appointment_services import AppointmentShceduleDataConstructor
 from service.service_services import ServiceDataConstructor
-from data.sql_models import Doctor, Service, WorkSchedule, Appointment
+from data.sql_models import Doctor, WorkSchedule
 
 
-class DoctorDataConstructor(BaseService):
-    def _traverse(self, doctors: list[Doctor]) -> list[dict]:
-        return [self._dump(doctor) for doctor in doctors]
+class DoctorDataConstructor:
+    def __init__(self, doctors: list[Doctor]) -> None:
+        self.doctors = doctors
+
+    def exec(self) -> list[dict]:
+        dumped_doctors = [self._dump(doctor) for doctor in self.doctors]
+        return dumped_doctors
 
     def _dump(self, doctor: Doctor) -> dict:
-        dumped = {"id": doctor.id}
-        self._add_full_name(dumped, doctor)
-        self._add_services(dumped, doctor.services)
-        self._add_appointment_schedule(dumped, doctor)
-        return dumped
+        self._set_doctors_data(doctor)
+        self._add_fields_to_dumped_doctor()
+        return self.dumped_doctor
 
-    def _add_full_name(
-            self, dumped_doctor: dict[str, str], doctor: Doctor
-    ) -> None:
-        full = f"{doctor.first_name} {doctor.middle_name} {doctor.last_name}"
-        dumped_doctor.update({"full_name": full})
+    def _set_doctors_data(self, doctor: Doctor) -> None:
+        self.doctor = doctor
+        self.dumped_doctor = {"id": self.doctor.id}
 
-    def _add_services(
-            self, dumped_doctor: dict[str, str], services: list[Service]
-    ) -> dict:
-        services = ServiceDataConstructor()._traverse(
-            dumped_doctor.get("id"), services
-        )
-        dumped_doctor.update({"services": services})
-        return dumped_doctor
+    def _add_fields_to_dumped_doctor(self) -> None:
+        self._add_full_name()
+        self._add_services()
+        self._add_appointment_schedule()
 
-    def _add_appointment_schedule(
-            self, dumped_doctor: dict[str, str], doctor: Doctor
-    ) -> None:
+    def _add_full_name(self) -> None:
+        self.dumped_doctor.update({"full_name": self.doctor.full_name})
+
+    def _add_services(self) -> None:
+        constructor = ServiceDataConstructor(self.doctor)
+        services = constructor.exec()
+        self.dumped_doctor.update({"services": services})
+
+    def _add_appointment_schedule(self) -> None:
         # TODO: fix this import
-        from service.appointment_services import AppointmentShceduleDataConstructor
 
-        doctor_schedule = self._get_schedule(doctor)
-        appointment_schedule = AppointmentShceduleDataConstructor(
-            doctor_schedule, self._get_appointments(doctor)
-        ).exec()
-        dumped_doctor.update({"schedule": appointment_schedule})
+        doctor_schedule = self._get_schedule()
+        appointments = self._get_appointments()
+        constructor = AppointmentShceduleDataConstructor(
+            doctor_schedule, appointments
+        )
+        appointment_schedule = constructor.exec()
+        self.dumped_doctor.update({"schedule": appointment_schedule})
 
-    def _get_schedule(self, doctor: Doctor) -> dict:
-        schedule = {
-            int(work_day.weekday): WorkScheduleDataConstructor(work_day).exec()
-            for work_day
-            in doctor.work_days
-        }
+    def _get_schedule(self) -> dict:
+        schedule = {}
+        for work_day in self.doctor.work_days:
+            self._populate_schedule(work_day, schedule)
         return schedule
 
-    def _get_appointments(self, doctor: Doctor) -> set[tuple[date, time]]:
+    def _populate_schedule(
+            self, work_day: WorkSchedule, schedule: dict
+    ) -> None:
+        schedule_value = self._get_schedule_value(work_day)
+        schedule.update(schedule_value)
+
+    def _get_schedule_value(self, work_day: WorkSchedule) -> dict:
+        week_day, constructor = self._construct_schedule_value_data(work_day)
+        schedule_value = {week_day: constructor.exec()}
+        return schedule_value
+
+    def _construct_schedule_value_data(
+            self, work_day: WorkSchedule
+    ) -> tuple[int, "WorkScheduleDataConstructor"]:
+        week_day = self._get_week_day(work_day)
+        constructor = WorkScheduleDataConstructor(work_day)
+        return week_day, constructor
+
+    def _get_week_day(self, work_day: WorkSchedule) -> int:
+        week_day_int = int(work_day.weekday)
+        return week_day_int
+
+    def _get_appointments(self) -> set[tuple[date, time]]:
         appointments = set(
             (appointment.date, appointment.time)
             for appointment
-            in doctor.appointments
+            in self.doctor.appointments
             if appointment.status == "pending"
         )
         return appointments

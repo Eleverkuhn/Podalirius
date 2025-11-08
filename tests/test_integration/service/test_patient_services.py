@@ -5,7 +5,9 @@ from logger.setup import get_logger
 from exceptions.exc import AppointmentNotFound
 from model.patient_models import PatientCreate
 from model.appointment_models import AppointmentOuter
-from service.patient_services import PatientService, PatientPage
+from service.patient_services import (
+    PatientService, PatientPage, PatientDataConstructor
+)
 from data.sql_models import Appointment, Patient
 from tests.test_integration.conftest import BasePatientTest, appointment_status
 
@@ -20,16 +22,18 @@ def patient_page(
     return PatientPage(session, patient_str_id)
 
 
-class TestPatientService(BasePatientTest):
-    def test_construct_patient_data(
-            self,
-            patient_service: PatientService,
-            patient: Patient
-    ) -> None:
-        patient_id = patient_service.crud.uuid_to_str(patient.id)
-        patient_data = patient_service.construct_patient_data(patient_id)
-        assert patient_data
+class TestPatientDataConstructor(BasePatientTest):
+    @pytest.fixture(autouse=True)
+    def _service(self, session: Session, patient_str_id: str) -> None:
+        self.service = PatientDataConstructor(session, patient_str_id)
 
+    def test_exec(self) -> None:
+        patient_data = self.service.exec()
+        assert patient_data
+        get_logger().debug(patient_data)
+
+
+class TestPatientService(BasePatientTest):
     def test_check_input_data_returns_patient(
             self, patient_service: PatientService, patient: Patient
     ) -> None:  # TODO: test both workflows for new and existing patient

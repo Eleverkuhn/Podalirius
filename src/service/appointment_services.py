@@ -14,11 +14,9 @@ from model.appointment_models import (
 from service.base_services import BaseService
 from service.auth_services import AuthService, JWTTokenService
 from service.patient_services import PatientService
-from service.specialty_services import SpecialtyDataConstructor
-from service.service_services import ServiceDataConstructor
 from data.connections import MySQLConnection
 from data.base_data import BaseCRUD
-from data.sql_models import Appointment, Service, ServiceToAppointment
+from data.sql_models import Appointment, ServiceToAppointment
 
 type AppointmentSchedule = dict[date, set[time]]
 
@@ -38,28 +36,6 @@ class BaseAppointmentServiceWithCRUD(BaseService):
     def __init__(self, session: Session) -> None:
         super().__init__(session)
         self.crud = BaseCRUD(session, Appointment, AppointmentInner)
-
-
-class FormContent(BaseAppointmentService):
-    """Service for rendering content of 'AppointmentBookingForm'"""
-    def construct(self, cookies: dict[str, str]) -> dict:
-        """Initial method"""
-        patient = self._get_patient_from_cookies(cookies)
-        specialties = SpecialtyDataConstructor(self.session).exec()
-        content = {"patient": patient, "specialties": specialties}
-        return content
-
-    def _get_patient_from_cookies(self, cookies: dict[str, str]) -> dict | None:
-        patient_id = self._check_user_is_logged_in(cookies)
-        return self._get_patient_data(patient_id)
-
-    def _get_patient_data(self, patient_id: str) -> dict | None:
-        if patient_id:
-            patient_data = PatientService(self.session).construct_patient_data(
-                patient_id
-            )
-            return patient_data
-        return None
 
 
 class AppointmentShceduleDataConstructor:
@@ -236,10 +212,10 @@ class AppointmentJWTTokenService(BaseAppointmentServiceWithCRUD):
         return content.get("id")
 
 
-def get_form_content(
-        session: Session = Depends(MySQLConnection.get_session)
-) -> FormContent:
-    return FormContent(session)
+# def get_form_content(
+#         session: Session = Depends(MySQLConnection.get_session)
+# ) -> FormContent:
+#     return FormContent(session)
 
 
 def get_appointment_booking(
