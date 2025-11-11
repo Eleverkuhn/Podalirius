@@ -18,11 +18,9 @@
 
 {% if appointments %}
   {% for appointment in appointments %}
-  <a href="{{ request.url_for('PatientAppointment.appointment', id=appointment.id)}}">
-      <ul>
-        {% from "macros.html" import appointment_info %}
-        {{ appointment_info(appointment) }}
-      </ul>
+    <a href="{{ request.url_for('PatientAppointment.appointment', id=appointment.id)}}">
+      {% from "macros.html" import display_info %}
+      {{ display_info(appointment) }}
     </a>
   {% endfor %}
 {% endif %}

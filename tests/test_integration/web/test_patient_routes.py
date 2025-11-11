@@ -7,11 +7,13 @@ from pydantic import BaseModel
 
 from logger.setup import get_logger
 from main import app
+from model.patient_models import PatientCreate
 from model.appointment_models import AppointmentOuter
 from model.form_models import RescheduleAppointmentForm
 from service.auth_services import JWTTokenService
 from data.base_data import BaseSQLModel
 from data.sql_models import Patient
+from data.patient_data import PatientCRUD
 from tests.test_integration.conftest import BasePatientTest, appointment_status
 from tests.test_integration.web.conftest import BaseTestEndpoint
 
@@ -36,6 +38,12 @@ def converted_appointment(
     return converted_appointment
 
 
+@pytest.fixture
+def patient_public(patient: Patient) -> PatientCreate:
+    patient_public = PatientCreate(**patient.model_dump())
+    return patient_public
+
+
 class BasePatientEndpointTest(BaseTestEndpoint):
     base_url = "PatientAppointment.all"
     param = "id"
@@ -44,6 +52,7 @@ class BasePatientEndpointTest(BaseTestEndpoint):
             self, model: BaseModel | BaseSQLModel, response: Response
     ) -> None:
         for value in model.model_dump().values():
+            get_logger().debug(value)
             assert str(value) in response.text
 
 
@@ -61,22 +70,6 @@ class BaseAuthorizedPatientEndpointTest(
 @pytest.mark.usefixtures("link_services_to_appointments")
 class BasePatientAppointmentTest(BaseAuthorizedPatientEndpointTest):
     base_url = "PatientAppointment.appointment"
-
-    # @override
-    # def _get_url(
-    #         self,
-    #         name: str | None = None,
-    #         id: int | str | None = None
-    # ) -> None:
-    #     # FIX: rework `_get_url in general`
-    #     if name:
-    #         return self.client.app.url_path_for(name)
-    #     elif id:
-    #         get_logger().debug("Inside elif")
-    #         url = self.client.app.url_path_for(self.appointment_url, id=id)
-    #         get_logger().debug(url)
-    #         return url
-    #     return self.client.app.url_path_for(self.base_url)
 
 
 @pytest.mark.usefixtures("patient")
@@ -165,6 +158,8 @@ class TestPatientEndpointAnuthorized(BasePatientEndpointTest):
 class TestPatientInfoEndpoint(TestPatientEndpoint):
     base_url = "PatientInfo.info"
 
-    def test_get_displays_patient_info(self, patient: Patient) -> None:
+    def test_get_displays_patient_info(
+            self, patient_public: PatientCreate
+    ) -> None:
         response = self.client.get(self._get_url())
-        self._info_is_displayed_correctly(patient, response)
+        self._info_is_displayed_correctly(patient_public, response)

@@ -6,9 +6,7 @@ from sqlmodel import Session
 
 from logger.setup import get_logger
 from exceptions.exc import DataDoesNotMatch, AppointmentNotFound
-from model.patient_models import (
-    PatientCreate, PatientOuter, PatientWithAppointments
-)
+from model.patient_models import PatientCreate, PatientOuter
 from model.appointment_models import AppointmentOuter
 from model.form_models import RescheduleAppointmentForm
 from service.base_services import BaseService
@@ -97,6 +95,11 @@ class PatientPage(BasePatientService):
     def appointment_crud(self) -> BaseCRUD:
         appointment_crud = BaseCRUD(self.session, Appointment, Appointment)
         return appointment_crud
+
+    @property
+    def patient_public(self) -> PatientCreate:
+        outer = PatientCreate(**self.patient.model_dump())
+        return outer
 
     def reschedule_appointment(
             self, id: int, form: RescheduleAppointmentForm
