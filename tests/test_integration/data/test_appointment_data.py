@@ -8,8 +8,13 @@ from utils import SetUpTest
 from model.appointment_models import AppointmentOuter
 from service.service_services import PriceCalculator
 from data.base_data import BaseCRUD
-from data.sql_models import Appointment, Service, ServiceToAppointment
-from data.appointment_data import AppointmentDataConverter
+from data.sql_models import (
+    Appointment, Service, ServiceToAppointment, Doctor
+)
+from data.appointment_data import AppointmentCRUD, AppointmentDataConverter
+from tests.test_integration.conftest import (
+    BaseDoctorTest, BaseAppointmentTest
+)
 
 
 @pytest.fixture
@@ -67,10 +72,9 @@ def to_outer_expected_output(
 
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-@pytest.mark.parametrize("appointments_data", ["patient_1"], indirect=True)
 @pytest.mark.parametrize("get_appointment", [0], indirect=True)
 @pytest.mark.usefixtures("link_service_to_appointment")
-class TestAppointmentDataConverter:
+class TestAppointmentDataConverter(BaseAppointmentTest):
     @pytest.fixture(autouse=True)
     def _converter(self, converter: AppointmentDataConverter) -> None:
         self.converter = converter
@@ -93,3 +97,13 @@ class TestAppointmentDataConverter:
         services = self.converter._get_services()
         assert services == get_services_expected_output
         get_logger().debug(services)
+
+
+class TestAppointmentCRUD(BaseDoctorTest):
+    @pytest.fixture(autouse=True)
+    def _crud(self, session: Session) -> None:
+        self.crud = AppointmentCRUD(session)
+
+    def test_get_all_by_doctor(self, doctor: Doctor) -> None:
+        appointments = self.crud.get_all_by_doctor(doctor.id)
+        assert len(appointments) == 4

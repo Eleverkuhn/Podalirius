@@ -4,6 +4,7 @@ from fastapi_utils.cbv import cbv
 from starlette.templating import _TemplateResponse
 
 from logger.setup import get_logger
+from model.form_models import RescheduleAppointmentForm
 from web.base_routes import Prefixes, BaseRouter
 from service.patient_services import PatientPage, get_patient_page
 from data.sql_models import Status
@@ -48,24 +49,43 @@ class PatientAppointment(BaseRouter):
         return response
 
     @patient_appointments_router.put(
-        "/{id}", name="appointment", status_code=status.HTTP_200_OK)
-    def update(self) -> None:
-        pass
+        "/{id}", name="appointment", status_code=status.HTTP_200_OK
+    )
+    def update(
+            self,
+            request: Request,
+            id: str,
+            form: RescheduleAppointmentForm,
+            patient_page: PatientPage = Depends(get_patient_page)
+    ) -> RedirectResponse:
+        appointment_id = self._convert_appointment_id(id)
+        patient_page.reschedule_appointment(appointment_id, form)
+        url = request.app.url_path_for("PatientAppointment.appointment", id=id)
+        response = RedirectResponse(
+            url=url, status_code=status.HTTP_303_SEE_OTHER
+        )
+        return response
 
     @patient_appointments_router.patch(
-        "/{id}", name="appointment", status_code=status.HTTP_200_OK)
+        "/{id}", name="appointment", status_code=status.HTTP_200_OK
+    )
     def cancel(
             self,
             request: Request,
             id: str,
             patient_page: PatientPage = Depends(get_patient_page)
     ) -> RedirectResponse:
-        patient_page.change_appointment_status(int(id), Status.CANCELLED)
+        appointment_id = self._convert_appointment_id(id)
+        patient_page.change_appointment_status(appointment_id, Status.CANCELLED)
         url = request.app.url_path_for("PatientAppointment.appointment", id=id)
         response = RedirectResponse(
             url=url, status_code=status.HTTP_303_SEE_OTHER
         )
         return response
+
+    def _convert_appointment_id(self, id: str) -> int:
+        id = int(id)
+        return id
 
 
 @cbv(patient_info_router)

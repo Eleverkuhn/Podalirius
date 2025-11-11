@@ -37,7 +37,7 @@ class BaseCRUD:
         self.session = session
         self.sql_model = sql_model
         self.return_model = return_model
-    
+
     def create(self, create_data: BaseModel) -> BaseModel:
         instance = self.sql_model(**create_data.model_dump())
         self._add(instance)

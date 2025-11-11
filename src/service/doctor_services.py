@@ -1,13 +1,21 @@
 from datetime import datetime, date, time, timedelta
 
-from service.appointment_services import AppointmentShceduleDataConstructor
+from service.appointment_services import (
+    AppointmentShceduleDataConstructor,
+    AppointmentTimes
+)
 from service.service_services import ServiceDataConstructor
 from data.sql_models import Doctor, WorkSchedule
 
 
 class DoctorDataConstructor:
-    def __init__(self, doctors: list[Doctor]) -> None:
+    def __init__(
+            self,
+            doctors: list[Doctor] | None = None,
+            doctor: Doctor | None = None
+    ) -> None:
         self.doctors = doctors
+        self.doctor = doctor
 
     def exec(self) -> list[dict]:
         dumped_doctors = [self._dump(doctor) for doctor in self.doctors]
@@ -36,8 +44,6 @@ class DoctorDataConstructor:
         self.dumped_doctor.update({"services": services})
 
     def _add_appointment_schedule(self) -> None:
-        # TODO: fix this import
-
         doctor_schedule = self._get_schedule()
         appointments = self._get_appointments()
         constructor = AppointmentShceduleDataConstructor(
@@ -74,7 +80,7 @@ class DoctorDataConstructor:
         week_day_int = int(work_day.weekday)
         return week_day_int
 
-    def _get_appointments(self) -> set[tuple[date, time]]:
+    def _get_appointments(self) -> AppointmentTimes:
         appointments = set(
             (appointment.date, appointment.time)
             for appointment

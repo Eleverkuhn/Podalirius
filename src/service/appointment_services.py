@@ -19,6 +19,7 @@ from data.base_data import BaseCRUD
 from data.sql_models import Appointment, ServiceToAppointment
 
 type AppointmentSchedule = dict[date, set[time]]
+type AppointmentTimes = set[tuple[date, time]]
 
 
 class BaseAppointmentService(BaseService):
@@ -43,7 +44,7 @@ class AppointmentShceduleDataConstructor:
     def __init__(
             self,
             doctor_schedule: dict,
-            appointment_datetimes: set[tuple[date, time]],
+            appointment_datetimes: AppointmentTimes,
             booking_range: timedelta = timedelta(days=30)
     ) -> None:
         self.doctor_schedule = doctor_schedule
@@ -210,12 +211,6 @@ class AppointmentJWTTokenService(BaseAppointmentServiceWithCRUD):
     def _get_id_from_token(self, token: str) -> int:
         content = JWTTokenService().verify(token)
         return content.get("id")
-
-
-# def get_form_content(
-#         session: Session = Depends(MySQLConnection.get_session)
-# ) -> FormContent:
-#     return FormContent(session)
 
 
 def get_appointment_booking(

@@ -7,9 +7,12 @@ from fastapi.testclient import TestClient
 from logger.setup import get_logger
 from main import app
 from model.appointment_models import AppointmentOuter
+from model.form_models import RescheduleAppointmentForm
 from service.auth_services import JWTTokenService
 from tests.test_integration.conftest import BasePatientTest, appointment_status
-from tests.test_integration.web.conftest import BaseTestEndpoint
+from tests.test_integration.web.conftest import (
+    BaseTestEndpoint, EndpointWithForm
+)
 
 
 @pytest.fixture
@@ -45,19 +48,10 @@ class BaseAuthorizedPatientEndpointTest(
         self.client = authorized_client
 
 
-@pytest.mark.usefixtures("patient")
-class TestPatientEndpoint(BaseAuthorizedPatientEndpointTest):
-    # INFO: has URL parameters
-    @override
-    def test_exists(self) -> None:
-        response = self.client.get(self._get_url())
-        assert response.status_code == status.HTTP_200_OK
-
-
 @pytest.mark.parametrize("appointments_data", ["patient_1"], indirect=True)
 @pytest.mark.parametrize("appointments", [0], indirect=True)
 @pytest.mark.usefixtures("link_services_to_appointments")
-class TestPatientEndpointWithAppointments(BaseAuthorizedPatientEndpointTest):
+class BasePatientAppointmentTest(BaseAuthorizedPatientEndpointTest):
     appointment_url = "PatientAppointment.appointment"
 
     @override
@@ -70,9 +64,23 @@ class TestPatientEndpointWithAppointments(BaseAuthorizedPatientEndpointTest):
         if name:
             return self.client.app.url_path_for(name)
         elif id:
-            return self.client.app.url_path_for(self.appointment_url, id=id)
+            get_logger().debug("Inside elif")
+            url = self.client.app.url_path_for(self.appointment_url, id=id)
+            get_logger().debug(url)
+            return url
         return self.client.app.url_path_for(self.base_url)
 
+
+@pytest.mark.usefixtures("patient")
+class TestPatientEndpoint(BaseAuthorizedPatientEndpointTest):
+    # INFO: has URL parameters
+    @override
+    def test_exists(self) -> None:
+        response = self.client.get(self._get_url())
+        assert response.status_code == status.HTTP_200_OK
+
+
+class TestPatientEndpointWithAppointments(BasePatientAppointmentTest):
     @pytest.mark.parametrize(
         "filtered_appointments", appointment_status, indirect=True
     )
@@ -94,23 +102,54 @@ class TestPatientEndpointWithAppointments(BaseAuthorizedPatientEndpointTest):
         response = self.client.get(self._get_url(id=converted_appointment.id))
         self._find_appointment_info_in_response(converted_appointment, response)
 
-    @pytest.mark.parametrize("converted_appointment", [0], indirect=True)
-    def test_cancel_is_succeed(
-            self, converted_appointment: AppointmentOuter
-    ) -> None:
-        response = self.client.get(self._get_url(id=converted_appointment.id))
-        assert "pending" in response.text
-        response = self.client.patch(
-            self._get_url(id=converted_appointment.id), follow_redirects=True
-        )
-        get_logger().debug(response.text)
-        assert "cancelled" in response.text
-
     def _find_appointment_info_in_response(
             self, appointment: AppointmentOuter, response: Response
     ) -> None:
         for value in appointment.model_dump().values():
             assert str(value) in response.text
+
+
+@pytest.mark.parametrize("converted_appointment", [0], indirect=True)
+@pytest.mark.usefixtures("converted_appointment")
+class TestPatientAppointmentInfoUpdate(BasePatientAppointmentTest):
+    @pytest.fixture(autouse=True)
+    def _converted_appointment(
+            self, converted_appointment: AppointmentOuter
+    ) -> None:
+        self.converted_appointment = converted_appointment
+
+    def test_cancel_is_succeed(self) -> None:
+        url = self._get_url(id=self.converted_appointment.id)
+        get_logger().debug(type(url))
+        response = self.client.get(
+            self._get_url(id=self.converted_appointment.id)
+        )
+        assert "pending" in response.text
+        response = self.client.patch(
+            self._get_url(
+                id=self.converted_appointment.id), follow_redirects=True
+        )
+        get_logger().debug(response.text)
+        assert "cancelled" in response.text
+
+    def test_update_is_succeed(
+            self,
+            reschedule_appointment_form: RescheduleAppointmentForm
+    ) -> None:
+        url = self._get_url(id=self.converted_appointment.id)
+        response = self.client.get(url)
+        assert self.converted_appointment.date.isoformat() in response.text
+        assert self.converted_appointment.time.isoformat() in response.text
+        dumped_form = reschedule_appointment_form.model_dump()
+        dumped_form.update(
+            {
+                "date": reschedule_appointment_form.date.isoformat(),
+                "time": reschedule_appointment_form.time.isoformat()
+            }
+        )
+        response = self.client.put(url, json=dumped_form)
+        assert reschedule_appointment_form.date.isoformat() in response.text
+        assert reschedule_appointment_form.time.isoformat() in response.text
 
 
 class TestPatientEndpointAnuthorized(BasePatientEndpointTest):

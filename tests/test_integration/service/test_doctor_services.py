@@ -10,6 +10,7 @@ from service.doctor_services import (
     DoctorDataConstructor, WorkScheduleDataConstructor
 )
 from data.sql_models import Doctor, WorkSchedule
+from tests.test_integration.conftest import BaseDoctorTest
 
 
 @pytest.fixture
@@ -59,13 +60,19 @@ class TestDoctorDataConstructor:
         dumped = self.constructor._dump(doctor)
         assert dumped
 
-    @pytest.mark.parametrize("doctor", [0], indirect=True)
+
+class TestDoctorDataConstructorSingle(BaseDoctorTest):
+    @pytest.fixture(autouse=True)
+    def _constructor(
+            self, doctor_data_constructor_single: DoctorDataConstructor
+    ) -> None:
+        self.constructor = doctor_data_constructor_single
+
     def test__get_schedule(self, doctor: Doctor) -> None:
         self.constructor.doctor = doctor
         schedule = self.constructor._get_schedule()
         assert schedule
 
-    @pytest.mark.parametrize("doctor", [0], indirect=True)
     def test__get_appointments(self, doctor: Doctor) -> None:
         self.constructor.doctor = doctor
         appointments = self.constructor._get_appointments()

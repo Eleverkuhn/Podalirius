@@ -1,21 +1,30 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Appointment Info</h2>
+<div
+  id="appointment-container"
+  data-api-url="{{ request.url_for('Doctor.schedule', id=appointment.doctor_id) }}"
+  data-appointment-url="{{ request.url_for('PatientAppointment.appointment', id=appointment.id) }}"
+>
+  <h2>Appointment Info</h2>
 
-<ul>
-  {% from "macros.html" import appointment_info %}
-  {{ appointment_info(appointment) }}
-</ul>
+  <ul>
+    {% from "macros.html" import appointment_info %}
+    {{ appointment_info(appointment) }}
+  </ul>
 
-{% if appointment.status == 'pending' %}
-  <button id="update" data-appointment-id={{ appointment.id }}>Cancel Appointment</button>
-{% endif %}
-
+  {% if appointment.status == 'pending' %}
+    <button id="update" data-appointment-id={{ appointment.id }}>Cancel Appointment</button>
+    
+    <form id="reschedule-form">
+      {% include "datetime_form_fields.html" %}
+      <button type="Submit">Reschedule</button>
+    </form>
+  {% endif %}
+</div>
 {% endblock %}
 
 {% block scripts %}
-
 <script src="{{ url_for('static', path='patch.js') }}" defer></script>
-
+<script src="{{ url_for('static', path='reschedule_appointment_form.js') }}" defer></script>
 {% endblock %}

@@ -11,10 +11,15 @@ from sqlmodel import Session, Sequence
 from service.base_services import BaseService
 from service.auth_services import AuthService
 from service.patient_services import PatientDataConstructor
+from service.appointment_services import (
+    AppointmentShceduleDataConstructor,
+    AppointmentTimes
+)
 from service.specialty_services import SpecialtyDataConstructor
+from service.doctor_services import DoctorDataConstructor
 from data.connections import MySQLConnection
 from data.base_data import BaseCRUD
-from data.sql_models import Appointment, Specialty
+from data.sql_models import Appointment, Specialty, Doctor
 
 
 class AppointmentBookingFormDataConstructor(BaseService):
@@ -61,10 +66,48 @@ class AppointmentBookingFormDataConstructor(BaseService):
         return specialties_data
 
 
+class AppointmentRescheduleFormDataConstructor(BaseService):
+    def __init__(self, session: Session, doctor_id: int) -> None:
+        super().__init__(session)
+        self.doctor_crud = BaseCRUD(session, Doctor, Doctor)
+        self.doctor = self._get_doctor(int(doctor_id))
+        self.doctor_data_constructor = DoctorDataConstructor(doctor=self.doctor)
+
+    def _get_doctor(self, doctor_id: int) -> Doctor:
+        doctor = self.doctor_crud._get(doctor_id)
+        return doctor
+
+    def exec(self) -> dict:
+        appointment_schedule = self._get_appointment_schedule()
+        return appointment_schedule
+
+    def _get_appointment_schedule(self) -> dict:
+        constructor = AppointmentShceduleDataConstructor(
+            self._get_doctor_schedule(), self._get_doctor_appointments()
+        )
+        appointment_schedule = constructor.exec()
+        return appointment_schedule
+
+    def _get_doctor_schedule(self) -> dict:
+        schedule = self.doctor_data_constructor._get_schedule()
+        return schedule
+
+    def _get_doctor_appointments(self) -> AppointmentTimes:
+        appointments = self.doctor_data_constructor._get_appointments()
+        return appointments
+
+
 def get_booking_form_data_constructor(
         request: Request,
         session: Session = Depends(MySQLConnection.get_session),
 ) -> AppointmentBookingFormDataConstructor:
     constructor = AppointmentBookingFormDataConstructor(session, request)
     return constructor
-    pass
+
+
+def get_reschedule_data_constructor(
+        id: int,
+        session: Session = Depends(MySQLConnection.get_session)
+) -> AppointmentRescheduleFormDataConstructor:
+    constructor = AppointmentRescheduleFormDataConstructor(session, id)
+    return constructor

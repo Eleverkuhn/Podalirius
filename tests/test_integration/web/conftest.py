@@ -55,12 +55,6 @@ class EndpointWithForm(BaseTestEndpoint):
         assert error_msgs is not None
         assert sorted(raised_errors) == sorted(error_msgs)
 
-    def _post_req(self, data: dict[str, str]):
-        response = self.client.post(
-            self._get_url(), data=data, follow_redirects=False
-        )
-        return response
-
     def _get_form_errors(
             self, form: type[AbstractModel], data: dict[str, str]
     ) -> list[str]:
@@ -77,6 +71,12 @@ class EndpointWithForm(BaseTestEndpoint):
             in soup.find_all("small")
         ]
         return error_msgs
+
+    def _post_req(self, data: dict[str, str]):
+        response = self.client.post(
+            self._get_url(), data=data, follow_redirects=False
+        )
+        return response
 
 
 class EndpointWithURLParams(BaseTestEndpoint):

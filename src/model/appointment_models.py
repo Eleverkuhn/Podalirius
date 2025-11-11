@@ -8,16 +8,16 @@ from model.base_models import AbstractModel
 from data.base_data import FieldDefault
 
 
-class Appointment(AbstractModel):
+class AppointmentDateTime(AbstractModel):
     date: date
     time: time
 
 
-class AppointmentBase(Appointment):
+class AppointmentBase(AppointmentDateTime):
     doctor_id: int
 
 
-class AppointmentBaseOuter(Appointment):
+class AppointmentBaseOuter(AppointmentBase):
     status: Literal["pending", "completed", "cancelled"] = "pending"
     is_paid: bool = Field(default=False)
 

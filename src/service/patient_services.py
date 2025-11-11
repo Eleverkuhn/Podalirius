@@ -10,6 +10,7 @@ from model.patient_models import (
     PatientCreate, PatientOuter, PatientWithAppointments
 )
 from model.appointment_models import AppointmentOuter
+from model.form_models import RescheduleAppointmentForm
 from service.base_services import BaseService
 from service.auth_services import authorize
 from data.connections import MySQLConnection
@@ -97,16 +98,25 @@ class PatientPage(BasePatientService):
         appointment_crud = BaseCRUD(self.session, Appointment, Appointment)
         return appointment_crud
 
+    def reschedule_appointment(
+            self, id: int, form: RescheduleAppointmentForm
+    ) -> None:
+        update_data = form.model_dump()
+        self._update_appointment(id, update_data)
+
     def change_appointment_status(self, id: int, status: str) -> None:
         update_data = self._prepare_update_appointment_data(id, status)
-        self.appointment_crud.update(id, update_data)
-        self.session.commit()
+        self._update_appointment(id, update_data)
 
     def _prepare_update_appointment_data(self, id: int, status: str) -> dict:
         appointment = self.get_appointment(id)
         appointment.status = status
         appointment_dumped = appointment.model_dump(exclude=["doctor", "price"])
         return appointment_dumped
+
+    def _update_appointment(self, id: int, update_data: dict) -> None:
+        self.appointment_crud.update(id, update_data)
+        self.session.commit()
 
     def get_appointment(self, id: int) -> AppointmentOuter:
         for appointment in self.patient.appointments:

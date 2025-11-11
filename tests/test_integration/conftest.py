@@ -1,4 +1,5 @@
 from collections.abc import Iterator
+from datetime import datetime
 from pathlib import Path
 from random import randint
 
@@ -12,6 +13,7 @@ from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
 from model.appointment_models import AppointmentOuter
+from model.form_models import RescheduleAppointmentForm
 from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
@@ -28,6 +30,16 @@ appointment_status = ["pending", "completed", "cancelled"]  # Is used for parame
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
 class BasePatientTest:
+    pass
+
+
+@pytest.mark.parametrize("doctor", [0], indirect=True)
+class BaseDoctorTest:
+    pass
+
+
+@pytest.mark.parametrize("appointments_data", ["patient_1"], indirect=True)
+class BaseAppointmentTest:
     pass
 
 
@@ -221,3 +233,11 @@ def doctor(
         doctors: Sequence[Doctor], request: pytest.FixtureRequest
 ) -> Doctor:
     return doctors[request.param]
+
+
+@pytest.fixture
+def reschedule_appointment_form() -> RescheduleAppointmentForm:
+    current = datetime.now().replace(microsecond=0)
+    current_date, current_time = current.date(), current.time()
+    form = RescheduleAppointmentForm(date=current_date, time=current_time)
+    return form
