@@ -138,5 +138,6 @@ class TestAppointmentEndpointCreatedInfo(BaseTestEndpoint):
             self._token_url(jwt_token_appointment),
             follow_redirects=False
         )
+        redirected_url = self._get_url(path="Main.main")
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert response.headers.get("location") == self._get_url("Main.main")
+        assert response.headers.get("location") == redirected_url

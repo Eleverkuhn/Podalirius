@@ -3,16 +3,17 @@ from typing import override
 import pytest
 from fastapi import status, Response
 from fastapi.testclient import TestClient
+from pydantic import BaseModel
 
 from logger.setup import get_logger
 from main import app
 from model.appointment_models import AppointmentOuter
 from model.form_models import RescheduleAppointmentForm
 from service.auth_services import JWTTokenService
+from data.base_data import BaseSQLModel
+from data.sql_models import Patient
 from tests.test_integration.conftest import BasePatientTest, appointment_status
-from tests.test_integration.web.conftest import (
-    BaseTestEndpoint, EndpointWithForm
-)
+from tests.test_integration.web.conftest import BaseTestEndpoint
 
 
 @pytest.fixture
@@ -37,6 +38,13 @@ def converted_appointment(
 
 class BasePatientEndpointTest(BaseTestEndpoint):
     base_url = "PatientAppointment.all"
+    param = "id"
+
+    def _info_is_displayed_correctly(
+            self, model: BaseModel | BaseSQLModel, response: Response
+    ) -> None:
+        for value in model.model_dump().values():
+            assert str(value) in response.text
 
 
 class BaseAuthorizedPatientEndpointTest(
@@ -52,23 +60,23 @@ class BaseAuthorizedPatientEndpointTest(
 @pytest.mark.parametrize("appointments", [0], indirect=True)
 @pytest.mark.usefixtures("link_services_to_appointments")
 class BasePatientAppointmentTest(BaseAuthorizedPatientEndpointTest):
-    appointment_url = "PatientAppointment.appointment"
+    base_url = "PatientAppointment.appointment"
 
-    @override
-    def _get_url(
-            self,
-            name: str | None = None,
-            id: int | str | None = None
-    ) -> None:
-        # FIX: rework `_get_url in general`
-        if name:
-            return self.client.app.url_path_for(name)
-        elif id:
-            get_logger().debug("Inside elif")
-            url = self.client.app.url_path_for(self.appointment_url, id=id)
-            get_logger().debug(url)
-            return url
-        return self.client.app.url_path_for(self.base_url)
+    # @override
+    # def _get_url(
+    #         self,
+    #         name: str | None = None,
+    #         id: int | str | None = None
+    # ) -> None:
+    #     # FIX: rework `_get_url in general`
+    #     if name:
+    #         return self.client.app.url_path_for(name)
+    #     elif id:
+    #         get_logger().debug("Inside elif")
+    #         url = self.client.app.url_path_for(self.appointment_url, id=id)
+    #         get_logger().debug(url)
+    #         return url
+    #     return self.client.app.url_path_for(self.base_url)
 
 
 @pytest.mark.usefixtures("patient")
@@ -80,7 +88,9 @@ class TestPatientEndpoint(BaseAuthorizedPatientEndpointTest):
         assert response.status_code == status.HTTP_200_OK
 
 
-class TestPatientEndpointWithAppointments(BasePatientAppointmentTest):
+class TestPatientAppointmentAll(BasePatientAppointmentTest):
+    base_url = "PatientAppointment.all"
+
     @pytest.mark.parametrize(
         "filtered_appointments", appointment_status, indirect=True
     )
@@ -93,41 +103,33 @@ class TestPatientEndpointWithAppointments(BasePatientAppointmentTest):
         )
         response = self.client.get(pending_url)
         for appointment in appointments:
-            self._find_appointment_info_in_response(appointment, response)
-
-    @pytest.mark.parametrize("converted_appointment", [0], indirect=True)
-    def test_get_displays_appointment_info(
-            self, converted_appointment: AppointmentOuter
-    ) -> None:
-        response = self.client.get(self._get_url(id=converted_appointment.id))
-        self._find_appointment_info_in_response(converted_appointment, response)
-
-    def _find_appointment_info_in_response(
-            self, appointment: AppointmentOuter, response: Response
-    ) -> None:
-        for value in appointment.model_dump().values():
-            assert str(value) in response.text
+            self._info_is_displayed_correctly(appointment, response)
 
 
 @pytest.mark.parametrize("converted_appointment", [0], indirect=True)
 @pytest.mark.usefixtures("converted_appointment")
-class TestPatientAppointmentInfoUpdate(BasePatientAppointmentTest):
+class TestPatientAppointmentInfo(BasePatientAppointmentTest):
     @pytest.fixture(autouse=True)
     def _converted_appointment(
             self, converted_appointment: AppointmentOuter
     ) -> None:
         self.converted_appointment = converted_appointment
 
+    # @pytest.mark.parametrize("converted_appointment", [0], indirect=True)
+    def test_get_displays_appointment_info(self) -> None:
+        response = self.client.get(self._get_url(self.converted_appointment.id))
+        self._info_is_displayed_correctly(self.converted_appointment, response)
+
     def test_cancel_is_succeed(self) -> None:
-        url = self._get_url(id=self.converted_appointment.id)
+        url = self._get_url(self.converted_appointment.id)
         get_logger().debug(type(url))
         response = self.client.get(
-            self._get_url(id=self.converted_appointment.id)
+            self._get_url(self.converted_appointment.id)
         )
         assert "pending" in response.text
         response = self.client.patch(
-            self._get_url(
-                id=self.converted_appointment.id), follow_redirects=True
+            self._get_url(self.converted_appointment.id),
+            follow_redirects=True
         )
         get_logger().debug(response.text)
         assert "cancelled" in response.text
@@ -136,7 +138,7 @@ class TestPatientAppointmentInfoUpdate(BasePatientAppointmentTest):
             self,
             reschedule_appointment_form: RescheduleAppointmentForm
     ) -> None:
-        url = self._get_url(id=self.converted_appointment.id)
+        url = self._get_url(self.converted_appointment.id)
         response = self.client.get(url)
         assert self.converted_appointment.date.isoformat() in response.text
         assert self.converted_appointment.time.isoformat() in response.text
@@ -155,5 +157,14 @@ class TestPatientAppointmentInfoUpdate(BasePatientAppointmentTest):
 class TestPatientEndpointAnuthorized(BasePatientEndpointTest):
     def test_unauthorized_patient_get_redirected_to_main(self) -> None:
         response = self.client.get(self._get_url(), follow_redirects=False)
+        redirected = self._get_url(path="Main.main")
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert response.headers.get("location") == self._get_url("Main.main")
+        assert response.headers.get("location") == redirected
+
+
+class TestPatientInfoEndpoint(TestPatientEndpoint):
+    base_url = "PatientInfo.info"
+
+    def test_get_displays_patient_info(self, patient: Patient) -> None:
+        response = self.client.get(self._get_url())
+        self._info_is_displayed_correctly(patient, response)

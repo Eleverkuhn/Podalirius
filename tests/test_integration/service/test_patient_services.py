@@ -106,6 +106,9 @@ class TestPatientPage(BasePatientPageTest):
         with pytest.raises(AppointmentNotFound):
             self.patient_page.get_appointment(0)
 
+    def test_get_patient_info(self) -> None:
+        pass
+
 
 @pytest.mark.parametrize("appointment", [0], indirect=True)
 class TestPatientPageSingleAppointment(BasePatientPageTest):

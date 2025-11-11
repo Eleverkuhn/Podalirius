@@ -17,15 +17,40 @@ def client() -> TestClient:
 
 class BaseTestEndpoint:
     base_url: str
+    param: str
 
     @pytest.fixture(autouse=True)
     def setup_method(self, client: TestClient) -> None:
         self.client = client
 
-    def _get_url(self, name: str | None = None) -> str:
-        if name:
-            return self.client.app.url_path_for(name)
-        return self.client.app.url_path_for(self.base_url)
+    def _get_url(
+            self,
+            param: str | int | None = None,
+            path: str | None = None
+    ) -> str:
+        if hasattr(self, "param") and param:
+            return self._get_parametrized_url(param)
+        elif path:
+            return self._get_different_url(path)
+        else:
+            return self._get_default_url()
+
+    def _get_parametrized_url(self, param: str | int) -> str:
+        url = self.client.app.url_path_for(
+            self.base_url, **{self.param: param}
+        )
+        return url
+
+    def _get_different_url(self, path: str) -> str:
+        url = self.client.app.url_path_for(path)
+        return url
+
+    def _get_default_url(self) -> str:
+        url = self.client.app.url_path_for(self.base_url)
+        return url
+        # if name:
+        #     return self.client.app.url_path_for(name)
+        # return self.client.app.url_path_for(self.base_url)
 
 
 class EndpointWithForm(BaseTestEndpoint):
@@ -35,8 +60,9 @@ class EndpointWithForm(BaseTestEndpoint):
 
     def test_redirects(self, data: dict[str, str], destination: str) -> None:
         response = self._post_req(data)
+        redirected = self._get_url(path=destination)
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert response.headers.get("location") == self._get_url(destination)
+        assert response.headers.get("location") == redirected
 
     def test_invalid_form_data_returns_422(
             self, invalid_data: dict[str, str]
