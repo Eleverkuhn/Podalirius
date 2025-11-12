@@ -18,16 +18,17 @@ class DoctorDataConverter:
         return doctors_outer
 
     def convert_doctor_to_outer(self, doctor: Doctor) -> DoctorOuter:
-        consultations = self._get_consiltations(doctor)
+        consultations = self._get_consultations(doctor)
         dumped_doctor = doctor.model_dump()
         doctor_outer = DoctorOuter(
             **dumped_doctor,
             consultations=consultations,
-            full_name=doctor.full_name
+            full_name=doctor.full_name,
+            experience_in_years=doctor.experience_in_years
         )
         return doctor_outer
 
-    def _get_consiltations(self, doctor: Doctor) -> list[dict[str, int]]:
+    def _get_consultations(self, doctor: Doctor) -> list[dict[str, int]]:
         consultations = [
             self._construct_consultation_info(doctor, service)
             for service

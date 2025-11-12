@@ -4,6 +4,7 @@ import pytest
 from fastapi import status
 from sqlmodel import Session, Sequence
 
+from logger.setup import get_logger
 from data.sql_models import Specialty
 from tests.test_integration.web.conftest import EndpointWithURLParams
 
@@ -30,8 +31,11 @@ class TestSpecialtyEndpoint(EndpointWithURLParams):
             assert specialty.title in response.text
 
     @pytest.mark.parametrize("specialty", [0], indirect=True)
+    @pytest.mark.usefixtures("doctors")
     def test_detailed_info_render_correctly(
             self, specialty: Specialty
     ) -> None:
         response = self.client.get(self._get_url(param=specialty.title))
-        self._info_is_displayed_correctly(specialty, response)
+        assert specialty.title in response.text
+        for doctor in specialty.doctors:
+            assert doctor.full_name in response.text

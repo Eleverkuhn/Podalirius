@@ -91,6 +91,11 @@ class Doctor(PersonSQLModel, table=True):
         full_name = f"{self.first_name} {self.middle_name} {self.last_name}"
         return full_name
 
+    @property
+    def experience_in_years(self) -> int:
+        years = date.today().year - self.experience.year
+        return years
+
 
 class Weekday(str, Enum):
     MONDAY = "0"
