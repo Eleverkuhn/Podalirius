@@ -1,10 +1,19 @@
 from typing import override
 
+import pytest
 from fastapi import status
-from sqlmodel import Session
+from sqlmodel import Session, Sequence
 
+from data.base_data import BaseCRUD
 from data.sql_models import Specialty
 from tests.test_integration.web.conftest import EndpointWithURLParams
+
+
+@pytest.fixture
+def specialties(session: Session) -> Sequence[Specialty]:
+    crud = BaseCRUD(session, Specialty, Specialty)
+    specialties = crud.get_all()
+    return specialties
 
 
 class TestSpecialtyEndpoint(EndpointWithURLParams):
@@ -20,3 +29,10 @@ class TestSpecialtyEndpoint(EndpointWithURLParams):
     @override
     def test_multiple_exist(self, session: Session) -> None:
         super().test_multiple_exist(session)
+
+    def test_all_specialties_render_correctly(
+            self, specialties: Sequence[Specialty]
+    ) -> None:
+        response = self.client.get(self._get_url(path="Specialty.all"))
+        for specialty in specialties:
+            assert specialty.title in response.text
