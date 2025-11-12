@@ -3,15 +3,7 @@ from sqlmodel import Session, Sequence
 
 from logger.setup import get_logger
 from service.specialty_services import SpecialtyDataConstructor
-from data.base_data import BaseCRUD
 from data.sql_models import Specialty
-
-
-@pytest.fixture
-def specialties(session: Session) -> Sequence[Specialty]:
-    specialties_crud = BaseCRUD(session, Specialty, Specialty)
-    specialties = specialties_crud.get_all()
-    return specialties
 
 
 class TestSpecialtyDataConstructor:

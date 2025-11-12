@@ -50,13 +50,6 @@ class BasePatientEndpointTest(BaseTestEndpoint):
     base_url = "PatientAppointment.all"
     param = "id"
 
-    def _info_is_displayed_correctly(
-            self, model: BaseModel | BaseSQLModel, response: Response
-    ) -> None:
-        for value in model.model_dump().values():
-            get_logger().debug(value)
-            assert str(value) in response.text
-
 
 class BaseAuthorizedPatientEndpointTest(
         BaseProtectedEndpointTest,

@@ -4,16 +4,8 @@ import pytest
 from fastapi import status
 from sqlmodel import Session, Sequence
 
-from data.base_data import BaseCRUD
 from data.sql_models import Specialty
 from tests.test_integration.web.conftest import EndpointWithURLParams
-
-
-@pytest.fixture
-def specialties(session: Session) -> Sequence[Specialty]:
-    crud = BaseCRUD(session, Specialty, Specialty)
-    specialties = crud.get_all()
-    return specialties
 
 
 class TestSpecialtyEndpoint(EndpointWithURLParams):
@@ -36,3 +28,10 @@ class TestSpecialtyEndpoint(EndpointWithURLParams):
         response = self.client.get(self._get_url(path="Specialty.all"))
         for specialty in specialties:
             assert specialty.title in response.text
+
+    @pytest.mark.parametrize("specialty", [0], indirect=True)
+    def test_detailed_info_render_correctly(
+            self, specialty: Specialty
+    ) -> None:
+        response = self.client.get(self._get_url(param=specialty.title))
+        self._info_is_displayed_correctly(specialty, response)

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>{{ specialty.title }}</h2>
+
+{% for doctor in specialty.doctors %}
+  {% from "macros.html" import display_info %}
+  {{ display_info(doctor) }}
+{% endfor %}
+
+{% endblock %}

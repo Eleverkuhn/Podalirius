@@ -3,22 +3,27 @@ from typing import override
 from fastapi import Depends
 from sqlmodel import Session, Sequence
 
+from model.specialty_models import SpecialtyOuter
 from service.base_services import BaseService
 from service.doctor_services import DoctorDataConstructor
 from data.connections import MySQLConnection
-from data.base_data import BaseCRUD
 from data.sql_models import Specialty
+from data.specialty_data import SpecialtyCRUD
 
 
 class SpecialtyPage(BaseService):
     @override
     def __init__(self, session: Session) -> None:
         super().__init__(session)
-        self.crud = BaseCRUD(session, Specialty, Specialty)
+        self.crud = SpecialtyCRUD(session)
 
     def get_all_specialties(self) -> Sequence[Specialty]:
         specialties = self.crud.get_all()
         return specialties
+
+    def get_detailed_info(self, title: str) -> SpecialtyOuter:
+        specialty = self.crud.get_by_title(title)
+        return specialty
 
 
 class SpecialtyDataConstructor(BaseService):

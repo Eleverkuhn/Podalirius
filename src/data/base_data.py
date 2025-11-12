@@ -5,6 +5,7 @@ from sqlmodel import SQLModel, Field, Session, select
 
 
 class FieldDefault:
+    SPECIALTY_TITLE_MAX_LENGHT = 30
     SERVICE_TITLE_MAX_LENGHT = 75
     PRECISION = 8
     SCALE = 2

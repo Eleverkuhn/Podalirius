@@ -22,5 +22,15 @@ class Specialty(BaseRouter):
         return response
 
     @router.get("/{title}", name="specialty", status_code=status.HTTP_200_OK)
-    def get(self, title: str) -> None:
-        pass
+    def get(
+            self,
+            request: Request,
+            title: str,
+            specialty_page: SpecialtyPage = Depends(get_specialty_page),
+    ) -> _TemplateResponse:
+        specialty = specialty_page.get_detailed_info(title)
+        content = {"request": request, "specialty": specialty}
+        response = self.template.TemplateResponse(
+            "specialty_detail.html", content
+        )
+        return response

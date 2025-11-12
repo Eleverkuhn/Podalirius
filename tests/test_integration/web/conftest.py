@@ -3,8 +3,8 @@ from typing import override
 import pytest
 from bs4 import BeautifulSoup
 from fastapi.testclient import TestClient
-from fastapi import status
-from pydantic import ValidationError
+from fastapi import status, Response
+from pydantic import ValidationError, BaseModel
 from sqlmodel import Session
 
 from main import app
@@ -55,6 +55,12 @@ class BaseTestEndpoint:
     def _get_default_url(self) -> str:
         url = self.client.app.url_path_for(self.base_url)
         return url
+
+    def _info_is_displayed_correctly(
+            self, model: BaseModel | BaseSQLModel, response: Response
+    ) -> None:
+        for value in model.model_dump().values():
+            assert str(value) in response.text
 
 
 class BaseProtectedEndpointTest(BaseTestEndpoint):

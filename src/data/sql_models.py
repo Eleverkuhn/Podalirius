@@ -55,7 +55,7 @@ class ServiceToAppointment(BaseSQLModel, table=True):
 class Specialty(BaseSQLModel, table=True):
     __tablename__ = "specialties"
 
-    title: str = Field(max_length=30)
+    title: str = Field(max_length=FieldDefault.SPECIALTY_TITLE_MAX_LENGHT)
     description: None | str = Field(default=None)
 
     doctors: list["Doctor"] = Relationship(

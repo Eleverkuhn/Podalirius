@@ -18,7 +18,9 @@ from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
 from data.base_data import BaseSQLModel, BaseCRUD
-from data.sql_models import Appointment, Doctor, ServiceToAppointment
+from data.sql_models import (
+    Appointment, Doctor, ServiceToAppointment, Specialty
+)
 from data.auth_data import OTPCodeRedis
 from data.patient_data import Patient, PatientCRUD
 from utils import SetUpTest
@@ -271,3 +273,18 @@ def mock_request(cookies: dict[str, str]) -> MockRequest:
 def mock_request_with_no_cookies() -> MockRequest:
     mock_request = MockRequest()
     return mock_request
+
+
+@pytest.fixture
+def specialties(session: Session) -> Sequence[Specialty]:
+    specialties_crud = BaseCRUD(session, Specialty, Specialty)
+    specialties = specialties_crud.get_all()
+    return specialties
+
+
+@pytest.fixture
+def specialty(
+        specialties: Sequence[Specialty], request: pytest.FixtureRequest
+) -> Specialty:
+    specialty = specialties[request.param]
+    return specialty

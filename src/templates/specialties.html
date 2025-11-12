@@ -6,7 +6,11 @@
 
 <ul>
   {% for specialty in specialties %}
-    <li>{{ specialty.title }}</li>
+      <li>
+        <a href={{ request.url_for('Specialty.specialty', title=specialty.title) }}>
+          {{ specialty.title }}
+        </a>
+      </li>
   {% endfor %}
 </ul>
 

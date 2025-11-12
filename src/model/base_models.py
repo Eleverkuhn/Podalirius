@@ -12,7 +12,7 @@ def is_alpha(value: str) -> str | None:
     return value
 
 
-class AbstractModel(BaseModel):  # FIX: rename this to `AbstractModel`
+class AbstractModel(BaseModel):
     def is_submodel(self, to_compare: "AbstractModel") -> bool:
         return self.dumped_items <= to_compare.dumped_items
 
@@ -21,7 +21,7 @@ class AbstractModel(BaseModel):  # FIX: rename this to `AbstractModel`
         return self.model_dump().items()
 
 
-class AbstractInner(AbstractModel):  # FIX: rename this to `AbstractInner`
+class AbstractInner(AbstractModel):
     id: int
     created_at: datetime
     updated_at: datetime
