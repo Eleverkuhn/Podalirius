@@ -21,6 +21,13 @@ class TestDoctorEndpoint(EndpointWithURLParams):
     def test_multiple_exist(self, session: Session) -> None:
         super().test_multiple_exist(session)
 
+    @pytest.mark.parametrize("doctor", [0], indirect=True)
+    def test_detailed_doctor_info_render_correctly(
+            self, doctor: Doctor
+    ) -> None:
+        response = self.client.get(self._get_url(param=doctor.id))
+        assert doctor.full_name in response.text
+
 
 @pytest.mark.parametrize("doctor", [0], indirect=True)
 class TestDoctorScheduleEndpoint(BaseTestEndpoint):

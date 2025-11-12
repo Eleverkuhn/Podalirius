@@ -16,7 +16,7 @@ class TestSpecialtyEndpoint(EndpointWithURLParams):
     sql_model = Specialty
 
     def test_all_specialties_exists(self) -> None:
-        response = self.client.get(self._get_url("Specialty.all"))
+        response = self.client.get(self._get_url(path="Specialty.all"))
         assert response.status_code == status.HTTP_200_OK
 
     @override

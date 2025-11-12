@@ -1,11 +1,31 @@
 from datetime import datetime, date, time, timedelta
+from typing import override
 
+from fastapi import Depends
+from sqlmodel import Session
+
+from model.doctor_models import DoctorDetail
+from service.base_services import BaseService
 from service.appointment_services import (
     AppointmentShceduleDataConstructor,
     AppointmentTimes
 )
 from service.service_services import ServiceDataConstructor
+from data.connections import MySQLConnection
 from data.sql_models import Doctor, WorkSchedule
+from data.base_data import BaseCRUD
+from data.doctor_data import DoctorCRUD
+
+
+class DoctorPage(BaseService):
+    @override
+    def __init__(self, session: Session) -> None:
+        super().__init__(session)
+        self.crud = DoctorCRUD(session)
+
+    def get_detailed_info(self, id: int) -> DoctorDetail:
+        doctor = self.crud.get(id)
+        return doctor
 
 
 class DoctorDataConstructor:
@@ -113,3 +133,10 @@ class WorkScheduleDataConstructor:
     def _add_appointment_time(self) -> None:
         self.schedule.add(self.appointment_time.time().isoformat())
         self.appointment_time += self.appointment_duration
+
+
+def get_doctor_page(
+        session: Session = Depends(MySQLConnection.get_session)
+) -> DoctorPage:
+    doctor_page = DoctorPage(session)
+    return doctor_page

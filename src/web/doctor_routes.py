@@ -1,8 +1,9 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Request
 from fastapi.responses import JSONResponse
 from fastapi_utils.cbv import cbv
+from starlette.templating import _TemplateResponse
 
-from logger.setup import get_logger
+from service.doctor_services import DoctorPage, get_doctor_page
 from service.form_services import get_reschedule_data_constructor
 from web.base_routes import BaseRouter
 
@@ -12,8 +13,18 @@ router = APIRouter(prefix="/doctors")
 @cbv(router)
 class Doctor(BaseRouter):
     @router.get("/{id}", name="doctor", status_code=status.HTTP_200_OK)
-    def get(self, id: str) -> None:
-        pass
+    def get(
+            self,
+            request: Request,
+            id: str,
+            doctor_page: DoctorPage = Depends(get_doctor_page)
+    ) -> _TemplateResponse:
+        doctor = doctor_page.get_detailed_info(int(id))
+        content = {"request": request, "doctor": doctor}
+        response = self.template.TemplateResponse(
+            "doctor_detail.html", content
+        )
+        return response
 
     @router.get(
         "/{id}/schedule",
@@ -28,5 +39,3 @@ class Doctor(BaseRouter):
     ):
         appointment_schedule = constructor.exec()
         return appointment_schedule
-        # response = {"schedule": appointment_schedule}
-        # return response

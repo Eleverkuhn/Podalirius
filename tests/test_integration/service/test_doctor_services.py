@@ -2,12 +2,12 @@ from datetime import time
 from pathlib import Path
 
 import pytest
-from sqlmodel import Sequence
+from sqlmodel import Session
 
 from logger.setup import get_logger
 from utils import read_fixture
 from service.doctor_services import (
-    DoctorDataConstructor, WorkScheduleDataConstructor
+    DoctorDataConstructor, WorkScheduleDataConstructor, DoctorPage
 )
 from data.sql_models import Doctor, WorkSchedule
 from tests.test_integration.conftest import BaseDoctorTest
@@ -41,6 +41,21 @@ def mock_work_schedule() -> WorkSchedule:
             end_time=time(hour=16)
         )
     return work_day
+
+
+@pytest.fixture
+def doctor_page(session: Session) -> DoctorPage:
+    doctor_page = DoctorPage(session)
+    return doctor_page
+
+
+class TestDoctorPage:
+    @pytest.mark.parametrize("doctor", [0], indirect=True)
+    def test_get_detailed_info(
+            self, doctor: Doctor, doctor_page: DoctorPage
+    ) -> None:
+        doctor_detailed_info = doctor_page.get_detailed_info(doctor.id)
+        assert doctor_detailed_info.full_name == doctor.full_name
 
 
 class TestDoctorDataConstructor:

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>{{ doctor.full_name }}</h2>
+
+{% from "macros.html" import display_info %}
+{{ display_info(doctor) }}
+
+{% endblock %}

@@ -1,13 +1,58 @@
 from decimal import Decimal
+from typing import override
 
-from model.doctor_models import DoctorOuter
+from sqlmodel import Session
+
+from model.doctor_models import DoctorOuter, DoctorDetail
+from model.service_models import ServiceOuter
 from service.service_services import PriceCalculator
 from data.sql_models import Doctor, Service
+from data.base_data import BaseCRUD
+from data.service_data import ServiceDataConverter
+
+
+class DoctorCRUD(BaseCRUD):
+    def __init__(
+            self,
+            session: Session,
+            sql_model: type[Doctor] = Doctor,
+            return_model: type[DoctorDetail] = DoctorDetail
+    ) -> None:
+        super().__init__(session, sql_model, return_model)
+
+    @override
+    def get(self, id: int) -> DoctorDetail:
+        doctor = self._get(id)
+        doctor_detail = DoctorDataConverter(doctor=doctor).convert_to_detail()
+        return doctor_detail
 
 
 class DoctorDataConverter:
-    def __init__(self, doctors: list[Doctor]) -> None:
+    def __init__(
+            self,
+            doctors: list[Doctor] | None = None,
+            doctor: Doctor | None = None
+    ) -> None:
         self.doctors = doctors
+        self.doctor = doctor
+
+    def convert_to_detail(self) -> DoctorDetail:
+        dumped_doctor = self.doctor.model_dump()
+        doctor_detail = DoctorDetail(
+            **dumped_doctor,
+            full_name=self.doctor.full_name,
+            experience_in_years=self.doctor.experience_in_years,
+            services=self._get_converted_services()
+        )
+        return doctor_detail
+
+    def _get_converted_services(self) -> list[ServiceOuter]:
+        services_outer = [
+            ServiceDataConverter(self.doctor, service).convert_to_outer()
+            for service
+            in self.doctor.services
+        ]
+        return services_outer
 
     def convert_multiple_doctors_to_outer(self) -> list:
         doctors_outer = [

@@ -5,8 +5,11 @@
 <h2>{{ specialty.title }}</h2>
 
 {% for doctor in specialty.doctors %}
-  {% from "macros.html" import display_info %}
-  {{ display_info(doctor) }}
+  <a href="{{ request.url_for('Doctor.doctor', id=doctor.id)}}">
+    {% from "macros.html" import display_info %}
+    {{ display_info(doctor) }}
+  </a>
+
 {% endfor %}
 
 {% endblock %}
