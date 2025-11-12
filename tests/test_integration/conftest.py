@@ -27,6 +27,11 @@ type CreatedTestEntry = Generator[BaseSQLModel, None, None]
 appointment_status = ["pending", "completed", "cancelled"]  # Is used for parametrizing 'filtered_appointments' fixture
 
 
+class MockRequest:
+    def __init__(self, cookies: dict[str, str] | dict = {}) -> None:
+        self.cookies = cookies
+
+
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
 class BasePatientTest:
     pass
@@ -252,3 +257,15 @@ def patient_update_info(patient: Patient) -> PatientCreate:
         **update_data
     )
     return update_info
+
+
+@pytest.fixture
+def mock_request(cookies: dict[str, str]) -> MockRequest:
+    mock_request = MockRequest(cookies)
+    return mock_request
+
+
+@pytest.fixture
+def mock_request_with_no_cookies() -> MockRequest:
+    mock_request = MockRequest()
+    return mock_request

@@ -46,7 +46,7 @@ class Appointment(BaseRouter):
             form: AppointmentBookingForm = Depends(AppointmentBookingForm.as_form),
             service: AppointmentBooking = Depends(get_appointment_booking)
     ) -> RedirectResponse:
-        token = service.book(request.cookies, form)
+        token = service.book(form)
         url = request.app.url_path_for("Appointment.info")
         modified = "".join([url, f"?token={token}"])
         response = RedirectResponse(

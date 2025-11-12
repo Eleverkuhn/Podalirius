@@ -10,19 +10,9 @@ from service.form_services import (
 )
 from data.sql_models import Doctor
 from data.appointment_data import AppointmentCRUD
-from tests.test_integration.conftest import BasePatientTest
-from tests.test_integration.conftest import BaseDoctorTest
-
-
-class MockRequest:
-    def __init__(self, cookies: dict[str, str]) -> None:
-        self.cookies = cookies
-
-
-@pytest.fixture
-def mock_request(cookies: dict[str, str]) -> MockRequest:
-    mock_request = MockRequest(cookies)
-    return mock_request
+from tests.test_integration.conftest import (
+    BasePatientTest, BaseDoctorTest, MockRequest
+)
 
 
 @pytest.fixture

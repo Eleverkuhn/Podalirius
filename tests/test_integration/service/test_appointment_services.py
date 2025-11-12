@@ -4,11 +4,11 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
+from logger.setup import get_logger
 from exceptions.exc import FormInputError
 from model.form_models import AppointmentBookingForm
 from model.appointment_models import AppointmentBase
 from service.appointment_services import (
-    BaseAppointmentService,
     AppointmentShceduleDataConstructor,
     AppointmentBooking,
     AppointmentJWTTokenService
@@ -17,6 +17,7 @@ from service.doctor_services import WorkScheduleDataConstructor
 from data.sql_models import Appointment, Doctor
 from data.patient_data import Patient
 from utils import SetUpTest
+from tests.test_integration.conftest import MockRequest, BasePatientTest
 
 
 @pytest.fixture
@@ -25,13 +26,17 @@ def form(appointment_form_data: dict[str, str | int]) -> AppointmentBookingForm:
 
 
 @pytest.fixture
-def base_appointment_service(session: Session) -> BaseAppointmentService:
-    return BaseAppointmentService(session)
+def booking_service(
+        session: Session, mock_request: MockRequest
+) -> AppointmentBooking:
+    return AppointmentBooking(session, mock_request)
 
 
 @pytest.fixture
-def booking_service(session: Session) -> AppointmentBooking:
-    return AppointmentBooking(session)
+def booking_service_unauthorized(
+        session: Session, mock_request_with_no_cookies: MockRequest
+) -> AppointmentBooking:
+    return AppointmentBooking(session, mock_request_with_no_cookies)
 
 
 @pytest.fixture
@@ -39,25 +44,6 @@ def appointment_model(
     appointment_form_data: dict[str, str | int]
 ) -> AppointmentBase:
     return AppointmentBase(**appointment_form_data)
-
-
-class TestBaseAppointmentService:
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    def test__check_user_is_logged_in_returns_patient_id_if_logged_in(
-            self,
-            base_appointment_service: BaseAppointmentService,
-            cookies: dict[str, str],
-            patient_str_id: str
-    ) -> None:
-        patient_id = base_appointment_service._check_user_is_logged_in(cookies)
-        assert patient_id == patient_str_id
-
-    def test__check_user_is_logged_in_returns_none_if_unlogged_in(
-            self, base_appointment_service: BaseAppointmentService
-    ) -> None:
-        cookies = {}
-        patient_id = base_appointment_service._check_user_is_logged_in(cookies)
-        assert not patient_id
 
 
 class TestAppointmentScheduleDataConstructor:
@@ -82,30 +68,48 @@ class TestAppointmentScheduleDataConstructor:
         assert not appoointment_schedule
 
 
-class TestAppointmentBooking:
+class TestAppointmentBookingForAuthorizedPatient(BasePatientTest):
+    @pytest.fixture(autouse=True)
+    def _service(self, booking_service: AppointmentBooking) -> None:
+        self.service = booking_service
+
+    def test__booking_for_logged_in_user_is_succeed(
+            self, cookies: dict[str, str]
+    ) -> None:
+        assert cookies
+        get_logger().debug(cookies)
+
+    def test__check_user_is_logged_in_returns_patient_id_if_logged_in(
+            self, patient_str_id: str
+    ) -> None:
+        patient_id = self.service._check_user_is_logged_in()
+        assert patient_id == patient_str_id
+
+
+class TestAppointmentBookingForUnauthorizedPatient:
+    @pytest.fixture(autouse=True)
+    def _service(self, booking_service_unauthorized: AppointmentBooking) -> None:
+        self.service = booking_service_unauthorized
+
+
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.parametrize(
         "appointment_form_data", ["booking_form"], indirect=True
     )
     @pytest.mark.usefixtures("patient")
     def test__booking_for_existing_unlogged_in_user_succeed(
-            self,
-            booking_service: AppointmentBooking,
-            form: AppointmentBookingForm,
+            self, form: AppointmentBookingForm,
     ) -> None:
-        token = booking_service._booking_for_unlogged_in_user(form)
+        token = self.service._booking_for_unlogged_in_user(form)
         assert token
 
     @pytest.mark.parametrize(
         "appointment_form_data", ["booking_form"], indirect=True
     )
     def test__booking_for_unexistent_unlogged_in_user_succeed(
-            self,
-            booking_service: AppointmentBooking,
-            form: AppointmentBookingForm,
-            setup_test: SetUpTest,
+            self, form: AppointmentBookingForm, setup_test: SetUpTest,
     ) -> None:
-        token = booking_service._booking_for_unlogged_in_user(form)
+        token = self.service._booking_for_unlogged_in_user(form)
         assert token
         setup_test.delete_patient(form.phone)
 
@@ -115,12 +119,17 @@ class TestAppointmentBooking:
     )
     @pytest.mark.usefixtures("patient")
     def test__booking_for_unlogged_in_user_rollbacks_if_miss_matched(
-            self,
-            booking_service: AppointmentBooking,
-            form: AppointmentBookingForm
+            self, form: AppointmentBookingForm
     ) -> None:
         with pytest.raises(FormInputError):
-            booking_service._booking_for_unlogged_in_user(form)
+            self.service._booking_for_unlogged_in_user(form)
+
+    def test__check_user_is_logged_in_returns_none_if_unlogged_in(
+            self,
+    ) -> None:
+        patient_id = self.service._check_user_is_logged_in()
+        assert not patient_id
+
 
     @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
     @pytest.mark.parametrize(
@@ -128,27 +137,27 @@ class TestAppointmentBooking:
     )
     def test__create_appointment_entry_succeed(
             self,
-            booking_service: AppointmentBooking,
             patient: Patient,
             appointment_model: AppointmentBase
     ) -> None:
-        appointment = booking_service._create_appointment_entry(
+        appointment = self.service._create_appointment_entry(
             patient.id, appointment_model
         )
-        appointment_db = booking_service.crud.get(appointment.id)
-        assert appointment.model_dump() == appointment_db.model_dump()
+        appointment_db = self.service.crud.get(appointment.id)
+        result = appointment.model_dump(exclude=["created_at", "updated_at"])
+        expected = appointment_db.model_dump(exclude=["created_at", "updated_at"])
+        assert result == expected
 
     @pytest.mark.parametrize(
         "appointment_form_data", ["booking_form"], indirect=True
     )
     def test__create_appointment_entry_fails_for_unexisting_patient(
             self,
-            booking_service: AppointmentBooking,
             uuid_bytes: bytes,
             appointment_model: AppointmentBase
     ) -> None:
         with pytest.raises(IntegrityError):
-            booking_service._create_appointment_entry(
+            self.service._create_appointment_entry(
                 uuid_bytes, appointment_model
             )
 

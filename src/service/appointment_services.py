@@ -2,7 +2,7 @@ from datetime import date, time, timedelta
 from typing import override
 
 from sqlmodel import Session
-from fastapi import Depends
+from fastapi import Depends, Request
 
 from logger.setup import get_logger
 from exceptions.exc import DataDoesNotMatch, FormInputError, UnauthorizedError
@@ -17,26 +17,17 @@ from service.patient_services import PatientService
 from data.connections import MySQLConnection
 from data.base_data import BaseCRUD
 from data.sql_models import Appointment, ServiceToAppointment
+from data.appointment_data import AppointmentCRUD
 
 type AppointmentSchedule = dict[date, set[time]]
 type AppointmentTimes = set[tuple[date, time]]
-
-
-class BaseAppointmentService(BaseService):
-    def _check_user_is_logged_in(self, cookies: dict[str, str]) -> str | None:
-        try:
-            patient_id = AuthService(self.session).authorize(cookies)
-        except UnauthorizedError:
-            return None
-        else:
-            return patient_id
 
 
 class BaseAppointmentServiceWithCRUD(BaseService):
     @override
     def __init__(self, session: Session) -> None:
         super().__init__(session)
-        self.crud = BaseCRUD(session, Appointment, AppointmentInner)
+        self.crud = AppointmentCRUD(session)
 
 
 class AppointmentShceduleDataConstructor:
@@ -123,19 +114,28 @@ class AppointmentShceduleDataConstructor:
             self.schedule[self.today_iso] = sorted(list(self.free_hours))
 
 
-class AppointmentBooking(
-        BaseAppointmentServiceWithCRUD, BaseAppointmentService
-):
-    def book(
-            self, cookies: dict[str, str], form: AppointmentBookingForm
-    ) -> str:
+class AppointmentBooking(BaseAppointmentServiceWithCRUD):
+    @override
+    def __init__(self, session: Session, request: Request) -> None:
+        super().__init__(session)
+        self.cookies = request.cookies
+
+    def book(self, form: AppointmentBookingForm) -> str:
         """
         Initial method which starts appointment booking process
         """
-        patient_id = self._check_user_is_logged_in(cookies)
+        patient_id = self._check_user_is_logged_in()
         if patient_id:
             return self._booking_for_logged_in_user()
         return self._booking_for_unlogged_in_user(form)
+
+    def _check_user_is_logged_in(self) -> str | None:
+        try:
+            patient_id = AuthService(self.session).authorize(self.cookies)
+        except UnauthorizedError:
+            return None
+        else:
+            return patient_id
 
     def _booking_for_logged_in_user(self) -> None:
         pass
@@ -214,9 +214,10 @@ class AppointmentJWTTokenService(BaseAppointmentServiceWithCRUD):
 
 
 def get_appointment_booking(
+        request: Request,
         session: Session = Depends(MySQLConnection.get_session),
 ) -> AppointmentBooking:
-    return AppointmentBooking(session)
+    return AppointmentBooking(session, request)
 
 
 def get_appointment_jwt_token_service(
