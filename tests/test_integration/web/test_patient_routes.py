@@ -8,8 +8,7 @@ from pydantic import BaseModel
 from logger.setup import get_logger
 from main import app
 from model.patient_models import PatientCreate
-from model.appointment_models import AppointmentOuter
-from model.form_models import RescheduleAppointmentForm
+from model.appointment_models import AppointmentOuter, AppointmentDateTime
 from service.auth_services import JWTTokenService
 from data.base_data import BaseSQLModel
 from data.sql_models import Patient
@@ -42,6 +41,13 @@ def converted_appointment(
 def patient_public(patient: Patient) -> PatientCreate:
     patient_public = PatientCreate(**patient.model_dump())
     return patient_public
+
+
+@pytest.fixture
+def patient_update_data(patient_update_info: PatientCreate) -> dict:
+    patient_dumped = patient_update_info.model_dump()
+    PatientCRUD.convert_birth_date_to_str(patient_dumped)
+    return patient_dumped
 
 
 class BasePatientEndpointTest(BaseTestEndpoint):
@@ -129,7 +135,7 @@ class TestPatientAppointmentInfo(BasePatientAppointmentTest):
 
     def test_update_is_succeed(
             self,
-            reschedule_appointment_form: RescheduleAppointmentForm
+            reschedule_appointment_form: AppointmentDateTime
     ) -> None:
         url = self._get_url(self.converted_appointment.id)
         response = self.client.get(url)
@@ -158,8 +164,21 @@ class TestPatientEndpointAnuthorized(BasePatientEndpointTest):
 class TestPatientInfoEndpoint(TestPatientEndpoint):
     base_url = "PatientInfo.info"
 
-    def test_get_displays_patient_info(
-            self, patient_public: PatientCreate
+    @pytest.fixture(autouse=True)
+    def _patient(self, patient_public: PatientCreate) -> None:
+        self.patient = patient_public
+
+    def test_get_displays_patient_info(self) -> None:
+        response = self.client.get(self._get_url())
+        self._info_is_displayed_correctly(self.patient, response)
+
+    def test_update_is_succeed(
+            self,
+            patient_update_data: dict,
+            patient_update_info: PatientCreate
     ) -> None:
         response = self.client.get(self._get_url())
-        self._info_is_displayed_correctly(patient_public, response)
+        self._info_is_displayed_correctly(self.patient, response)
+        response = self.client.put(self._get_url(), data=patient_update_data)
+        get_logger().debug(response.text)
+        self._info_is_displayed_correctly(patient_update_info, response)

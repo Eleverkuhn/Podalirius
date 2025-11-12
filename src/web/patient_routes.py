@@ -3,8 +3,8 @@ from fastapi.responses import RedirectResponse
 from fastapi_utils.cbv import cbv
 from starlette.templating import _TemplateResponse
 
-from logger.setup import get_logger
-from model.form_models import RescheduleAppointmentForm
+from model.appointment_models import AppointmentDateTime
+from model.form_models import PatientUpdateForm
 from web.base_routes import Prefixes, BaseRouter
 from service.patient_services import PatientPage, get_patient_page
 from data.sql_models import Status
@@ -55,7 +55,7 @@ class PatientAppointment(BaseRouter):
             self,
             request: Request,
             id: str,
-            form: RescheduleAppointmentForm,
+            form: AppointmentDateTime,
             patient_page: PatientPage = Depends(get_patient_page)
     ) -> RedirectResponse:
         appointment_id = self._convert_appointment_id(id)
@@ -103,6 +103,17 @@ class PatientInfo(BaseRouter):
 
 
     @patient_info_router.put(
-        "/", name="info", status_code=status.HTTP_200_OK)
-    def update(self) -> None:
-        pass
+        "/", name="info", status_code=status.HTTP_200_OK
+    )
+    def update(
+            self,
+            request: Request,
+            form: PatientUpdateForm = Depends(PatientUpdateForm.as_form),
+            patient_page: PatientPage = Depends(get_patient_page)
+    ) -> RedirectResponse:
+        patient_page.update_info(form)
+        url = request.app.url_path_for("PatientInfo.info")
+        response = RedirectResponse(
+            url=url, status_code=status.HTTP_303_SEE_OTHER
+        )
+        return response

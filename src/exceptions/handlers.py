@@ -28,6 +28,7 @@ class BaseExcHandler(BaseRouter):
             self.request.url_for("Login.form").path: "login.html",
             self.request.url_for("VerifyCode.form").path: "verify_login.html",
             self.request.url_for("Appointment.send_form").path: "appointment_new.html",
+            self.request.url_for("PatientInfo.info").path: "my_info.html"
         }
 
 
@@ -62,6 +63,8 @@ class RequestValidationErrorHandler(BaseExcHandler):
             for error in
             exc.errors()
         }
+        get_logger().debug(errors)
+        print(f"ERRORS: {errors}")
         return self.template.TemplateResponse(
             self.url_path_to_template.get(self.request.url.path),
             {

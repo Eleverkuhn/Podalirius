@@ -12,8 +12,7 @@ from utils import read_fixture
 from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
-from model.appointment_models import AppointmentOuter
-from model.form_models import RescheduleAppointmentForm
+from model.appointment_models import AppointmentOuter, AppointmentDateTime
 from service.auth_services import JWTTokenService, OTPCodeService
 from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
@@ -236,8 +235,20 @@ def doctor(
 
 
 @pytest.fixture
-def reschedule_appointment_form() -> RescheduleAppointmentForm:
+def reschedule_appointment_form() -> AppointmentDateTime:
     current = datetime.now().replace(microsecond=0)
     current_date, current_time = current.date(), current.time()
-    form = RescheduleAppointmentForm(date=current_date, time=current_time)
+    form = AppointmentDateTime(date=current_date, time=current_time)
     return form
+
+
+@pytest.fixture
+def patient_update_info(patient: Patient) -> PatientCreate:
+    update_data = {"phone": "8888888888", "last_name": "updated"}
+    update_info = PatientCreate(
+        first_name=patient.first_name,
+        middle_name=patient.middle_name,
+        birth_date=patient.birth_date,
+        **update_data
+    )
+    return update_info

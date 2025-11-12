@@ -70,12 +70,34 @@ class AppointmentBookingForm(AppointmentBase, PatientCreate):
             raise RequestValidationError(exc.errors())
 
 
-class RescheduleAppointmentForm(AppointmentDateTime):
+class PatientUpdateForm(PatientCreate):
     @classmethod
     def as_form(
-            cls, date: date = Form(...), time: time = Form(...)
-    ) -> "RescheduleAppointmentForm":
+            cls,
+            last_name: str = Form(...),
+            middle_name: str = Form(...),
+            first_name: str = Form(...),
+            birth_date: date = Form(...),
+            phone: str = Form(...),
+    ) -> "PatientUpdateForm":
         try:
-            return cls(date=date, time=time)
+            return cls(
+                last_name=last_name,
+                middle_name=middle_name,
+                first_name=first_name,
+                birth_date=birth_date,
+                phone=phone
+            )
         except ValidationError as exc:
             raise RequestValidationError(exc.errors())
+
+
+# class RescheduleAppointmentForm(AppointmentDateTime):  # TODO: remove this
+#     @classmethod
+#     def as_form(
+#             cls, date: date = Form(...), time: time = Form(...)
+#     ) -> "RescheduleAppointmentForm":
+#         try:
+#             return cls(date=date, time=time)
+#         except ValidationError as exc:
+#             raise RequestValidationError(exc.errors())

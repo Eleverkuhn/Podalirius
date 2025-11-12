@@ -2,9 +2,39 @@
 
 {% block content %}
 
-<h2>Patient Info</h2>
+<div id="patient-container" data-api-url="{{ request.url_for('PatientInfo.info') }}">
 
-{% from "macros.html" import display_info %}
-{{ display_info(patient) }}
+  <h2>Patient Info</h2>
 
+  {% if patient %}
+    {% from "macros.html" import display_info %}
+    {{ display_info(patient) }}
+  {% endif %}
+
+  <form id="update-patient-form">
+
+    {% if patient %}
+      {% for key, value in patient.model_dump().items() %}
+        <label>{{ key }}</label>
+        <input type="text" name="{{ key }}" value="{{ value }}" required>
+      {% endfor %}
+    {% endif %}
+
+    {% if errors %}
+      {% for key, value in form.items() %}
+        <label>{{ key }}</label>
+        <input type="text" name="{{ key }}" value="{{ value }}" required>
+        <small>{{ errors.get(key) }}</small>
+      {% endfor %}
+    {% endif %}
+
+    <button type="submit">Update</button>
+  </form>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='update_patient_info.js') }}" defer></script>
 {% endblock %}

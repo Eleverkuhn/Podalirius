@@ -6,8 +6,7 @@ from sqlmodel import Session
 from logger.setup import get_logger
 from exceptions.exc import AppointmentNotFound
 from model.patient_models import PatientCreate
-from model.appointment_models import AppointmentOuter
-from model.form_models import RescheduleAppointmentForm
+from model.appointment_models import AppointmentOuter, AppointmentDateTime
 from service.patient_services import (
     PatientService, PatientPage, PatientDataConstructor
 )
@@ -106,8 +105,13 @@ class TestPatientPage(BasePatientPageTest):
         with pytest.raises(AppointmentNotFound):
             self.patient_page.get_appointment(0)
 
-    def test_get_patient_info(self) -> None:
-        pass
+    def test_update_info_succeed(
+            self, session: Session, patient_update_info: PatientCreate
+    ) -> None:
+        self.patient_page.update_info(patient_update_info)
+        updated_phone = patient_update_info.phone
+        updated_patient_page = PatientPage(session, self.patient_page.patient.id)
+        assert updated_patient_page.patient.phone == updated_phone
 
 
 @pytest.mark.parametrize("appointment", [0], indirect=True)
@@ -130,7 +134,7 @@ class TestPatientPageSingleAppointment(BasePatientPageTest):
     def test_reschedule_appointment_succed(
             self,
             appointment: Appointment,
-            reschedule_appointment_form: RescheduleAppointmentForm
+            reschedule_appointment_form: AppointmentDateTime
     ) -> None:
         appointment_date, appointment_time = appointment.date, appointment.time
         self.patient_page.reschedule_appointment(

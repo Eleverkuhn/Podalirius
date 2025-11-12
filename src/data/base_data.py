@@ -3,8 +3,6 @@ from datetime import datetime
 from pydantic import ConfigDict, BaseModel
 from sqlmodel import SQLModel, Field, Session, select
 
-# from model.base_models import BaseModel
-
 
 class FieldDefault:
     SERVICE_TITLE_MAX_LENGHT = 75
