@@ -2,17 +2,18 @@ from datetime import date, time, timedelta
 from typing import override
 
 from sqlmodel import Session
-from fastapi import Depends, Request
+from fastapi import Depends, Request, status
+from fastapi.responses import RedirectResponse
 
 from logger.setup import get_logger
-from exceptions.exc import DataDoesNotMatch, FormInputError, UnauthorizedError
+from exceptions.exc import DataDoesNotMatch, FormInputError
 from model.form_models import AppointmentBookingForm
 from model.patient_models import PatientOuter
 from model.appointment_models import (
     AppointmentInner, AppointmentCreate
 )
 from service.base_services import BaseService
-from service.auth_services import AuthService, JWTTokenService
+from service.auth_services import JWTTokenService
 from service.patient_services import PatientService
 from data.connections import MySQLConnection
 from data.base_data import BaseCRUD
@@ -118,39 +119,17 @@ class AppointmentBooking(BaseAppointmentServiceWithCRUD):
     @override
     def __init__(self, session: Session, request: Request) -> None:
         super().__init__(session)
-        self.cookies = request.cookies
+        self.request = request
 
-    def book(self, form: AppointmentBookingForm) -> str:
-        """
-        Initial method which starts appointment booking process
-        """
-        patient_id = self._check_user_is_logged_in()
-        if patient_id:
-            return self._booking_for_logged_in_user()
-        return self._booking_for_unlogged_in_user(form)
-
-    def _check_user_is_logged_in(self) -> str | None:
-        try:
-            patient_id = AuthService(self.session).authorize(self.cookies)
-        except UnauthorizedError:
-            return None
-        else:
-            return patient_id
-
-    def _booking_for_logged_in_user(self) -> None:
-        pass
-
-    def _booking_for_unlogged_in_user(
-            self, form: AppointmentBookingForm
-    ) -> str:
+    def exec(self, form: AppointmentBookingForm) -> RedirectResponse:
         try:
             appointment = self._create_appointment(form)
         except DataDoesNotMatch:
             self._rollback()
         else:
             self._finish_transaction(form.service_id, appointment.id)
-            token = JWTTokenService().create(appointment.id)
-            return token
+            response = self._construct_response(appointment.id)
+            return response
 
     def _create_appointment(
             self, form: AppointmentBookingForm
@@ -201,6 +180,45 @@ class AppointmentBooking(BaseAppointmentServiceWithCRUD):
                 "You are trying to book an appointment for existing user with"
                 "wrong data."
             ))
+
+    def _construct_response(self, appointment_id: int) -> RedirectResponse:
+        if self.request.cookies:
+            response = self._construct_response_for_logged_in_patient(
+                appointment_id
+            )
+        else:
+            response = self._construct_response_for_unlogged_in_patient(
+                appointment_id
+            )
+        return response
+
+    def _construct_response_for_logged_in_patient(
+            self, appointment_id: int
+    ) -> RedirectResponse:
+        response = RedirectResponse(
+            url=self.request.app.url_path_for(
+                "PatientAppointment.appointment",
+                id=appointment_id
+            ),
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+        return response
+
+    def _construct_response_for_unlogged_in_patient(
+            self, appointment_id: int
+    ) -> RedirectResponse:
+        appointment_token = JWTTokenService().create(appointment_id)
+        url = self._construct_appointment_info_url(appointment_token)
+        response = RedirectResponse(
+            url=url, status_code=status.HTTP_303_SEE_OTHER
+        )
+        return response
+
+    def _construct_appointment_info_url(self, appointment_token: str) -> str:
+        url = self.request.app.url_path_for("Appointment.info")
+        query_param = f"?token={appointment_token}"
+        modified_url = "".join([url, query_param])
+        return modified_url
 
 
 class AppointmentJWTTokenService(BaseAppointmentServiceWithCRUD):

@@ -8,6 +8,7 @@ from typing import override
 from fastapi import Depends, Request
 from sqlmodel import Session, Sequence
 
+from exceptions.exc import UnauthorizedError
 from service.base_services import BaseService
 from service.auth_services import AuthService
 from service.patient_services import PatientDataConstructor
@@ -44,8 +45,12 @@ class AppointmentBookingFormDataConstructor(BaseService):
         return content
 
     def _get_patient_data(self) -> dict:
-        patient_id = self.auth_service.authorize(self.cookies)
-        patient_data = self._construct_patient_data(patient_id)
+        try:
+            patient_id = self.auth_service.authorize(self.cookies)
+        except UnauthorizedError:
+            patient_data = {}
+        else:
+            patient_data = self._construct_patient_data(patient_id)
         return patient_data
 
     def _construct_patient_data(self, patient_id: str) -> dict:

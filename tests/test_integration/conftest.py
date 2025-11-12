@@ -9,6 +9,7 @@ import pytest
 from sqlmodel import Session, Sequence
 
 from utils import read_fixture
+from main import app
 from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
@@ -29,6 +30,7 @@ appointment_status = ["pending", "completed", "cancelled"]  # Is used for parame
 
 class MockRequest:
     def __init__(self, cookies: dict[str, str] | dict = {}) -> None:
+        self.app = app
         self.cookies = cookies
 
 

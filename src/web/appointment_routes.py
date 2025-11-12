@@ -42,17 +42,10 @@ class Appointment(BaseRouter):
     )
     def create_appointment(
             self,
-            request: Request,
             form: AppointmentBookingForm = Depends(AppointmentBookingForm.as_form),
             service: AppointmentBooking = Depends(get_appointment_booking)
     ) -> RedirectResponse:
-        token = service.book(form)
-        url = request.app.url_path_for("Appointment.info")
-        modified = "".join([url, f"?token={token}"])
-        response = RedirectResponse(
-            url=modified,
-            status_code=status.HTTP_303_SEE_OTHER
-        )
+        response = service.exec(form)
         return response
 
     @router.get("/view", name="info", status_code=status.HTTP_200_OK)

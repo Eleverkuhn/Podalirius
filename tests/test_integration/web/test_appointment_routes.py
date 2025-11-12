@@ -11,7 +11,7 @@ from model.form_models import AppointmentBookingForm
 from model.appointment_models import AppointmentInner
 from data.patient_data import Patient
 from tests.test_integration.web.conftest import (
-    BaseTestEndpoint, EndpointWithForm
+    BaseTestEndpoint, EndpointWithForm, BaseProtectedEndpointTest
 )
 
 
@@ -95,6 +95,25 @@ class TestAppointmentEndpointSendForm(EndpointWithForm):
             "wrong data."
         )
         assert err_msg in response.text
+        setup_test.delete_patient(appointment_form_data.get("phone"))
+
+
+@pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+class TestAppointmentSendFormAuthorized(BaseProtectedEndpointTest):
+    base_url = "Appointment.send_form"
+
+    @pytest.mark.parametrize(
+        "appointment_form_data", ["booking_form"], indirect=True
+    )
+    def test_booking_for_logged_in_redirects_to_appointment_info(
+            self, appointment_form_data: dict, setup_test: SetUpTest
+    ) -> None:
+        response = self.client.post(
+            self._get_url(),
+            data=appointment_form_data,
+            follow_redirects=False
+        )
+        assert response.status_code == status.HTTP_303_SEE_OTHER
         setup_test.delete_patient(appointment_form_data.get("phone"))
 
 

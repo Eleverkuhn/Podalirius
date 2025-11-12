@@ -6,7 +6,6 @@ from fastapi.testclient import TestClient
 from pydantic import BaseModel
 
 from logger.setup import get_logger
-from main import app
 from model.patient_models import PatientCreate
 from model.appointment_models import AppointmentOuter, AppointmentDateTime
 from service.auth_services import JWTTokenService
@@ -14,12 +13,9 @@ from data.base_data import BaseSQLModel
 from data.sql_models import Patient
 from data.patient_data import PatientCRUD
 from tests.test_integration.conftest import BasePatientTest, appointment_status
-from tests.test_integration.web.conftest import BaseTestEndpoint
-
-
-@pytest.fixture
-def authorized_client(access_token: str) -> TestClient:
-    return TestClient(app, cookies={"access_token": access_token})
+from tests.test_integration.web.conftest import (
+    BaseTestEndpoint, BaseProtectedEndpointTest
+)
 
 
 @pytest.fixture
@@ -63,12 +59,11 @@ class BasePatientEndpointTest(BaseTestEndpoint):
 
 
 class BaseAuthorizedPatientEndpointTest(
-        BasePatientEndpointTest, BasePatientTest
+        BaseProtectedEndpointTest,
+        BasePatientEndpointTest,
+        BasePatientTest
 ):
-    @override
-    @pytest.fixture(autouse=True)
-    def setup_method(self, authorized_client: TestClient) -> None:
-        self.client = authorized_client
+    pass
 
 
 @pytest.mark.parametrize("appointments_data", ["patient_1"], indirect=True)

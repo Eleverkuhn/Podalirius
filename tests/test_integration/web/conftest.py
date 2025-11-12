@@ -1,3 +1,5 @@
+from typing import override
+
 import pytest
 from bs4 import BeautifulSoup
 from fastapi.testclient import TestClient
@@ -13,6 +15,11 @@ from data.base_data import BaseSQLModel, BaseCRUD
 @pytest.fixture(autouse=True)
 def client() -> TestClient:
     return TestClient(app)
+
+
+@pytest.fixture
+def authorized_client(access_token: str) -> TestClient:
+    return TestClient(app, cookies={"access_token": access_token})
 
 
 class BaseTestEndpoint:
@@ -48,9 +55,13 @@ class BaseTestEndpoint:
     def _get_default_url(self) -> str:
         url = self.client.app.url_path_for(self.base_url)
         return url
-        # if name:
-        #     return self.client.app.url_path_for(name)
-        # return self.client.app.url_path_for(self.base_url)
+
+
+class BaseProtectedEndpointTest(BaseTestEndpoint):
+    @override
+    @pytest.fixture(autouse=True)
+    def setup_method(self, authorized_client: TestClient) -> None:
+        self.client = authorized_client
 
 
 class EndpointWithForm(BaseTestEndpoint):
