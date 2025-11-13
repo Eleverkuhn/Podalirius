@@ -6,12 +6,12 @@ Built with **FastAPI**, **MySQL** and **Redis**, featuring JWT-based authenticat
 ---
 
 ## Tech Stack
-**Backend**: Python, FastAPI, SQLModel, MySQL, Redis
-**Frontend**: HTML, Jinja2, JavaScript (vanilla)
-**Validation**: Pydantic
-**Authentication**: jose
-**Testing**: Pytest, FastAPI test client and HTTPie
-**Deployment**: Docker
+- **Backend**: Python, FastAPI, SQLModel, MySQL, Redis
+- **Frontend**: HTML, Jinja2, JavaScript (vanilla)
+- **Validation**: Pydantic
+- **Authentication**: jose
+- **Testing**: Pytest, FastAPI test client and HTTPie
+- **Deployment**: Docker
 
 ### Libraries
 - Redis
