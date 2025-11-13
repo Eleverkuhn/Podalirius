@@ -32,12 +32,6 @@ def access_token(id: int) -> str:
 
 
 @pytest.fixture
-def mock_request(access_token: str) -> MockRequest:
-    mock_request = MockRequest(cookies={"access_token": access_token})
-    return mock_request
-
-
-@pytest.fixture
 def mock_request_with_expired_cookies(jwt_token_expired: str) -> MockRequest:
     mock_request = MockRequest(cookies={"access_token": jwt_token_expired})
     return mock_request

@@ -3,4 +3,7 @@
 {% block content %}
 <h2>Overview</h2>
 <p>There should be placed overview information about the clinic</p>
+<a href="{{ request.url_for('Specialty.all') }}">Specialties</a>
+<a href="{{ request.url_for('Appointment.get_form') }}">Book Appointment</a>
+<a href="{{ request.url_for('Login.form') }}">Login<a/>
 {% endblock %}

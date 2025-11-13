@@ -17,5 +17,5 @@ class Main(BaseRouter):
     )
     def index(self, request: Request) -> _TemplateResponse:
         return self.template.TemplateResponse(
-            {"request": request}, "index.html"
+            "index.html", {"request": request}
         )
