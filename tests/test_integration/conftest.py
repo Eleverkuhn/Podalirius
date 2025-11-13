@@ -19,7 +19,7 @@ from service.appointment_services import AppointmentJWTTokenService
 from service.patient_services import PatientService
 from data.base_data import BaseSQLModel, BaseCRUD
 from data.sql_models import (
-    Appointment, Doctor, ServiceToAppointment, Specialty
+    Appointment, Doctor, ServiceToAppointment, Specialty, Service
 )
 from data.auth_data import OTPCodeRedis
 from data.patient_data import Patient, PatientCRUD
@@ -288,3 +288,21 @@ def specialty(
 ) -> Specialty:
     specialty = specialties[request.param]
     return specialty
+
+
+@pytest.fixture
+def all_services(session: Session) -> Sequence[Service]:
+    crud = BaseCRUD(session, Service, Service)
+    services = crud.get_all()
+    return services
+
+
+@pytest.fixture
+def lab_tests(all_services: Sequence[Service]) -> list[Service]:
+    lab_tests = [
+        service
+        for service
+        in all_services
+        if service.type.id == 3
+    ]
+    return lab_tests

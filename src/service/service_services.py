@@ -1,8 +1,24 @@
-from decimal import Decimal
+from fastapi import Depends
+from sqlmodel import Sequence, Session
 
-from sqlmodel import Sequence
-
+from data.connections import MySQLConnection
 from data.sql_models import Doctor, Service
+from data.service_data import ServiceCRUD, PriceCalculator
+
+
+class ServicePage:
+    def __init__(self, session: Session) -> None:
+        self.session = session
+        self.crud = ServiceCRUD(session)
+
+    def get_lab_tests(self) -> list[Service]:
+        lab_tests = self.crud.get_lab_tests()
+        sorted_lab_tests = self._sort_by_price(lab_tests)
+        return sorted_lab_tests
+
+    def _sort_by_price(self, lab_tests: list[Service]) -> list[Service]:
+        sorted_lab_tests = sorted(lab_tests, key=lambda s: s.price)
+        return sorted_lab_tests
 
 
 class ServiceDataConstructor:
@@ -32,18 +48,8 @@ class ServiceDataConstructor:
         self.dumped_service.update({"price": str(price)})
 
 
-class PriceCalculator:
-    def __init__(self, doctor: Doctor, service: Service) -> None:
-        self.doctor = doctor
-        self.service = service
-
-    def exec(self) -> Decimal:
-        doctor_markup = self._get_doctor_to_service_markup()
-        price = self.service.type.price + self.service.markup + doctor_markup
-        return price
-
-    def _get_doctor_to_service_markup(self) -> Decimal:
-        for link in self.service.service_links:
-            if (link.doctor_id == self.doctor.id) and \
-                    (link.service_id == self.service.id):
-                return link.markup
+def get_service_page(
+        session: Session = Depends(MySQLConnection.get_session)
+) -> ServicePage:
+    service_page = ServicePage(session)
+    return service_page

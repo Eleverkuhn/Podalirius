@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<ul>
+  {% for lab_test in lab_tests %}
+    <li>
+      {{ lab_test.title }}: {{ lab_test.price }}
+    </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

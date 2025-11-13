@@ -168,6 +168,11 @@ class Service(BaseSQLModel, table=True):
         }
     )
 
+    @property
+    def price(self) -> Decimal:
+        price = self.type.price + self.markup
+        return price
+
 
 class Status(str, Enum):
     PENDING = "pending"

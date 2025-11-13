@@ -1,10 +1,13 @@
 from pathlib import Path
 
 import pytest
+from sqlmodel import Session
 
 from utils import read_fixture
-from service.service_services import ServiceDataConstructor, PriceCalculator
-from data.sql_models import Doctor
+from service.service_services import (
+    ServiceDataConstructor, PriceCalculator, ServicePage
+)
+from data.sql_models import Doctor, Service
 
 
 @pytest.fixture
@@ -20,6 +23,23 @@ def doctors_to_services_data(
     return content[request.param]
 
 
+@pytest.fixture
+def service_page(session: Session) -> ServicePage:
+    service_page = ServicePage(session)
+    return service_page
+
+
+class TestServicePage:
+    def test_get_lab_tests(
+            self, lab_tests: list[Service], service_page: ServicePage
+    ) -> None:
+        lab_tests = sorted(lab_tests, key=lambda s: s.price)
+        lab_tests_db = service_page.get_lab_tests()
+        for lab_test_db, lab_test in zip(lab_tests_db, lab_tests):
+            assert lab_test_db.title == lab_test.title
+            assert lab_test_db.price == int(lab_test.price)
+
+
 @pytest.mark.parametrize("doctor", [0], indirect=True)
 class BaseServiceTest:
     @pytest.fixture(autouse=True)
@@ -28,7 +48,6 @@ class BaseServiceTest:
 
 
 class TestServiceDataConstructor(BaseServiceTest):
-
     @pytest.fixture(autouse=True)
     def _constructor(self, doctor: Doctor) -> None:
         self.constructor = ServiceDataConstructor(doctor)
