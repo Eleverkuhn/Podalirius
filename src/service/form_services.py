@@ -30,7 +30,7 @@ class AppointmentBookingFormDataConstructor(BaseService):
         self.appointment_crud = BaseCRUD(session, Appointment, Appointment)
         self.specialty_crud = BaseCRUD(session, Specialty, Specialty)
         self.cookies: dict[str, str] = request.cookies
-        self.auth_service = AuthService(session)
+        self.auth_service = AuthService(session, request)
 
     def exec(self) -> dict:
         """Initial method"""
@@ -46,7 +46,7 @@ class AppointmentBookingFormDataConstructor(BaseService):
 
     def _get_patient_data(self) -> dict:
         try:
-            patient_id = self.auth_service.authorize(self.cookies)
+            patient_id = self.auth_service.authorize()
         except UnauthorizedError:
             patient_data = {}
         else:

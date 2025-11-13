@@ -5,7 +5,7 @@ from pydantic import Field, ValidationError
 from fastapi import Form
 from fastapi.exceptions import RequestValidationError
 
-from model.appointment_models import AppointmentDateTime, AppointmentBase
+from model.appointment_models import AppointmentBase
 from model.patient_models import PatientCreate, Phone
 
 
@@ -90,14 +90,3 @@ class PatientUpdateForm(PatientCreate):
             )
         except ValidationError as exc:
             raise RequestValidationError(exc.errors())
-
-
-# class RescheduleAppointmentForm(AppointmentDateTime):  # TODO: remove this
-#     @classmethod
-#     def as_form(
-#             cls, date: date = Form(...), time: time = Form(...)
-#     ) -> "RescheduleAppointmentForm":
-#         try:
-#             return cls(date=date, time=time)
-#         except ValidationError as exc:
-#             raise RequestValidationError(exc.errors())

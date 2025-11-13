@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from time import sleep
 
 import pytest
@@ -7,8 +7,11 @@ from fastapi import Response
 from jose.exceptions import ExpiredSignatureError
 
 from logger.setup import get_logger
-from exceptions.exc import OTPCodeHashDoesNotMatch, UnauthorizedError
+from exceptions.exc import (
+    OTPCodeHashDoesNotMatch, UnauthorizedError, AccessTokenExpired
+)
 from service.auth_services import JWTTokenService, AuthService, OTPCodeService
+from tests.conftest import MockRequest
 
 
 @pytest.fixture
@@ -23,55 +26,83 @@ def jwt_token_expired(jwt_token_service: JWTTokenService, id: int) -> str:
 
 
 @pytest.fixture
-def auth_service() -> AuthService:
-    return AuthService(None)
-
-
-@pytest.fixture
-def access_token(auth_service: AuthService, id: int) -> str:
-    token = JWTTokenService(auth_service.access_exp_time).create(id)
+def access_token(id: int) -> str:
+    token = JWTTokenService(AuthService.access_exp_time).create(id)
     return token
 
 
+@pytest.fixture
+def mock_request(access_token: str) -> MockRequest:
+    mock_request = MockRequest(cookies={"access_token": access_token})
+    return mock_request
+
+
+@pytest.fixture
+def mock_request_with_expired_cookies(jwt_token_expired: str) -> MockRequest:
+    mock_request = MockRequest(cookies={"access_token": jwt_token_expired})
+    return mock_request
+
+
+@pytest.fixture
+def auth_service_no_cookies(
+        mock_request_with_no_cookies: MockRequest
+) -> AuthService:
+    service = AuthService(session=None, request=mock_request_with_no_cookies)
+    return service
+
+
+@pytest.fixture
+def auth_service_with_expired_token(
+        mock_request_with_expired_cookies: MockRequest
+) -> AuthService:
+    service = AuthService(
+        session=None, request=mock_request_with_expired_cookies
+    )
+    return service
+
+
 class TestAuthService:
-    def test_authorize_returns_patient_id(
-            self, auth_service: AuthService, access_token: str, id: int
-    ) -> None:
-        patient_id = auth_service.authorize({"access_token": access_token})
+    @pytest.fixture(autouse=True)
+    def _service(self, auth_service: AuthService) -> None:
+        self.service = auth_service
+
+    def test_authorize_returns_patient_id(self, id: int) -> None:
+        patient_id = self.service.authorize()
         assert patient_id == id
 
     def test__create_auth_token(self, uuid_str: str) -> None:
-        service = AuthService(None)
-        assert service._create_auth_tokens(uuid_str)
+        assert self.service._create_auth_tokens(uuid_str)
 
-    def test__get_access_token_raises_http_exc(
-            self, auth_service: AuthService
+    def test__get_access_token_raises_access_token_expired_err(
+            self, auth_service_no_cookies: AuthService
     ) -> None:
         with pytest.raises(UnauthorizedError):
-            auth_service._get_access_token({"access_token": None})
+            auth_service_no_cookies._get_access_token()
+
+    def test__check_refresh_token_raises_unauth_err(
+            self, auth_service_no_cookies: AuthService
+    ) -> None:
+        with pytest.raises(UnauthorizedError):
+            auth_service_no_cookies._check_refresh_token()
 
     @pytest.mark.parametrize(
         "jwt_token_service", [timedelta(seconds=1)], indirect=True
     )
     def test__get_token_payload_raises_unauth_err_if_expired(
-            self, auth_service: AuthService, jwt_token_expired: str
+            self, auth_service_with_expired_token: AuthService
     ) -> None:
         sleep(2)
-        with pytest.raises(UnauthorizedError):
-            auth_service._get_token_payload(jwt_token_expired)
+        with pytest.raises(AccessTokenExpired):
+            auth_service_with_expired_token._get_access_token_payload()
 
-    def test__get_patient_id_raises_unauth_err_if_no_id(
-            self, auth_service: AuthService
-    ) -> None:
+    def test__get_patient_id_raises_unauth_err_if_no_id(self) -> None:
         invalid_payload = {"patient_id": None, "sub": None}
         with pytest.raises(UnauthorizedError):
-            auth_service._get_patient_id(invalid_payload)
+            self.service._get_patient_id(invalid_payload)
 
-    def test__set_http_only_cookie(
-            self, auth_service: AuthService, mock_response: Response
-    ) -> None:
+    def test__set_http_only_cookie(self, mock_response: Response) -> None:
         token = "123456"
-        auth_service._set_http_only_cookie(token, mock_response, "1", 120)
+        self.service._set_http_only_cookie(token, mock_response, "1", 120)
         cookie = mock_response.headers.get("set-cookie")
         assert token in cookie
 

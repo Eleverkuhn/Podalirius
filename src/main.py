@@ -23,6 +23,7 @@ app.mount("/static", StaticFiles(directory=Config.static_dir), name="static")
 app.include_router(appointment_routes.router)
 app.include_router(auth_routes.login_router)
 app.include_router(auth_routes.verify_code_router)
+app.include_router(auth_routes.refresh_router)
 app.include_router(doctor_routes.router)
 app.include_router(index_routes.router)
 app.include_router(patient_routes.patient_appointments_router)
@@ -38,4 +39,7 @@ app.add_exception_handler(
 )
 app.add_exception_handler(
     exc.UnauthorizedError, handlers.UnauthorizedErrorHandler()
+)
+app.add_exception_handler(
+    exc.AccessTokenExpired, handlers.AccessTokenExpiredHandler()
 )

@@ -1,13 +1,21 @@
+import re
+from datetime import timedelta
+from time import sleep
 from typing import override
 
 import pytest
 from bs4 import BeautifulSoup
 from fastapi import status
+from fastapi.testclient import TestClient
 
 from logger.setup import get_logger
+from main import app
 from model.form_models import PhoneForm, OTPCodeForm
+from service.auth_services import AuthService
 from data.auth_data import OTPCodeRedis
-from tests.test_integration.web.conftest import (EndpointWithForm)
+from tests.test_integration.web.conftest import (
+    BaseTestEndpoint, EndpointWithForm
+)
 
 
 @pytest.fixture
@@ -36,6 +44,27 @@ def invalid_otp_code_data(otp_code_data: dict[str, str]) -> dict[str, str]:
 def mismatched_otp_code_data(otp_code_data: dict[str, str]) -> dict[str, str]:
     otp_code_data.update({"code": "000000"})
     return otp_code_data
+
+
+@pytest.fixture
+def cookies(
+        request: pytest.FixtureRequest,
+        auth_service: AuthService,
+        patient_str_id: str
+) -> dict[str, str]:
+    if hasattr(request, "param"):
+        AuthService.access_exp_time = request.param
+    cookies = {
+        "access_token": auth_service._create_access_token(patient_str_id),
+        "refresh_token": auth_service._create_refresh_token(patient_str_id)
+    }
+    return cookies
+
+
+@pytest.fixture
+def client_override(cookies: dict[str, str]) -> TestClient:
+    client = TestClient(app, cookies=cookies)
+    return client
 
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
@@ -117,6 +146,42 @@ class TestVerifyCodeEndpoint(EndpointWithForm):
 
     @pytest.mark.usefixtures("otp_code_db", "patient")
     def test_auth_succeed(self, otp_code_data: dict[str, str]) -> None:
+        get_logger().debug(f"Cookies: {self.client.cookies}")
         self.client.post(self._get_url(), data=otp_code_data)
         assert self.client.cookies.get("access_token")
         assert self.client.cookies.get("refresh_token")
+
+
+@pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+class TestRefreshEndpoint(BaseTestEndpoint):
+    base_url = "Refresh.refresh"
+
+    @override
+    @pytest.fixture(autouse=True)
+    def setup_method(self, client_override: TestClient) -> None:
+        self.client = client_override
+
+    @pytest.mark.parametrize("cookies", [timedelta(seconds=1)], indirect=True)
+    def test_get_redirected_to_refresh_if_access_token_expired(self) -> None:
+        sleep(2)
+        url = self._get_url(path="PatientAppointment.all")
+        response = self.client.get(url, follow_redirects=False)
+        assert response.headers.get("location") == f"{self._get_url()}?next={url}"
+        assert response.status_code == status.HTTP_303_SEE_OTHER
+
+    def test_refresh_updates_access_token(self) -> None:
+        old_access_token = self.client.cookies.get("access_token")
+        self.client.cookies.pop("access_token")
+        assert self.client.cookies.get("access_token") is None
+        new_access_token = self.client.cookies.get("access_token")
+        assert not new_access_token == old_access_token
+
+    @pytest.mark.parametrize("cookies", [timedelta(seconds=1)], indirect=True)
+    def test_refresh_redirects_to_url_from_where_it_was_called(self) -> None:
+        sleep(2)
+        original_url = self._get_url(path="PatientAppointment.all")
+        response = self.client.get(original_url, follow_redirects=False)
+        location = response.headers.get("location")
+        redirected_url = re.search(r"=(.*)", location)
+        assert redirected_url.group(1) == original_url
+        assert response.status_code == status.HTTP_303_SEE_OTHER

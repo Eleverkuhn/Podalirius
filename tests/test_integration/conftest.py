@@ -9,7 +9,6 @@ import pytest
 from sqlmodel import Session, Sequence
 
 from utils import read_fixture
-from main import app
 from model.form_models import OTPCodeForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate
@@ -24,16 +23,11 @@ from data.sql_models import (
 from data.auth_data import OTPCodeRedis
 from data.patient_data import Patient, PatientCRUD
 from utils import SetUpTest
+from tests.conftest import MockRequest
 
 type CreatedTestEntry = Generator[BaseSQLModel, None, None]
 
 appointment_status = ["pending", "completed", "cancelled"]  # Is used for parametrizing 'filtered_appointments' fixture
-
-
-class MockRequest:
-    def __init__(self, cookies: dict[str, str] | dict = {}) -> None:
-        self.app = app
-        self.cookies = cookies
 
 
 @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
@@ -266,12 +260,6 @@ def patient_update_info(patient: Patient) -> PatientCreate:
 @pytest.fixture
 def mock_request(cookies: dict[str, str]) -> MockRequest:
     mock_request = MockRequest(cookies)
-    return mock_request
-
-
-@pytest.fixture
-def mock_request_with_no_cookies() -> MockRequest:
-    mock_request = MockRequest()
     return mock_request
 
 

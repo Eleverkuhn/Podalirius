@@ -10,6 +10,7 @@ from utils import SetUpTest
 from model.form_models import OTPCodeForm
 from service.auth_services import AuthService, OTPCodeService
 from data.auth_data import OTPCodeRedis
+from tests.test_integration.conftest import MockRequest
 
 
 @pytest.fixture
@@ -19,40 +20,41 @@ def invalid_form(otp_code_form: OTPCodeForm) -> OTPCodeForm:
 
 
 @pytest.fixture
-def auth_service(session: Session) -> AuthService:
-    return AuthService(session)
+def auth_service(session: Session, mock_request: MockRequest) -> AuthService:
+    return AuthService(session, mock_request)
 
 
+@pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
+@pytest.mark.usefixtures("otp_code_db", "patient")
 class TestAuthService:
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    @pytest.mark.usefixtures("otp_code_db", "patient")
-    def test_auth_succeed_for_existing_patient(
-            self,
-            auth_service: AuthService,
-            otp_code_form: OTPCodeForm,
-            mock_response: Response
-    ) -> None:
-        auth_service.authenticate(otp_code_form, mock_response)
-        access_token, refresh_token = mock_response.headers.values()[1:]
+    @pytest.fixture(autouse=True)
+    def _service(self, auth_service: AuthService) -> None:
+        self.service = auth_service
+
+    @pytest.fixture(autouse=True)
+    def _form(self, otp_code_form: OTPCodeForm) -> None:
+        self.form = otp_code_form
+
+    @pytest.fixture(autouse=True)
+    def _mock_response(self, mock_response: Response) -> None:
+        self.mock_response = mock_response
+
+    def test_auth_succeed_for_existing_patient(self) -> None:
+        self.service.authenticate(self.form, self.mock_response)
+        access_token, refresh_token = self.mock_response.headers.values()[1:]
         assert "access_token" in access_token
         assert "refresh_token" in refresh_token
         get_logger().debug(access_token)
         get_logger().debug(refresh_token)
 
-    @pytest.mark.parametrize("patients_data", ["patient_1"], indirect=True)
-    @pytest.mark.usefixtures("otp_code_db")
     def test_auth_succeed_for_nonexistent_patient(
-            self,
-            auth_service: AuthService,
-            otp_code_form: OTPCodeForm,
-            mock_response: Response,
-            setup_test: SetUpTest,
+            self, setup_test: SetUpTest,
     ) -> None:
-        auth_service.authenticate(otp_code_form, mock_response)
-        access_token, refresh_token = mock_response.headers.values()[1:]
+        self.service.authenticate(self.form, self.mock_response)
+        access_token, refresh_token = self.mock_response.headers.values()[1:]
         assert "access_token" in access_token
         assert "refresh_token" in refresh_token
-        setup_test.delete_patient(otp_code_form.phone)
+        setup_test.delete_patient(self.form.phone)
 
 
 class TestOTPCodeService:

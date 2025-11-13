@@ -8,11 +8,12 @@ from sqlmodel import Session
 from logger.setup import get_logger
 from web.base_routes import BaseRouter, Prefixes
 from model.form_models import PhoneForm, OTPCodeForm
-from service.auth_services import AuthService, OTPCodeService
+from service.auth_services import AuthService, OTPCodeService, get_auth_service
 from data.connections import MySQLConnection
 
 login_router = APIRouter(prefix=f"{Prefixes.AUTH}/login")
 verify_code_router = APIRouter(prefix=f"{Prefixes.AUTH}/verify-code")
+refresh_router = APIRouter(prefix=f"{Prefixes.AUTH}/refresh")
 
 
 @cbv(login_router)
@@ -52,9 +53,7 @@ class Login(BaseRouter):
 
 @cbv(verify_code_router)
 class VerifyCode(BaseRouter):
-    @verify_code_router.get(
-        "/", status_code=status.HTTP_200_OK, name="form"
-    )
+    @verify_code_router.get("/", status_code=status.HTTP_200_OK, name="form")
     def get_form(self, request: Request) -> _TemplateResponse:
         content = {"request": request}
         return self.template.TemplateResponse("verify_login.html", content)
@@ -72,6 +71,22 @@ class VerifyCode(BaseRouter):
             url=request.app.url_path_for("PatientAppointment.all"),
             status_code=status.HTTP_303_SEE_OTHER
         )
-        AuthService(session).authenticate(form, response)
-        get_logger().debug(response.headers)
+        AuthService(session, request).authenticate(form, response)
+        return response
+
+
+@cbv(refresh_router)
+class Refresh(BaseRouter):
+    @refresh_router.get("/", status_code=status.HTTP_200_OK, name="refresh")
+    def refresh(
+            self,
+            request: Request,
+            auth: AuthService = Depends(get_auth_service)
+    ) -> RedirectResponse:
+        next_url = request.query_params.get("next")
+        get_logger().debug(request.cookies)
+        response = RedirectResponse(
+            url=next_url, status_code=status.HTTP_303_SEE_OTHER
+        )
+        auth.refresh_access_token(response)
         return response

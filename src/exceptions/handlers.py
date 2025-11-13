@@ -5,7 +5,9 @@ from fastapi.responses import RedirectResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.templating import Jinja2Templates
 
-from exceptions.exc import FormInputError, UnauthorizedError
+from exceptions.exc import (
+    FormInputError, UnauthorizedError, AccessTokenExpired
+)
 from logger.setup import get_logger
 from config import Config
 from web.base_routes import BaseRouter
@@ -74,3 +76,19 @@ class RequestValidationErrorHandler(BaseExcHandler):
             },
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
         )
+
+
+class AccessTokenExpiredHandler:
+    async def __call__(self, request: Request, exc: AccessTokenExpired):
+        response = RedirectResponse(
+            url=self._construct_url(request),
+            status_code=status.HTTP_303_SEE_OTHER
+        )
+        return response
+
+    def _construct_url(self, request: Request) -> str:
+        original_url = request.url.path
+        refresh_url = request.url_for("Refresh.refresh").path
+        combined_url = f"{refresh_url}?next={original_url}"
+        get_logger().debug(combined_url)
+        return combined_url

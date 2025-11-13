@@ -6,18 +6,20 @@ from datetime import datetime, timedelta, timezone
 from fastapi import Depends, Request
 from fastapi.responses import RedirectResponse
 from jose import jwt
-from jose.exceptions import ExpiredSignatureError, JWSSignatureError, JWTError
+from jose.exceptions import ExpiredSignatureError, JWTError
 from sqlmodel import Session
 
 from logger.setup import get_logger
 from exceptions.exc import (
-    FormInputError, OTPCodeHashDoesNotMatch, UnauthorizedError
+    FormInputError,
+    OTPCodeHashDoesNotMatch,
+    UnauthorizedError,
+    AccessTokenExpired
 )
 from model.form_models import PhoneForm
 from model.auth_models import OTPCode
 from model.patient_models import PatientCreate, PatientOuter
 from service.base_services import BaseService
-# from service.patient_services import PatientService
 from data.auth_data import OTPCodeRedis
 from data.connections import MySQLConnection
 
@@ -55,35 +57,75 @@ class AuthService(BaseService):
     access_exp_time = timedelta(minutes=15)
     refresh_exp_time = timedelta(days=7)
 
-    def authorize(self, cookies: dict) -> str:
-        access_token = self._get_access_token(cookies)
-        payload = self._get_token_payload(access_token)
+    def __init__(self, session: Session, request: Request) -> None:
+        super().__init__(session)
+        self.cookies = request.cookies
+
+    @property
+    def access_token(self) -> str:
+        access_token = self.cookies.get("access_token")
+        return access_token
+
+    @property
+    def refresh_token(self) -> str:
+        refresh_token = self.cookies.get("refresh_token")
+        return refresh_token
+
+    def refresh_access_token(self, response: RedirectResponse) -> None:
+        payload = self._check_refresh_token()
+        self._refresh(payload, response)
+
+    def authorize(self) -> str:
+        payload = self._get_access_token()
         patient_id = self._get_patient_id(payload)
         return patient_id
-
-    def refresh_access_token(self) -> None:
-        pass
 
     def authenticate(self, form: PhoneForm, response: RedirectResponse) -> None:
         if OTPCodeService().verify(form):
             patient = self._get_patient(form.phone)
             self._set_cookies(patient.id, response)
 
-    def _get_access_token(self, cookies: dict) -> str:
-        token = cookies.get("access_token")
-        if token:
-            return token
+    def _get_access_token(self) -> Payload:
+        if self.access_token:
+            payload = self._get_access_token_payload()
+            return payload
         raise UnauthorizedError(detail="Not authenticated")
 
-    def _get_token_payload(self, access_token: str) -> Payload:
+    def _get_access_token_payload(self) -> Payload:
         try:
-            payload = JWTTokenService().verify(access_token)
+            payload = JWTTokenService().verify(self.access_token)
         except ExpiredSignatureError:
-            raise UnauthorizedError(detail="Access token is expired")
+            raise AccessTokenExpired()
         except JWTError as exc:
             raise UnauthorizedError(detail=str(exc))
         else:
             return payload
+
+    def _check_refresh_token(self) -> Payload:
+        if self.refresh_token:
+            payload = self._get_refresh_token_payload()
+            return payload
+        raise UnauthorizedError(detail="Refresh token doesn't exist")
+
+    def _get_refresh_token_payload(self) -> Payload:
+        try:
+            payload = JWTTokenService().verify(self.refresh_token)
+        except ExpiredSignatureError:
+            raise UnauthorizedError(detail="Refresh token is expired")
+        else:
+            return payload
+
+    def _refresh(
+            self, refresh_token_payload: Payload, response: RedirectResponse
+    ) -> None:
+        patient_id = self._get_patient_id(refresh_token_payload)
+        new_access_token = self._create_access_token(patient_id)
+        self._set_http_only_cookie(
+            new_access_token,
+            response,
+            "access_token",
+            self._convert_exp_time(self.access_exp_time)
+        )
 
     def _get_patient_id(self, payload: Payload) -> str:
         patient_id = payload.get("id")
@@ -117,9 +159,17 @@ class AuthService(BaseService):
 
     def _create_auth_tokens(self, patient_id: str) -> tuple[str, str]:
         return (
-            JWTTokenService(self.access_exp_time).create(patient_id),
-            JWTTokenService(self.refresh_exp_time).create(patient_id)
+            self._create_access_token(patient_id),
+            self._create_refresh_token(patient_id)
         )
+
+    def _create_access_token(self, patient_id: str) -> str:
+        access_token = JWTTokenService(self.access_exp_time).create(patient_id)
+        return access_token
+
+    def _create_refresh_token(self, patient_id: str) -> str:
+        refresh_token = JWTTokenService(self.refresh_exp_time).create(patient_id)
+        return refresh_token
 
     def _set_http_only_cookie(
             self,
@@ -136,6 +186,10 @@ class AuthService(BaseService):
             samesite="lax",
             max_age=age
         )
+
+    def _convert_exp_time(self, exp_time: timedelta) -> int:
+        exp_time = int(exp_time.total_seconds())
+        return exp_time
 
 
 class OTPCodeService:
@@ -187,13 +241,12 @@ class OTPCodeService:
 
 
 def get_auth_service(
+        request: Request,
         session: Session = Depends(MySQLConnection.get_session)
 ) -> AuthService:
-    return AuthService(session)
+    return AuthService(session, request)
 
 
-def authorize(
-        request: Request,
-        auth: AuthService = Depends(get_auth_service)
-) -> str:
-    return auth.authorize(request.cookies)
+def authorize(auth: AuthService = Depends(get_auth_service)) -> str:
+    patient_id = auth.authorize()
+    return patient_id

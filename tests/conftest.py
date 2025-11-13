@@ -5,13 +5,19 @@ import pytest
 from fastapi import Response
 from sqlmodel import Session, SQLModel, Field
 
-from logger.setup import get_logger
-from utils import SetUpTest, read_fixture
+from main import app
 from model.form_models import AppointmentBookingForm, PhoneForm, OTPCodeForm
-from service.auth_services import JWTTokenService, OTPCodeService
+from service.auth_services import JWTTokenService, OTPCodeService, AuthService
 from data.connections import MySQLConnection
 from data.base_data import BaseSQLModel, BaseCRUD
 from data.patient_data import Patient
+from utils import SetUpTest, read_fixture
+
+
+class MockRequest:
+    def __init__(self, cookies: dict[str, str] | dict = {}) -> None:
+        self.app = app
+        self.cookies = cookies
 
 
 class SQLModelForTest(BaseSQLModel, table=True):
@@ -126,3 +132,20 @@ def otp_code_service() -> OTPCodeService:
 @pytest.fixture
 def mock_response() -> Response:
     return Response()
+
+
+@pytest.fixture
+def mock_request_with_no_cookies() -> MockRequest:
+    mock_request = MockRequest()
+    return mock_request
+
+
+@pytest.fixture
+def mock_request(access_token: str) -> MockRequest:
+    mock_request = MockRequest(cookies={"access_token": access_token})
+    return mock_request
+
+
+@pytest.fixture
+def auth_service(mock_request: MockRequest) -> AuthService:
+    return AuthService(session=None, request=mock_request)
