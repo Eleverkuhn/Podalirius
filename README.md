@@ -54,7 +54,7 @@ The application follows a layered architecture:
 
 ## Setup
 ```bash
-git clone
+git clone https://github.com/Eleverkuhn/Podalirius
 cd podalirius
 docker compose up --build
 pytest -q
