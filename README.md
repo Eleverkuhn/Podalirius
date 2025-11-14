@@ -11,7 +11,7 @@ Built with **FastAPI**, **MySQL** and **Redis**, featuring JWT-based authenticat
 - **Validation**: Pydantic
 - **Authentication**: jose
 - **Testing**: Pytest, FastAPI test client and HTTPie
-- **Deployment**: Docker
+- **Deployment**: Docker, uv (project manager)
 
 ### Libraries
 - Redis
